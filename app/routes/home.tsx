@@ -2,11 +2,11 @@ import type { Route } from "./+types/home";
 
 export function meta({}: Route.MetaArgs) {
 	return [
-		{ title: "Napat Sangsong — Personal Portfolio" },
+		{ title: "Napat Sangsong — Senior Frontend Developer" },
 		{
 			name: "description",
 			content:
-				"Personal portfolio of Napat Sangsong — developer, creator, and lifelong learner.",
+				"Senior Frontend Developer with 15+ years of enterprise application experience, specializing in scalable, production-grade systems for Fortune 500 organizations.",
 		},
 	];
 }
@@ -26,6 +26,12 @@ export default function Home() {
 							className="hover:text-gray-900 dark:hover:text-white transition-colors"
 						>
 							About
+						</a>
+						<a
+							href="#projects"
+							className="hover:text-gray-900 dark:hover:text-white transition-colors"
+						>
+							Projects
 						</a>
 						<a
 							href="#skills"
@@ -61,11 +67,12 @@ export default function Home() {
 						Napat Sangsong
 					</h1>
 					<p className="text-xl sm:text-2xl text-gray-500 dark:text-gray-400 font-light mb-8">
-						Software Developer
+						Senior Frontend Developer
 					</p>
 					<p className="text-lg text-gray-600 dark:text-gray-400 max-w-xl mx-auto leading-relaxed">
-						Passionate about building clean, efficient, and meaningful digital
-						experiences. I love turning ideas into reality through code.
+						15+ years of enterprise application experience, specializing in
+						scalable, production-grade systems for Fortune 500 organizations in
+						the energy sector.
 					</p>
 					<div className="mt-10">
 						<a
@@ -104,45 +111,152 @@ export default function Home() {
 							</h2>
 							<div className="space-y-4 text-gray-600 dark:text-gray-400 leading-relaxed">
 								<p>
-									I'm a software developer based in Thailand with a passion for
-									crafting clean and user-friendly applications. I enjoy working
-									across the full stack, from building intuitive interfaces to
-									designing robust backend systems.
+									Currently architecting mission-critical platforms for PTT/PTTGC
+									Group, working in regulated, high-stakes energy sector
+									environments. My expertise spans C#, .NET Framework, SharePoint
+									SPFx, Kendo UI, and modern JavaScript ecosystems.
 								</p>
 								<p>
-									I believe in writing code that is not only functional but also
-									maintainable and elegant. Every project is an opportunity to
-									learn something new and push boundaries.
+									I specialize in complex authentication systems (MSAL),
+									cross-platform browser compatibility, database optimization,
+									and API architecture. I write code that balances elegance with
+									maintainability, approaching every system with forward-thinking
+									architecture.
+								</p>
+								<p>
+									Bilingual (Thai/English) with international experience and a
+									genuine curiosity about emerging technologies and industry
+									evolution.
 								</p>
 							</div>
 						</div>
 						<div className="grid grid-cols-2 gap-6">
 							<div className="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-								<p className="text-3xl font-bold mb-1">3+</p>
+								<p className="text-3xl font-bold mb-1">15+</p>
 								<p className="text-sm text-gray-500">Years Experience</p>
 							</div>
 							<div className="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-								<p className="text-3xl font-bold mb-1">10+</p>
-								<p className="text-sm text-gray-500">Projects Completed</p>
+								<p className="text-3xl font-bold mb-1">50+</p>
+								<p className="text-sm text-gray-500">Enterprise Projects</p>
 							</div>
 							<div className="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-								<p className="text-3xl font-bold mb-1">5+</p>
-								<p className="text-sm text-gray-500">Technologies</p>
+								<p className="text-3xl font-bold mb-1">8+</p>
+								<p className="text-sm text-gray-500">Core Technologies</p>
 							</div>
 							<div className="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-								<p className="text-3xl font-bold mb-1">&infin;</p>
-								<p className="text-sm text-gray-500">Curiosity</p>
+								<p className="text-3xl font-bold mb-1 text-lg">Global</p>
+								<p className="text-sm text-gray-500">Clients</p>
 							</div>
 						</div>
 					</div>
 				</div>
 			</section>
 
-			{/* Skills Section */}
+			{/* Key Projects Section */}
 			<section
-				id="skills"
+				id="projects"
 				className="py-24 px-6 bg-gray-50 dark:bg-gray-900/50"
 			>
+				<div className="max-w-5xl mx-auto">
+					<p className="text-sm font-medium text-gray-400 uppercase tracking-widest mb-3">
+						Featured Work
+					</p>
+					<h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-12">
+						Key Projects
+					</h2>
+					<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+						<div className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+							<div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4">
+								<svg
+									className="w-6 h-6"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={1.5}
+										d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+									/>
+								</svg>
+							</div>
+							<h3 className="text-lg font-semibold mb-2">GSP eMoC</h3>
+							<p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-3">
+								PTT/PTTGC Group
+							</p>
+							<p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+								Electronic Management of Change system for enterprise workflow
+								coordination. Built with SharePoint SPFx, MSAL authentication,
+								and sophisticated token management.
+							</p>
+						</div>
+						<div className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+							<div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4">
+								<svg
+									className="w-6 h-6"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={1.5}
+										d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"
+									/>
+								</svg>
+							</div>
+							<h3 className="text-lg font-semibold mb-2">IdeaMANI</h3>
+							<p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-3">
+								PTT/PTTGC Group
+							</p>
+							<p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+								Investment type validation and portfolio management platform.
+								Complex validation logic, cross-platform browser compatibility,
+								and CORS configuration for enterprise integration.
+							</p>
+						</div>
+						<div className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+							<div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-4">
+								<svg
+									className="w-6 h-6"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={1.5}
+										d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"
+									/>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={1.5}
+										d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"
+									/>
+								</svg>
+							</div>
+							<h3 className="text-lg font-semibold mb-2">
+								Stock Photography Business
+							</h3>
+							<p className="text-xs font-medium text-amber-600 dark:text-amber-400 mb-3">
+								Entrepreneurial Venture
+							</p>
+							<p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+								Successful digital asset monetization business applying
+								strategic SEO optimization, seasonal trend analysis, and market
+								psychology for positioning.
+							</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			{/* Skills Section */}
+			<section id="skills" className="py-24 px-6">
 				<div className="max-w-5xl mx-auto">
 					<p className="text-sm font-medium text-gray-400 uppercase tracking-widest mb-3">
 						What I Do
@@ -150,12 +264,12 @@ export default function Home() {
 					<h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-12">
 						Skills & Expertise
 					</h2>
-					<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+					<div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
 						{[
 							{
 								title: "Frontend Development",
 								description:
-									"Building responsive, accessible, and performant user interfaces with React, TypeScript, and modern CSS.",
+									"Building enterprise-grade UIs with React, TypeScript, SharePoint SPFx, and Kendo UI for Fortune 500 clients.",
 								icon: (
 									<svg
 										className="w-6 h-6"
@@ -173,9 +287,9 @@ export default function Home() {
 								),
 							},
 							{
-								title: "Backend Development",
+								title: "Backend & APIs",
 								description:
-									"Designing APIs and server-side applications with Node.js, Python, and cloud-native architectures.",
+									"Designing API architecture with C#, .NET Framework. Deep collaboration with backend teams and database architects.",
 								icon: (
 									<svg
 										className="w-6 h-6"
@@ -193,9 +307,29 @@ export default function Home() {
 								),
 							},
 							{
+								title: "Auth & Security",
+								description:
+									"MSAL implementation, token management, localStorage strategies, Safari compatibility, and CORS configuration.",
+								icon: (
+									<svg
+										className="w-6 h-6"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={1.5}
+											d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+										/>
+									</svg>
+								),
+							},
+							{
 								title: "Database & DevOps",
 								description:
-									"Managing databases, CI/CD pipelines, and cloud deployments for reliable and scalable systems.",
+									"SQL Server optimization, index tuning, GitHub migration, SSH infrastructure, and server management.",
 								icon: (
 									<svg
 										className="w-6 h-6"
@@ -215,7 +349,7 @@ export default function Home() {
 						].map((skill) => (
 							<div
 								key={skill.title}
-								className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+								className="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
 							>
 								<div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400 mb-4">
 									{skill.icon}
@@ -235,20 +369,23 @@ export default function Home() {
 						</p>
 						<div className="flex flex-wrap gap-3">
 							{[
+								"C#",
+								".NET Framework",
+								"SharePoint SPFx",
 								"TypeScript",
+								"JavaScript",
 								"React",
-								"Node.js",
-								"Python",
+								"Kendo UI",
+								"MSAL",
+								"SQL Server",
+								"REST APIs",
 								"Tailwind CSS",
-								"PostgreSQL",
-								"Docker",
 								"Git",
 								"Cloudflare",
-								"REST APIs",
 							].map((tech) => (
 								<span
 									key={tech}
-									className="px-4 py-2 text-sm rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
+									className="px-4 py-2 text-sm rounded-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
 								>
 									{tech}
 								</span>
@@ -259,7 +396,10 @@ export default function Home() {
 			</section>
 
 			{/* Hobbies Section */}
-			<section id="hobbies" className="py-24 px-6">
+			<section
+				id="hobbies"
+				className="py-24 px-6 bg-gray-50 dark:bg-gray-900/50"
+			>
 				<div className="max-w-5xl mx-auto">
 					<p className="text-sm font-medium text-gray-400 uppercase tracking-widest mb-3">
 						Beyond Code
@@ -267,36 +407,30 @@ export default function Home() {
 					<h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-12">
 						Hobbies & Interests
 					</h2>
-					<div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+					<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
 						{[
 							{
-								title: "Music Enthusiast",
+								title: "Music & Cultural Appreciation",
 								description:
-									"Passionate listener across K-pop (Yerin Baek, LEE HI, Minsu, Bol4) and T-pop (Serious Bacon), appreciating quality vocal performances.",
+									"Passionate listener across K-pop and T-pop — Yerin Baek, LEE HI, Minsu, Bol4, and Serious Bacon. Appreciating quality vocal performances and diverse musical styles.",
 								emoji: "🎵",
 							},
 							{
-								title: "Avid Reader",
+								title: "Literary Engagement",
 								description:
-									"Active novel reader with consistent engagement in literary content, providing intellectual balance to my technical career.",
+									"Active novel reader with consistent engagement in literary content, providing intellectual balance to technical work and broadening creative perspective.",
 								emoji: "📚",
 							},
 							{
-								title: "Stock Photography Entrepreneur",
+								title: "Pet Care & Responsibility",
 								description:
-									"Operate a successful digital graphics business, applying SEO optimization and seasonal trend analysis.",
-								emoji: "📸",
-							},
-							{
-								title: "Pet Care Advocate",
-								description:
-									"Dedicated caretaker for Thuaifu, a senior feline companion, managing health with analytical veterinary care.",
+									"Dedicated caretaker for Thuaifu, a 15-year-old senior cat companion. Managing health with analytical veterinary care and unwavering commitment.",
 								emoji: "🐱",
 							},
 						].map((hobby) => (
 							<div
 								key={hobby.title}
-								className="group p-6 rounded-2xl border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+								className="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
 							>
 								<span className="text-3xl mb-4 block">{hobby.emoji}</span>
 								<h3 className="text-lg font-semibold mb-2">{hobby.title}</h3>
@@ -310,10 +444,7 @@ export default function Home() {
 			</section>
 
 			{/* Contact Section */}
-			<section
-				id="contact"
-				className="py-24 px-6 bg-gray-50 dark:bg-gray-900/50"
-			>
+			<section id="contact" className="py-24 px-6">
 				<div className="max-w-3xl mx-auto text-center">
 					<p className="text-sm font-medium text-gray-400 uppercase tracking-widest mb-3">
 						Get in Touch
@@ -322,8 +453,9 @@ export default function Home() {
 						Let's Connect
 					</h2>
 					<p className="text-gray-600 dark:text-gray-400 mb-10 leading-relaxed">
-						I'm always open to discussing new projects, creative ideas, or
-						opportunities to be part of something great.
+						I'm always open to discussing enterprise solutions, creative
+						collaborations, or opportunities to architect mission-critical
+						systems.
 					</p>
 					<div className="flex flex-wrap justify-center gap-4">
 						<a
