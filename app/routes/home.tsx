@@ -270,28 +270,28 @@ export default function Home() {
 					<div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
 						{[
 							{
-								title: "Reading",
+								title: "Music Enthusiast",
 								description:
-									"Exploring books on technology, philosophy, and self-improvement.",
+									"Passionate listener across K-pop (Yerin Baek, LEE HI, Minsu, Bol4) and T-pop (Serious Bacon), appreciating quality vocal performances.",
+								emoji: "🎵",
+							},
+							{
+								title: "Avid Reader",
+								description:
+									"Active novel reader with consistent engagement in literary content, providing intellectual balance to my technical career.",
 								emoji: "📚",
 							},
 							{
-								title: "Gaming",
+								title: "Stock Photography Entrepreneur",
 								description:
-									"Enjoying strategy and RPG games in my downtime.",
-								emoji: "🎮",
+									"Operate a successful digital graphics business, applying SEO optimization and seasonal trend analysis.",
+								emoji: "📸",
 							},
 							{
-								title: "Photography",
+								title: "Pet Care Advocate",
 								description:
-									"Capturing moments and exploring visual storytelling.",
-								emoji: "📷",
-							},
-							{
-								title: "Traveling",
-								description:
-									"Discovering new cultures, food, and perspectives around the world.",
-								emoji: "✈️",
+									"Dedicated caretaker for Thuaifu, a senior feline companion, managing health with analytical veterinary care.",
+								emoji: "🐱",
 							},
 						].map((hobby) => (
 							<div
