@@ -4,6 +4,10 @@
 	--font-sans:
 		"Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
 		"Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+	--font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman",
+		Times, serif;
+	--font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo,
+		Consolas, "Liberation Mono", monospace;
 }
 
 html {
@@ -12,9 +16,232 @@ html {
 
 html,
 body {
-	@apply bg-white dark:bg-gray-950;
+	background-color: #0a0a0a;
+	color: #e5e5e5;
+	color-scheme: dark;
+}
 
-	@media (prefers-color-scheme: dark) {
-		color-scheme: dark;
+/* Selection */
+::selection {
+	background-color: rgba(255, 255, 255, 0.15);
+	color: #ffffff;
+}
+
+/* Film grain overlay */
+@keyframes grain {
+	0%,
+	100% {
+		transform: translate(0, 0);
 	}
+	10% {
+		transform: translate(-5%, -10%);
+	}
+	20% {
+		transform: translate(-15%, 5%);
+	}
+	30% {
+		transform: translate(7%, -25%);
+	}
+	40% {
+		transform: translate(-5%, 25%);
+	}
+	50% {
+		transform: translate(-15%, 10%);
+	}
+	60% {
+		transform: translate(15%, 0%);
+	}
+	70% {
+		transform: translate(0%, 15%);
+	}
+	80% {
+		transform: translate(3%, 35%);
+	}
+	90% {
+		transform: translate(-10%, 10%);
+	}
+}
+
+.film-grain::before {
+	content: "";
+	position: fixed;
+	top: -50%;
+	left: -50%;
+	right: -50%;
+	bottom: -50%;
+	width: 200%;
+	height: 200%;
+	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+	animation: grain 8s steps(10) infinite;
+	pointer-events: none;
+	z-index: 9999;
+	opacity: 0.4;
+}
+
+/* Scroll-triggered fade-in */
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(32px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.animate-fade-in {
+	animation: fadeInUp 0.8s ease-out both;
+}
+
+.animate-delay-100 {
+	animation-delay: 0.1s;
+}
+.animate-delay-200 {
+	animation-delay: 0.2s;
+}
+.animate-delay-300 {
+	animation-delay: 0.3s;
+}
+.animate-delay-400 {
+	animation-delay: 0.4s;
+}
+.animate-delay-500 {
+	animation-delay: 0.5s;
+}
+.animate-delay-600 {
+	animation-delay: 0.6s;
+}
+
+/* Elegant horizontal rule */
+.hr-ornament {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	color: rgba(255, 255, 255, 0.15);
+}
+.hr-ornament::before,
+.hr-ornament::after {
+	content: "";
+	flex: 1;
+	height: 1px;
+	background: linear-gradient(
+		to right,
+		transparent,
+		rgba(255, 255, 255, 0.12),
+		transparent
+	);
+}
+
+/* Hover line reveal on links */
+.link-reveal {
+	position: relative;
+	display: inline-block;
+}
+.link-reveal::after {
+	content: "";
+	position: absolute;
+	bottom: -2px;
+	left: 0;
+	width: 0;
+	height: 1px;
+	background: #ffffff;
+	transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.link-reveal:hover::after {
+	width: 100%;
+}
+
+/* Card hover lift */
+.card-lift {
+	transition:
+		transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+		box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.card-lift:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Stagger children for scroll reveal */
+.stagger-children > * {
+	opacity: 0;
+	animation: fadeInUp 0.6s ease-out both;
+}
+.stagger-children > *:nth-child(1) {
+	animation-delay: 0s;
+}
+.stagger-children > *:nth-child(2) {
+	animation-delay: 0.1s;
+}
+.stagger-children > *:nth-child(3) {
+	animation-delay: 0.2s;
+}
+.stagger-children > *:nth-child(4) {
+	animation-delay: 0.3s;
+}
+
+/* Smooth image-like border */
+.bw-border {
+	border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Marquee text */
+@keyframes marquee {
+	from {
+		transform: translateX(0);
+	}
+	to {
+		transform: translateX(-50%);
+	}
+}
+.marquee-track {
+	animation: marquee 30s linear infinite;
+}
+.marquee-track:hover {
+	animation-play-state: paused;
+}
+
+/* Subtle pulse for scroll indicator */
+@keyframes subtlePulse {
+	0%,
+	100% {
+		opacity: 0.4;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+.pulse-subtle {
+	animation: subtlePulse 2.5s ease-in-out infinite;
+}
+
+/* Monospace accent */
+.mono-accent {
+	font-family: "JetBrains Mono", monospace;
+	letter-spacing: 0.05em;
+}
+
+/* Leica red dot - tiny accent */
+.leica-dot {
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background-color: #cc0000;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+	width: 6px;
+}
+::-webkit-scrollbar-track {
+	background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.2);
 }
