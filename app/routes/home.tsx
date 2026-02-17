@@ -11,6 +11,9 @@ export function meta({}: Route.MetaArgs) {
 	];
 }
 
+
+
+
 export default function Home() {
 	return (
 		<div className="film-grain min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
