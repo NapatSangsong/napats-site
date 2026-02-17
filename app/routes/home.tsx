@@ -677,7 +677,7 @@ export default function Home() {
 						<span className="leica-dot" />
 					</div>
 					<span className="mono-accent text-[9px] uppercase tracking-[0.3em] text-white/15">
-						Developed with precision
+						Crafted with precision
 					</span>
 				</div>
 			</footer>
