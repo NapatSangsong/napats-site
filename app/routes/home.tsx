@@ -172,10 +172,6 @@ export default function Home() {
 								approaching every system with forward-thinking architecture,
 								considering scalability, security, and long-term technical debt.
 							</p>
-							<p className="text-white/30 text-sm">
-								Bilingual (Thai/English) &middot; International experience &middot;
-								Emerging technology advocate
-							</p>
 						</div>
 					</div>
 				</div>
