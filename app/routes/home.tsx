@@ -126,8 +126,8 @@ export default function Home() {
 							&nbsp;&middot;&nbsp; MSAL &nbsp;&middot;&nbsp; SQL Server
 							&nbsp;&middot;&nbsp; REST APIs &nbsp;&middot;&nbsp; B&amp;W Film
 							&nbsp;&middot;&nbsp; Analog Photography &nbsp;&middot;&nbsp; Music &nbsp;&middot;&nbsp;
-							Enterprise Architecture &nbsp;&middot;&nbsp; PTT/PTTGC
-							&nbsp;&middot;&nbsp; Fortune 500 &nbsp;&middot;&nbsp;
+							Enterprise Architecture &nbsp;&middot;&nbsp; Fortune 500
+							&nbsp;&middot;&nbsp;
 						</span>
 					))}
 				</div>
@@ -153,7 +153,7 @@ export default function Home() {
 						<div className="lg:col-span-8 space-y-6 text-white/50 text-base sm:text-lg leading-relaxed">
 							<p>
 								Currently architecting mission-critical platforms for{" "}
-								<span className="text-white/80">PTT/PTTGC Group</span> — working
+								<span className="text-white/80">Fortune 500 enterprises</span> — working
 								in regulated, high-stakes energy sector environments where
 								failure is not an option. My expertise spans C#, .NET Framework,
 								SharePoint SPFx, Kendo UI, and modern JavaScript ecosystems.
@@ -221,7 +221,7 @@ export default function Home() {
 							</div>
 							<h3 className="font-serif text-2xl text-white mb-2">GSP eMoC</h3>
 							<p className="mono-accent text-[10px] uppercase tracking-[0.2em] text-white/30 mb-4">
-								PTT/PTTGC Group
+								Energy Sector
 							</p>
 							<p className="text-sm text-white/40 leading-relaxed">
 								Electronic Management of Change for enterprise workflow
@@ -252,7 +252,7 @@ export default function Home() {
 							</div>
 							<h3 className="font-serif text-2xl text-white mb-2">IdeaMANI</h3>
 							<p className="mono-accent text-[10px] uppercase tracking-[0.2em] text-white/30 mb-4">
-								PTT/PTTGC Group
+								Energy Sector
 							</p>
 							<p className="text-sm text-white/40 leading-relaxed">
 								Investment type validation and portfolio management. Complex
