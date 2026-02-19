@@ -222,13 +222,50 @@ body {
 	letter-spacing: 0.05em;
 }
 
-/* Leica red dot - tiny accent */
-.leica-dot {
+/* Film sprocket accent — subtle analog marker */
+.film-dot {
 	display: inline-block;
-	width: 6px;
-	height: 6px;
+	width: 5px;
+	height: 5px;
 	border-radius: 50%;
-	background-color: #cc0000;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	background-color: transparent;
+}
+
+/* Film frame border — thin contact sheet edge */
+.film-frame {
+	position: relative;
+}
+.film-frame::before,
+.film-frame::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background: repeating-linear-gradient(
+		to right,
+		rgba(255, 255, 255, 0.06) 0px,
+		rgba(255, 255, 255, 0.06) 8px,
+		transparent 8px,
+		transparent 12px
+	);
+}
+.film-frame::before {
+	top: 0;
+}
+.film-frame::after {
+	bottom: 0;
+}
+
+/* Subtle vignette overlay */
+.vignette::after {
+	content: "";
+	position: fixed;
+	inset: 0;
+	background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.3) 100%);
+	pointer-events: none;
+	z-index: 9998;
 }
 
 /* Scrollbar */
