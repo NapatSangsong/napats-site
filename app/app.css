@@ -225,11 +225,10 @@ body {
 /* Film sprocket accent — subtle analog marker */
 .film-dot {
 	display: inline-block;
-	width: 5px;
-	height: 5px;
+	width: 6px;
+	height: 6px;
 	border-radius: 50%;
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	background-color: transparent;
+	background-color: #cc0000;
 }
 
 /* Film frame border — thin contact sheet edge */
