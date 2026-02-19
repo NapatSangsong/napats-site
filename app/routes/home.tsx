@@ -128,6 +128,7 @@ export default function Home() {
 							&nbsp;&middot;&nbsp; Analog Photography &nbsp;&middot;&nbsp; Music &nbsp;&middot;&nbsp;
 							Enterprise Architecture &nbsp;&middot;&nbsp; Thalamo
 							&nbsp;&middot;&nbsp; Knowledge Management &nbsp;&middot;&nbsp;
+							Coffee Roasting &nbsp;&middot;&nbsp;
 						</span>
 					))}
 				</div>
@@ -431,7 +432,7 @@ export default function Home() {
 						the things that give my work depth.
 					</p>
 
-					<div className="grid md:grid-cols-3 gap-6 stagger-children">
+					<div className="grid md:grid-cols-2 gap-6 stagger-children">
 						{/* Music */}
 						<div className="card-lift group p-8 bg-white/[0.02] bw-border rounded-sm hover:bg-white/[0.04] transition-colors duration-500 relative overflow-hidden">
 							<div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-white/[0.02] to-transparent" />
@@ -498,6 +499,52 @@ export default function Home() {
 								broadening creative perspective. The quiet discipline of reading
 								sharpens the mind for code.
 							</p>
+						</div>
+
+						{/* Coffee Roasting */}
+						<div className="card-lift group p-8 bg-white/[0.02] bw-border rounded-sm hover:bg-white/[0.04] transition-colors duration-500 relative overflow-hidden">
+							<div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-white/[0.02] to-transparent" />
+							<div className="mb-6">
+								<svg
+									className="w-8 h-8 text-white/15 group-hover:text-white/30 transition-colors duration-500"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={1}
+										d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"
+									/>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={1}
+										d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1.001A3.75 3.75 0 0012 18z"
+									/>
+								</svg>
+							</div>
+							<h3 className="font-serif text-xl text-white mb-3">
+								Coffee Roasting
+							</h3>
+							<p className="text-sm text-white/35 leading-relaxed mb-4">
+								Home roaster and dedicated coffee enthusiast. From selecting
+								green beans to dialing in the perfect roast profile — treating
+								every batch like a craft. The ritual of brewing fuels the code.
+							</p>
+							<div className="flex flex-wrap gap-2">
+								{["Home Roast", "Single Origin", "Pour Over", "Espresso"].map(
+									(tag) => (
+										<span
+											key={tag}
+											className="mono-accent text-[9px] uppercase tracking-[0.15em] px-2.5 py-1 border border-white/[0.06] text-white/20 rounded-sm"
+										>
+											{tag}
+										</span>
+									),
+								)}
+							</div>
 						</div>
 
 						{/* Thuaifu */}
