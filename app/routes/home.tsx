@@ -18,7 +18,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
 	return (
-		<div className="film-grain min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+		<div className="film-grain vignette min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
 			{/* Navigation */}
 			<nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/[0.04]">
 				<div className="max-w-6xl mx-auto px-8 py-5 flex items-center justify-between">
@@ -26,7 +26,7 @@ export default function Home() {
 						<span className="font-serif text-xl font-medium tracking-tight text-white">
 							Napat
 						</span>
-						<span className="leica-dot" />
+						<span className="film-dot" />
 					</a>
 					<div className="hidden sm:flex items-center gap-10 mono-accent text-xs uppercase tracking-[0.2em] text-white/40">
 						<a href="#about" className="link-reveal hover:text-white transition-colors duration-300">
@@ -80,7 +80,7 @@ export default function Home() {
 					{/* Brief */}
 					<p className="animate-fade-in animate-delay-400 mt-8 text-lg sm:text-xl text-white/50 max-w-xl leading-relaxed font-light">
 						15+ years architecting mission-critical enterprise systems.
-						Capturing the world in monochrome through a Leica lens.
+						Seeing the world in silver halide and monochrome film.
 						Finding rhythm in code and music alike.
 					</p>
 
@@ -112,8 +112,8 @@ export default function Home() {
 				</div>
 			</section>
 
-			{/* Marquee divider */}
-			<div className="overflow-hidden border-y border-white/[0.04] py-4">
+			{/* Marquee divider — film strip */}
+			<div className="film-frame overflow-hidden border-y border-white/[0.04] py-4">
 				<div className="marquee-track flex whitespace-nowrap">
 					{Array.from({ length: 2 }).map((_, i) => (
 						<span
@@ -124,8 +124,8 @@ export default function Home() {
 							SharePoint SPFx &nbsp;&middot;&nbsp; TypeScript
 							&nbsp;&middot;&nbsp; React &nbsp;&middot;&nbsp; Kendo UI
 							&nbsp;&middot;&nbsp; MSAL &nbsp;&middot;&nbsp; SQL Server
-							&nbsp;&middot;&nbsp; REST APIs &nbsp;&middot;&nbsp; Leica
-							Photography &nbsp;&middot;&nbsp; Music &nbsp;&middot;&nbsp;
+							&nbsp;&middot;&nbsp; REST APIs &nbsp;&middot;&nbsp; B&amp;W Film
+							&nbsp;&middot;&nbsp; Analog Photography &nbsp;&middot;&nbsp; Music &nbsp;&middot;&nbsp;
 							Enterprise Architecture &nbsp;&middot;&nbsp; PTT/PTTGC
 							&nbsp;&middot;&nbsp; Fortune 500 &nbsp;&middot;&nbsp;
 						</span>
@@ -184,7 +184,7 @@ export default function Home() {
 			{/* Divider */}
 			<div className="max-w-6xl mx-auto px-8">
 				<div className="hr-ornament">
-					<span className="leica-dot" />
+					<span className="film-dot" />
 				</div>
 			</div>
 
@@ -300,7 +300,7 @@ export default function Home() {
 			{/* Divider */}
 			<div className="max-w-6xl mx-auto px-8">
 				<div className="hr-ornament">
-					<span className="leica-dot" />
+					<span className="film-dot" />
 				</div>
 			</div>
 
@@ -416,7 +416,7 @@ export default function Home() {
 			{/* Divider */}
 			<div className="max-w-6xl mx-auto px-8">
 				<div className="hr-ornament">
-					<span className="leica-dot" />
+					<span className="film-dot" />
 				</div>
 			</div>
 
@@ -674,10 +674,10 @@ export default function Home() {
 						<span className="font-serif text-sm text-white/30">
 							&copy; 2026 Napat Sangsong
 						</span>
-						<span className="leica-dot" />
+						<span className="film-dot" />
 					</div>
 					<span className="mono-accent text-[9px] uppercase tracking-[0.3em] text-white/15">
-						Crafted with precision
+						Shot on film, built with code
 					</span>
 				</div>
 			</footer>
