@@ -79,7 +79,7 @@ export default function Home() {
 
 					{/* Brief */}
 					<p className="animate-fade-in animate-delay-400 mt-8 text-lg sm:text-xl text-white/50 max-w-xl leading-relaxed font-light">
-						15+ years architecting mission-critical enterprise systems.
+						15+ years building enterprise SharePoint solutions at Thalamo.
 						Seeing the world in silver halide and monochrome film.
 						Finding rhythm in code and music alike.
 					</p>
@@ -126,8 +126,8 @@ export default function Home() {
 							&nbsp;&middot;&nbsp; MSAL &nbsp;&middot;&nbsp; SQL Server
 							&nbsp;&middot;&nbsp; REST APIs &nbsp;&middot;&nbsp; B&amp;W Film
 							&nbsp;&middot;&nbsp; Analog Photography &nbsp;&middot;&nbsp; Music &nbsp;&middot;&nbsp;
-							Enterprise Architecture &nbsp;&middot;&nbsp; Fortune 500
-							&nbsp;&middot;&nbsp;
+							Enterprise Architecture &nbsp;&middot;&nbsp; Thalamo
+							&nbsp;&middot;&nbsp; Knowledge Management &nbsp;&middot;&nbsp;
 						</span>
 					))}
 				</div>
@@ -152,18 +152,19 @@ export default function Home() {
 						{/* Right column */}
 						<div className="lg:col-span-8 space-y-6 text-white/50 text-base sm:text-lg leading-relaxed">
 							<p>
-								Currently architecting mission-critical platforms for{" "}
-								<span className="text-white/80">Fortune 500 enterprises</span> — working
-								in regulated, high-stakes energy sector environments where
-								failure is not an option. My expertise spans C#, .NET Framework,
-								SharePoint SPFx, Kendo UI, and modern JavaScript ecosystems.
+								Senior consultant at{" "}
+								<span className="text-white/80">Thalamo Co., Ltd.</span> — Thailand's
+								most trusted adviser in SharePoint technologies and knowledge
+								management. Designing, deploying, and implementing Microsoft
+								Business Productivity solutions for medium-size businesses and
+								large enterprises.
 							</p>
 							<p>
-								I specialize in complex{" "}
-								<span className="text-white/80">MSAL authentication systems</span>,
-								cross-platform browser compatibility, database optimization, and
-								API architecture. I've successfully implemented enterprise
-								solutions requiring sophisticated token management, CORS
+								My expertise spans{" "}
+								<span className="text-white/80">SharePoint SPFx</span>, C#, .NET
+								Framework, MSAL authentication, Kendo UI, and modern JavaScript
+								ecosystems. I specialize in enterprise solution architecture —
+								token management, cross-platform browser compatibility, CORS
 								configuration, and seamless integration between legacy and modern
 								technology stacks.
 							</p>
@@ -217,7 +218,7 @@ export default function Home() {
 							</div>
 							<h3 className="font-serif text-2xl text-white mb-2">GSP eMoC</h3>
 							<p className="mono-accent text-[10px] uppercase tracking-[0.2em] text-white/30 mb-4">
-								Energy Sector
+								Thalamo &middot; Enterprise
 							</p>
 							<p className="text-sm text-white/40 leading-relaxed">
 								Electronic Management of Change for enterprise workflow
@@ -248,7 +249,7 @@ export default function Home() {
 							</div>
 							<h3 className="font-serif text-2xl text-white mb-2">IdeaMANI</h3>
 							<p className="mono-accent text-[10px] uppercase tracking-[0.2em] text-white/30 mb-4">
-								Energy Sector
+								Thalamo &middot; Enterprise
 							</p>
 							<p className="text-sm text-white/40 leading-relaxed">
 								Investment type validation and portfolio management. Complex
