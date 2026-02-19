@@ -553,14 +553,14 @@ export default function Home() {
 								<span className="text-white/20">together.</span>
 							</h2>
 							<p className="text-white/35 text-base max-w-md leading-relaxed">
-								Open to discussing enterprise solutions, creative collaborations,
-								or opportunities to architect mission-critical systems in
-								regulated environments.
+								Open to discussing SharePoint solutions, creative collaborations,
+								or just talking about music and analog photography over coffee.
+								Let's connect.
 							</p>
 						</div>
 						<div className="lg:col-span-5 flex flex-col justify-end gap-4">
 							<a
-								href="mailto:hello@example.com"
+								href="mailto:napats@thalamo.com"
 								className="group flex items-center justify-between p-5 border border-white/[0.06] hover:border-white/[0.15] hover:bg-white/[0.02] transition-all duration-500 rounded-sm"
 							>
 								<div className="flex items-center gap-4">
@@ -596,7 +596,7 @@ export default function Home() {
 								</svg>
 							</a>
 							<a
-								href="https://github.com"
+								href="https://github.com/NapatSangsong"
 								target="_blank"
 								rel="noopener noreferrer"
 								className="group flex items-center justify-between p-5 border border-white/[0.06] hover:border-white/[0.15] hover:bg-white/[0.02] transition-all duration-500 rounded-sm"
@@ -628,7 +628,7 @@ export default function Home() {
 								</svg>
 							</a>
 							<a
-								href="https://linkedin.com"
+								href="https://www.linkedin.com/in/napatsangsong"
 								target="_blank"
 								rel="noopener noreferrer"
 								className="group flex items-center justify-between p-5 border border-white/[0.06] hover:border-white/[0.15] hover:bg-white/[0.02] transition-all duration-500 rounded-sm"
