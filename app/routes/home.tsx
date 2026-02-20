@@ -26,14 +26,14 @@ export function meta({}: Route.MetaArgs) {
  * instagram.com/p/SHORTCODE/ → copy that SHORTCODE value here.
  */
 const INSTAGRAM_POSTS = [
-	"POST_1_SHORTCODE",
-	"POST_2_SHORTCODE",
-	"POST_3_SHORTCODE",
-	"POST_4_SHORTCODE",
-	"POST_5_SHORTCODE",
-	"POST_6_SHORTCODE",
-	"POST_7_SHORTCODE",
-	"POST_8_SHORTCODE",
+	"CdIifeqv0ue",
+	"B-HyGEvh8Ov",
+	"B8zHUDLhK71",
+	"Cco7syQPvPD",
+	"B2jzNHkBYlj",
+	"B1yuZfoBLaP",
+	"B-HtqOIBap5",
+	"B0oReOUBo_B",
 ];
 
 export default function Home() {
