@@ -637,35 +637,41 @@ export default function Home() {
 
 						<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[2px] bg-white/[0.03]">
 							{[
-								{ id: "I", caption: "Temple shadow, Chiang Mai", aspect: "portrait" },
-								{ id: "II", caption: "Dusk over the Chao Phraya", aspect: "landscape" },
-								{ id: "III", caption: "Alleyway, Talat Noi", aspect: "portrait" },
-								{ id: "IV", caption: "Morning fog, Doi Inthanon", aspect: "landscape" },
-								{ id: "V", caption: "Neon & rain, Yaowarat", aspect: "portrait" },
-								{ id: "VI", caption: "The quiet hour", aspect: "landscape" },
-								{ id: "VII", caption: "Rooftop silhouette", aspect: "portrait" },
-								{ id: "VIII", caption: "Last light, Rattanakosin", aspect: "landscape" },
+								{ id: "I", seed: "temple-shadow", caption: "Temple shadow, Chiang Mai" },
+								{ id: "II", seed: "river-dusk", caption: "Dusk over the Chao Phraya" },
+								{ id: "III", seed: "alley-talat", caption: "Alleyway, Talat Noi" },
+								{ id: "IV", seed: "fog-mountain", caption: "Morning fog, Doi Inthanon" },
+								{ id: "V", seed: "neon-rain", caption: "Neon & rain, Yaowarat" },
+								{ id: "VI", seed: "quiet-hour", caption: "The quiet hour" },
+								{ id: "VII", seed: "rooftop-bkk", caption: "Rooftop silhouette" },
+								{ id: "VIII", seed: "last-light", caption: "Last light, Rattanakosin" },
 							].map((frame) => (
-								<div
+								<a
 									key={frame.id}
-									className="film-cell group relative bg-[#0a0a0a] overflow-hidden"
+									href="https://www.instagram.com/snap_analog/"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="film-cell group relative bg-[#0a0a0a] overflow-hidden block"
 								>
-									{/* Aspect ratio container */}
-									<div
-										className={`relative ${frame.aspect === "portrait" ? "aspect-[3/4]" : "aspect-[4/3]"}`}
-									>
-										{/* Simulated B&W photo with grain */}
-										<div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-black/40" />
+									{/* Image container */}
+									<div className="relative aspect-square">
+										<img
+											src={`https://picsum.photos/seed/${frame.seed}/600/600?grayscale`}
+											alt={frame.caption}
+											loading="lazy"
+											className="absolute inset-0 w-full h-full object-cover grayscale contrast-125 brightness-90 group-hover:brightness-100 group-hover:contrast-100 transition-all duration-700"
+										/>
+										{/* Film grain overlay */}
 										<div className="absolute inset-0 film-cell-grain" />
 
 										{/* Frame number — top left */}
-										<span className="absolute top-2.5 left-3 mono-accent text-[9px] text-white/15 tracking-[0.2em] z-10">
+										<span className="absolute top-2.5 left-3 mono-accent text-[9px] text-white/40 tracking-[0.2em] z-10 drop-shadow-lg">
 											{frame.id}
 										</span>
 
 										{/* Hover overlay with caption */}
-										<div className="absolute inset-0 flex items-end p-4 bg-black/0 group-hover:bg-black/50 transition-colors duration-500">
-											<p className="font-serif text-xs text-white/0 group-hover:text-white/70 transition-colors duration-500 italic leading-snug">
+										<div className="absolute inset-0 flex items-end p-4 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+											<p className="font-serif text-xs text-white/80 italic leading-snug">
 												{frame.caption}
 											</p>
 										</div>
@@ -680,7 +686,7 @@ export default function Home() {
 											{frame.id}A
 										</span>
 									</div>
-								</div>
+								</a>
 							))}
 						</div>
 
