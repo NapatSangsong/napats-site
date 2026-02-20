@@ -1,11 +1,4 @@
-import { useEffect } from "react";
 import type { Route } from "./+types/home";
-
-declare global {
-	interface Window {
-		instgrm?: { Embeds: { process: () => void } };
-	}
-}
 
 export function meta({}: Route.MetaArgs) {
 	return [
@@ -19,39 +12,23 @@ export function meta({}: Route.MetaArgs) {
 }
 
 /*
- * Instagram Post Shortcodes
- * -------------------------
- * Replace these with your 8 latest post shortcodes from @snap_analog.
- * To find a shortcode: open a post on Instagram → the URL is
- * instagram.com/p/SHORTCODE/ → copy that SHORTCODE value here.
+ * Film Gallery Images
+ * -------------------
+ * Replace `src` with your own photo paths, e.g. "/photos/01.jpg".
+ * Place image files in the public/photos/ directory.
  */
-const INSTAGRAM_POSTS = [
-	"CdIifeqv0ue",
-	"B-HyGEvh8Ov",
-	"B8zHUDLhK71",
-	"Cco7syQPvPD",
-	"B2jzNHkBYlj",
-	"B1yuZfoBLaP",
-	"B-HtqOIBap5",
-	"B0oReOUBo_B",
+const FILM_FRAMES = [
+	{ id: "I", src: "", caption: "" },
+	{ id: "II", src: "", caption: "" },
+	{ id: "III", src: "", caption: "" },
+	{ id: "IV", src: "", caption: "" },
+	{ id: "V", src: "", caption: "" },
+	{ id: "VI", src: "", caption: "" },
+	{ id: "VII", src: "", caption: "" },
+	{ id: "VIII", src: "", caption: "" },
 ];
 
 export default function Home() {
-	// Load Instagram embed.js and process embeds after mount
-	useEffect(() => {
-		const script = document.createElement("script");
-		script.src = "https://www.instagram.com/embed.js";
-		script.async = true;
-		script.onload = () => {
-			if (window.instgrm) {
-				window.instgrm.Embeds.process();
-			}
-		};
-		document.body.appendChild(script);
-		return () => {
-			document.body.removeChild(script);
-		};
-	}, []);
 	return (
 		<div className="film-grain vignette min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
 			{/* Navigation */}
@@ -665,52 +642,62 @@ export default function Home() {
 						</svg>
 					</a>
 
-					{/* Instagram Embed Grid */}
+					{/* Contact Sheet Grid */}
 					<div className="contact-sheet">
 						{/* Film strip top edge */}
-						<div className="sprocket-strip mb-8" />
+						<div className="sprocket-strip mb-6" />
 
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 ig-embed-grid">
-							{INSTAGRAM_POSTS.map((shortcode, i) => (
-								<div key={shortcode} className="ig-embed-cell">
-									<blockquote
-										className="instagram-media"
-										data-instgrm-captioned
-										data-instgrm-permalink={`https://www.instagram.com/p/${shortcode}/`}
-										data-instgrm-version="14"
-										style={{
-											background: "#000",
-											border: 0,
-											borderRadius: 0,
-											margin: 0,
-											maxWidth: "100%",
-											minWidth: "100%",
-											padding: 0,
-											width: "100%",
-										}}
-									>
-										<a
-											href={`https://www.instagram.com/p/${shortcode}/`}
-											target="_blank"
-											rel="noopener noreferrer"
-											className="block aspect-square bg-white/[0.03] hover:bg-white/[0.06] transition-colors duration-500 flex items-center justify-center"
-										>
-											<div className="text-center p-6">
-												<span className="mono-accent text-[40px] text-white/[0.06] block font-serif">
-													{String(i + 1).padStart(2, "0")}
-												</span>
-												<span className="mono-accent text-[8px] uppercase tracking-[0.3em] text-white/15 block mt-2">
-													Loading from Instagram&hellip;
-												</span>
+						<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[2px] bg-white/[0.03]">
+							{FILM_FRAMES.map((frame) => (
+								<div
+									key={frame.id}
+									className="film-cell group relative bg-[#0a0a0a] overflow-hidden"
+								>
+									{/* Aspect ratio container */}
+									<div className="relative aspect-square">
+										{frame.src ? (
+											<img
+												src={frame.src}
+												alt={frame.caption}
+												loading="lazy"
+												className="absolute inset-0 w-full h-full object-cover"
+											/>
+										) : (
+											<div className="absolute inset-0 bg-gradient-to-br from-white/[0.06] via-white/[0.02] to-black/30" />
+										)}
+										{/* Film grain overlay */}
+										<div className="absolute inset-0 film-cell-grain" />
+
+										{/* Frame number — top left */}
+										<span className="absolute top-2.5 left-3 mono-accent text-[9px] text-white/15 tracking-[0.2em] z-10">
+											{frame.id}
+										</span>
+
+										{/* Hover overlay with caption */}
+										{frame.caption && (
+											<div className="absolute inset-0 flex items-end p-4 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+												<p className="font-serif text-xs text-white/80 italic leading-snug">
+													{frame.caption}
+												</p>
 											</div>
-										</a>
-									</blockquote>
+										)}
+									</div>
+
+									{/* Film rebate strip */}
+									<div className="h-5 bg-[#0d0d0d] flex items-center justify-between px-3">
+										<span className="mono-accent text-[7px] text-white/10 tracking-[0.15em]">
+											KODAK TRI-X 400
+										</span>
+										<span className="mono-accent text-[7px] text-white/10">
+											{frame.id}A
+										</span>
+									</div>
 								</div>
 							))}
 						</div>
 
 						{/* Film strip bottom edge */}
-						<div className="sprocket-strip mt-8" />
+						<div className="sprocket-strip mt-6" />
 					</div>
 
 					{/* Gallery caption */}
