@@ -41,6 +41,9 @@ export default function Home() {
 						<a href="#personal" className="link-reveal hover:text-white transition-colors duration-300">
 							Personal
 						</a>
+						<a href="#film" className="link-reveal hover:text-white transition-colors duration-300">
+							Film
+						</a>
 						<a href="#contact" className="link-reveal hover:text-white transition-colors duration-300">
 							Contact
 						</a>
@@ -581,6 +584,121 @@ export default function Home() {
 				</div>
 			</section>
 
+			{/* Divider */}
+			<div className="max-w-6xl mx-auto px-8">
+				<div className="hr-ornament">
+					<span className="film-dot" />
+				</div>
+			</div>
+
+			{/* Film / Photography */}
+			<section id="film" className="py-28 sm:py-36 px-8">
+				<div className="max-w-6xl mx-auto">
+					<span className="mono-accent text-[10px] uppercase tracking-[0.3em] text-white/25 block mb-4">
+						05 / Film
+					</span>
+					<h2 className="font-serif text-4xl sm:text-5xl text-white tracking-tight mb-4">
+						Silver &amp; Light
+					</h2>
+					<p className="text-white/30 text-base max-w-xl mb-6 leading-relaxed">
+						Analogue observations — mostly black &amp; white, always on film.
+						Each frame developed by hand, each moment considered before the
+						shutter falls.
+					</p>
+					<a
+						href="https://www.instagram.com/snap_analog/"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="inline-flex items-center gap-3 mono-accent text-[10px] uppercase tracking-[0.25em] text-white/30 hover:text-white/60 transition-colors duration-300 mb-16 group"
+					>
+						<svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+							<path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+						</svg>
+						<span>@snap_analog</span>
+						<svg
+							className="w-3 h-3 group-hover:translate-x-0.5 transition-transform duration-300"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={1.5}
+								d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+							/>
+						</svg>
+					</a>
+
+					{/* Contact Sheet Grid */}
+					<div className="contact-sheet">
+						{/* Film strip top edge */}
+						<div className="sprocket-strip mb-6" />
+
+						<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[2px] bg-white/[0.03]">
+							{[
+								{ id: "I", caption: "Temple shadow, Chiang Mai", aspect: "portrait" },
+								{ id: "II", caption: "Dusk over the Chao Phraya", aspect: "landscape" },
+								{ id: "III", caption: "Alleyway, Talat Noi", aspect: "portrait" },
+								{ id: "IV", caption: "Morning fog, Doi Inthanon", aspect: "landscape" },
+								{ id: "V", caption: "Neon & rain, Yaowarat", aspect: "portrait" },
+								{ id: "VI", caption: "The quiet hour", aspect: "landscape" },
+								{ id: "VII", caption: "Rooftop silhouette", aspect: "portrait" },
+								{ id: "VIII", caption: "Last light, Rattanakosin", aspect: "landscape" },
+							].map((frame) => (
+								<div
+									key={frame.id}
+									className="film-cell group relative bg-[#0a0a0a] overflow-hidden"
+								>
+									{/* Aspect ratio container */}
+									<div
+										className={`relative ${frame.aspect === "portrait" ? "aspect-[3/4]" : "aspect-[4/3]"}`}
+									>
+										{/* Simulated B&W photo with grain */}
+										<div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-black/40" />
+										<div className="absolute inset-0 film-cell-grain" />
+
+										{/* Frame number — top left */}
+										<span className="absolute top-2.5 left-3 mono-accent text-[9px] text-white/15 tracking-[0.2em] z-10">
+											{frame.id}
+										</span>
+
+										{/* Hover overlay with caption */}
+										<div className="absolute inset-0 flex items-end p-4 bg-black/0 group-hover:bg-black/50 transition-colors duration-500">
+											<p className="font-serif text-xs text-white/0 group-hover:text-white/70 transition-colors duration-500 italic leading-snug">
+												{frame.caption}
+											</p>
+										</div>
+									</div>
+
+									{/* Film rebate strip */}
+									<div className="h-5 bg-[#0d0d0d] flex items-center justify-between px-3">
+										<span className="mono-accent text-[7px] text-white/10 tracking-[0.15em]">
+											KODAK TRI-X 400
+										</span>
+										<span className="mono-accent text-[7px] text-white/10">
+											{frame.id}A
+										</span>
+									</div>
+								</div>
+							))}
+						</div>
+
+						{/* Film strip bottom edge */}
+						<div className="sprocket-strip mt-6" />
+					</div>
+
+					{/* Gallery caption */}
+					<div className="mt-12 flex items-center gap-6">
+						<div className="h-px flex-1 bg-white/[0.06]" />
+						<p className="mono-accent text-[9px] uppercase tracking-[0.3em] text-white/15 shrink-0">
+							Shot on Kodak Tri-X 400 &middot; Developed by hand &middot; Bangkok &amp; beyond
+						</p>
+						<div className="h-px flex-1 bg-white/[0.06]" />
+					</div>
+				</div>
+			</section>
+
 			{/* Contact */}
 			<section
 				id="contact"
@@ -590,7 +708,7 @@ export default function Home() {
 					<div className="grid lg:grid-cols-12 gap-16">
 						<div className="lg:col-span-7">
 							<span className="mono-accent text-[10px] uppercase tracking-[0.3em] text-white/25 block mb-4">
-								05 / Contact
+								06 / Contact
 							</span>
 							<h2 className="font-serif text-4xl sm:text-5xl md:text-6xl text-white tracking-tight mb-8 leading-tight">
 								Let's build
