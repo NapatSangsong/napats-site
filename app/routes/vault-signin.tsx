@@ -41,7 +41,16 @@ export default function VaultSignIn() {
 			const { error } =
 				mode === "signIn"
 					? await supabase.auth.signInWithPassword({ email, password })
-					: await supabase.auth.signUp({ email, password });
+					: await supabase.auth.signUp({
+						email,
+						password,
+						options: {
+							emailRedirectTo:
+								typeof window !== "undefined"
+									? `${window.location.origin}/vault/signin`
+									: undefined,
+						},
+					});
 			if (error) throw error;
 			navigate("/vault");
 		} catch (e) {
