@@ -61,7 +61,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 		language: string;
 	} | null;
 
-	const model = requestedModel ?? selectModel("generateLesson");
+	const model = requestedModel ?? selectModel("perspectiveLesson");
 	const systemPrompt = perspectiveLessonPrompt({
 		courseTitle: course?.title ?? "Untitled Course",
 		lessonTitle: lesson.title,

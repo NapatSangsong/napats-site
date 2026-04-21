@@ -9,6 +9,28 @@ import { useTheme } from "./learning";
 import { createServiceClient } from "~/lib/supabase.server";
 import { Chip, Rule, Tracked } from "~/components/learning/primitives";
 
+// ── Deep-dive types ───────────────────────────────────────
+
+interface DeepDiveEntry {
+	term: string;
+	context: string;
+	blocks: unknown[];
+	loading: boolean;
+	depth: number;
+	collapsed: boolean;
+	/** Nested deep dives keyed by term */
+	children: Map<string, DeepDiveEntry>;
+}
+
+const MAX_DEEP_DIVE_DEPTH = 3;
+
+/** Border colors per depth level — progressively lighter accent */
+const DEPTH_BORDER_COLORS = [
+	"#cc0000",       // depth 1
+	"#cc000099",     // depth 2
+	"#cc000055",     // depth 3
+];
+
 export function meta({ data }: Route.MetaArgs) {
 	return [{ title: `Napat · Learning · ${data?.lesson?.title ?? "Lesson"}` }];
 }
@@ -75,6 +97,9 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	const [perspectiveBlocks, setPerspectiveBlocks] = useState<unknown[]>([]);
 	const [perspectiveLoading, setPerspectiveLoading] = useState(false);
 	const perspectiveCacheRef = useRef<Record<string, unknown[]>>({});
+
+	// Deep-dive (hyper-node) state — keyed by block index, then by term
+	const [deepDives, setDeepDives] = useState<Map<string, DeepDiveEntry>>(new Map());
 
 	// Recall checkpoint state
 	const [recallActive, setRecallActive] = useState(false);
@@ -499,6 +524,381 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 		}
 	};
 
+	// ── Deep-dive fetch ───────────────────────────────────────
+
+	const fetchDeepDive = useCallback(async (
+		term: string,
+		context: string,
+		depth: number,
+		parentPath: string[],
+	) => {
+		if (depth > MAX_DEEP_DIVE_DEPTH) return;
+
+		const updateAtPath = (
+			prev: Map<string, DeepDiveEntry>,
+			path: string[],
+			updater: (e: DeepDiveEntry) => DeepDiveEntry,
+		): Map<string, DeepDiveEntry> => {
+			const next = new Map(prev);
+			if (path.length === 1) {
+				const existing = next.get(path[0]);
+				if (existing) next.set(path[0], updater(existing));
+				return next;
+			}
+			const root = next.get(path[0]);
+			if (!root) return next;
+			const recurse = (entry: DeepDiveEntry, rem: string[]): DeepDiveEntry => {
+				if (rem.length === 1) {
+					const child = entry.children.get(rem[0]);
+					if (!child) return entry;
+					const nc = new Map(entry.children);
+					nc.set(rem[0], updater(child));
+					return { ...entry, children: nc };
+				}
+				const child = entry.children.get(rem[0]);
+				if (!child) return entry;
+				const nc = new Map(entry.children);
+				nc.set(rem[0], recurse(child, rem.slice(1)));
+				return { ...entry, children: nc };
+			};
+			next.set(path[0], recurse(root, path.slice(1)));
+			return next;
+		};
+
+		const fullPath = [...parentPath, term];
+
+		// Create or toggle
+		setDeepDives((prev) => {
+			if (parentPath.length === 0) {
+				const next = new Map(prev);
+				const existing = next.get(term);
+				if (existing && existing.blocks.length > 0) {
+					next.set(term, { ...existing, collapsed: !existing.collapsed });
+					return next;
+				}
+				next.set(term, { term, context, blocks: [], loading: true, depth, collapsed: false, children: new Map() });
+				return next;
+			}
+			return updateAtPath(prev, parentPath, (parent) => {
+				const existing = parent.children.get(term);
+				if (existing && existing.blocks.length > 0) {
+					const nc = new Map(parent.children);
+					nc.set(term, { ...existing, collapsed: !existing.collapsed });
+					return { ...parent, children: nc };
+				}
+				const nc = new Map(parent.children);
+				nc.set(term, { term, context, blocks: [], loading: true, depth, collapsed: false, children: new Map() });
+				return { ...parent, children: nc };
+			});
+		});
+
+		// Check if already fetched
+		let alreadyFetched = false;
+		setDeepDives((prev) => {
+			let current: DeepDiveEntry | undefined = prev.get(fullPath[0]);
+			for (let i = 1; i < fullPath.length && current; i++) current = current.children.get(fullPath[i]);
+			const entry = fullPath.length === 1 ? prev.get(fullPath[0]) : current;
+			if (entry && entry.blocks.length > 0) alreadyFetched = true;
+			return prev;
+		});
+		if (alreadyFetched) return;
+
+		try {
+			const res = await fetch("/learning/api/ai/deep-dive", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Origin: window.location.origin },
+				body: JSON.stringify({ term, context, lessonTitle: lesson.title, courseTitle: course.title, depth }),
+			});
+			if (!res.ok || !res.body) {
+				setDeepDives((prev) => updateAtPath(prev, fullPath, (e) => ({ ...e, loading: false })));
+				return;
+			}
+
+			const reader = res.body.getReader();
+			const decoder = new TextDecoder();
+			let buf = "";
+
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+				buf += decoder.decode(value, { stream: true });
+				const lines = buf.split("\n");
+				buf = lines.pop() || "";
+				for (const line of lines) {
+					if (line.startsWith("data: ")) {
+						const data = line.slice(6);
+						if (data === "done" || data === "[DONE]") continue;
+						try {
+							const parsed = JSON.parse(data);
+							if (parsed.blocks) {
+								const resultBlocks = parsed.blocks.map((b: unknown, i: number) => ({ content: b, id: `dd-${term}-${i}` }));
+								setDeepDives((prev) => updateAtPath(prev, fullPath, (e) => ({ ...e, blocks: resultBlocks, loading: false })));
+							}
+						} catch { /* streaming delta */ }
+					}
+				}
+			}
+			setDeepDives((prev) => updateAtPath(prev, fullPath, (e) => (e.loading ? { ...e, loading: false } : e)));
+		} catch {
+			setDeepDives((prev) => {
+				const updateAtPathLocal = updateAtPath;
+				return updateAtPathLocal(prev, fullPath, (e) => ({ ...e, loading: false }));
+			});
+		}
+	}, [lesson.title, course.title]);
+
+	const removeDeepDive = useCallback((term: string, parentPath: string[]) => {
+		setDeepDives((prev) => {
+			if (parentPath.length === 0) {
+				const next = new Map(prev);
+				next.delete(term);
+				return next;
+			}
+			const next = new Map(prev);
+			const root = next.get(parentPath[0]);
+			if (!root) return next;
+			const removeNested = (entry: DeepDiveEntry, rem: string[]): DeepDiveEntry => {
+				if (rem.length === 0) {
+					const nc = new Map(entry.children);
+					nc.delete(term);
+					return { ...entry, children: nc };
+				}
+				const child = entry.children.get(rem[0]);
+				if (!child) return entry;
+				const nc = new Map(entry.children);
+				nc.set(rem[0], removeNested(child, rem.slice(1)));
+				return { ...entry, children: nc };
+			};
+			next.set(parentPath[0], removeNested(root, parentPath.slice(1)));
+			return next;
+		});
+	}, []);
+
+	// ── Render a deep-dive section recursively ────────────────
+
+	const renderDeepDiveSection = (
+		entry: DeepDiveEntry,
+		parentPath: string[],
+	): React.ReactNode => {
+		const currentPath = [...parentPath, entry.term];
+		const depthIdx = Math.min(entry.depth - 1, DEPTH_BORDER_COLORS.length - 1);
+		const borderColor = DEPTH_BORDER_COLORS[depthIdx];
+		const atMaxDepth = entry.depth >= MAX_DEEP_DIVE_DEPTH;
+
+		return (
+			<div
+				key={`dive-${currentPath.join("-")}`}
+				style={{
+					marginTop: 16,
+					marginBottom: 16,
+					marginLeft: 4,
+					paddingLeft: 20,
+					borderLeft: `2px solid ${borderColor}`,
+					transition: "all .3s ease",
+				}}
+			>
+				{/* Header */}
+				<div
+					style={{
+						display: "flex",
+						alignItems: "center",
+						gap: 10,
+						marginBottom: entry.collapsed ? 0 : 16,
+						cursor: "pointer",
+					}}
+					onClick={() => {
+						setDeepDives((prev) => {
+							const updateAtPath = (
+								p: Map<string, DeepDiveEntry>,
+								path: string[],
+								updater: (e: DeepDiveEntry) => DeepDiveEntry,
+							): Map<string, DeepDiveEntry> => {
+								const n = new Map(p);
+								if (path.length === 1) {
+									const ex = n.get(path[0]);
+									if (ex) n.set(path[0], updater(ex));
+									return n;
+								}
+								const r = n.get(path[0]);
+								if (!r) return n;
+								const rec = (e: DeepDiveEntry, rem: string[]): DeepDiveEntry => {
+									if (rem.length === 1) {
+										const c = e.children.get(rem[0]);
+										if (!c) return e;
+										const nc = new Map(e.children);
+										nc.set(rem[0], updater(c));
+										return { ...e, children: nc };
+									}
+									const c = e.children.get(rem[0]);
+									if (!c) return e;
+									const nc = new Map(e.children);
+									nc.set(rem[0], rec(c, rem.slice(1)));
+									return { ...e, children: nc };
+								};
+								n.set(path[0], rec(r, path.slice(1)));
+								return n;
+							};
+							return updateAtPath(prev, currentPath, (e) => ({ ...e, collapsed: !e.collapsed }));
+						});
+					}}
+				>
+					<span style={{
+						fontFamily: "JetBrains Mono, monospace",
+						fontSize: 9,
+						textTransform: "uppercase",
+						letterSpacing: "0.3em",
+						color: borderColor,
+					}}>
+						DEEP DIVE · L{entry.depth}
+					</span>
+					<span style={{
+						fontFamily: "Playfair Display, serif",
+						fontSize: 16,
+						fontWeight: 500,
+						color: t.inkStrong,
+					}}>
+						{entry.term}
+					</span>
+					<span style={{
+						fontFamily: "JetBrains Mono, monospace",
+						fontSize: 10,
+						color: t.inkGhost,
+						marginLeft: "auto",
+					}}>
+						{entry.collapsed ? "+" : "-"}
+					</span>
+					<button
+						onClick={(e) => {
+							e.stopPropagation();
+							removeDeepDive(entry.term, parentPath);
+						}}
+						style={{
+							background: "transparent",
+							border: "none",
+							cursor: "pointer",
+							color: t.inkGhost,
+							fontSize: 14,
+							padding: "0 4px",
+							lineHeight: 1,
+						}}
+						aria-label={`Close deep dive: ${entry.term}`}
+					>
+						×
+					</button>
+				</div>
+
+				{/* Content */}
+				{!entry.collapsed && (
+					<>
+						{entry.loading && (
+							<div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 0" }}>
+								<span style={{
+									fontFamily: "Playfair Display, serif",
+									fontSize: 16,
+									color: t.inkMuted,
+									fontStyle: "italic",
+								}}>
+									exploring {entry.term}…
+								</span>
+								<span className="learning-breathe" style={{
+									display: "inline-block",
+									width: 4,
+									height: 4,
+									borderRadius: "50%",
+									background: borderColor,
+								}} />
+							</div>
+						)}
+
+						{entry.blocks.map((block: any, idx: number) => {
+							const b = block.content || block;
+							const blockId = block.id || `dd-${entry.term}-${idx}`;
+							return (
+								<div key={blockId} style={{ position: "relative", padding: "8px 0" }}>
+									{b.kind === "heading" || b.type === "heading" ? (
+										(b.level || 3) === 3 ? (
+											<h3 style={{ fontFamily: "Playfair Display, serif", fontSize: 20, color: t.inkStrong, fontWeight: 500, margin: "16px 0 8px" }}>{b.text || b.content}</h3>
+										) : (
+											<h4 style={{ fontFamily: "Playfair Display, serif", fontSize: 17, color: t.inkStrong, fontWeight: 500, margin: "12px 0 6px" }}>{b.text || b.content}</h4>
+										)
+									) : null}
+									{(b.kind === "prose" || b.type === "prose") && (
+										<div
+											onClick={(e) => {
+												const target = e.target as HTMLElement;
+												if (target.tagName === "HYPER" && !atMaxDepth) {
+													e.stopPropagation();
+													fetchDeepDive(
+														target.textContent || "",
+														b.markdown || b.content || "",
+														entry.depth + 1,
+														currentPath,
+													);
+												}
+											}}
+											style={{ fontSize: 15, lineHeight: 1.75, color: t.ink, margin: "8px 0", fontWeight: 300 }}
+											dangerouslySetInnerHTML={{ __html: b.markdown || b.content || "" }}
+										/>
+									)}
+									{(b.kind === "code" || b.type === "code") && (
+										<div style={{ margin: "12px 0", background: "#0d0d0d", border: `1px solid ${t.divider}` }}>
+											<div style={{ padding: "8px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+												<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: "rgba(255,255,255,0.3)" }}>
+													{b.filename || b.language || "CODE"}
+												</span>
+											</div>
+											<pre style={{ margin: 0, padding: 14, fontFamily: "JetBrains Mono, monospace", fontSize: 12, lineHeight: 1.7, color: "#c9c9c9", overflow: "auto" }}>
+												{b.code || b.content || ""}
+											</pre>
+										</div>
+									)}
+									{(b.kind === "callout" || b.type === "callout") && (
+										<div style={{ margin: "12px 0", border: `1px solid ${t.divider}`, padding: "14px 18px", background: t.bgCard }}>
+											<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost, display: "block", marginBottom: 6 }}>
+												{(b.variant || "note").toUpperCase()}
+											</span>
+											<div
+												onClick={(e) => {
+													const target = e.target as HTMLElement;
+													if (target.tagName === "HYPER" && !atMaxDepth) {
+														e.stopPropagation();
+														fetchDeepDive(target.textContent || "", b.markdown || b.content || "", entry.depth + 1, currentPath);
+													}
+												}}
+												style={{ fontSize: 13, lineHeight: 1.6, color: t.ink }}
+												dangerouslySetInnerHTML={{ __html: b.markdown || b.content || "" }}
+											/>
+										</div>
+									)}
+									{(b.kind === "katex" || b.type === "katex") && (
+										<div style={{ margin: "12px 0", textAlign: b.display ? "center" : "left" }}>
+											<code style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 13, color: t.ink }}>{b.expression || b.latex || b.content || ""}</code>
+										</div>
+									)}
+									{(b.kind === "quote" || b.type === "quote") && (
+										<blockquote style={{ borderLeft: `2px solid ${t.accent}`, paddingLeft: 18, margin: "12px 0", fontFamily: "Playfair Display, serif", fontSize: 18, fontStyle: "italic", color: t.ink, lineHeight: 1.4 }}>
+											{b.markdown || b.text || b.content || ""}
+											{b.attribution && (
+												<span style={{ display: "block", fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.2em", color: t.inkGhost, marginTop: 6, fontStyle: "normal" }}>
+													— {b.attribution}
+												</span>
+											)}
+										</blockquote>
+									)}
+								</div>
+							);
+						})}
+
+						{/* Render nested deep dives */}
+						{Array.from(entry.children.entries()).map(([childTerm, childEntry]) =>
+							renderDeepDiveSection(childEntry, currentPath),
+						)}
+					</>
+				)}
+			</div>
+		);
+	};
+
 	const askAbout = (block: { id: string; kind: string; text?: string }) => {
 		setRefineBlock(block);
 		setChatOpen(true);
@@ -601,6 +1001,72 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 					{lesson.title}<span style={{ color: t.accent }}>.</span>
 				</h1>
 
+				{/* Perspective lens selector */}
+				{blocks.length > 0 && !isPending && (
+					<div style={{ maxWidth: 720, marginTop: 20, marginBottom: 8 }}>
+						<div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+							<Rule width={32} color={t.divider} />
+							<Tracked size={9} tracking={0.35} style={{ color: t.inkGhost }}>LENS</Tracked>
+							<Rule width={32} color={t.divider} />
+						</div>
+						<div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+							{([
+								{ key: "default" as const, label: "DEFAULT", color: t.accent },
+								{ key: "evolutionary" as const, label: "EVOLUTIONARY", color: "#2d6a4f" },
+								{ key: "neuro" as const, label: "NEURO-ENGINEER", color: "#1d3557" },
+								{ key: "philosopher" as const, label: "PHILOSOPHER", color: "#6b2fa0" },
+							] as const).map(({ key, label, color }) => {
+								const isActive = activePerspective === key;
+								const isLoading = perspectiveLoading && activePerspective === key;
+								return (
+									<button
+										key={key}
+										onClick={() => !perspectiveLoading && handlePerspectiveChange(key)}
+										style={{
+											fontFamily: "JetBrains Mono, ui-monospace, monospace",
+											fontSize: 9,
+											textTransform: "uppercase",
+											letterSpacing: "0.2em",
+											padding: "6px 10px",
+											border: `1px solid ${isActive ? color : t.divider}`,
+											color: isActive ? color : t.inkGhost,
+											whiteSpace: "nowrap",
+											background: "transparent",
+											cursor: perspectiveLoading ? "wait" : "pointer",
+											transition: "all .25s ease",
+											opacity: perspectiveLoading && !isLoading ? 0.4 : 1,
+											display: "inline-flex",
+											alignItems: "center",
+											gap: 6,
+										}}
+									>
+										{isActive && (
+											<span style={{
+												display: "inline-block",
+												width: 4,
+												height: 4,
+												borderRadius: "50%",
+												background: color,
+											}} />
+										)}
+										{label}
+										{isLoading && (
+											<span className="learning-breathe" style={{
+												display: "inline-block",
+												width: 4,
+												height: 4,
+												borderRadius: "50%",
+												background: color,
+												marginLeft: 2,
+											}} />
+										)}
+									</button>
+								);
+							})}
+						</div>
+					</div>
+				)}
+
 				{/* Generating indicator */}
 				{generating && blocks.length === 0 && (
 					<div style={{ marginTop: 48 }}>
@@ -611,9 +1077,19 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 					</div>
 				)}
 
+				{/* Perspective loading indicator */}
+				{perspectiveLoading && perspectiveBlocks.length === 0 && (
+					<div style={{ maxWidth: 720, marginTop: 48 }}>
+						<span style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkMuted, fontStyle: "italic" }}>
+							reframing through {activePerspective} lens…
+						</span>
+						<span className="learning-breathe" style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: activePerspective === "evolutionary" ? "#2d6a4f" : activePerspective === "neuro" ? "#1d3557" : "#6b2fa0", marginLeft: 12 }} />
+					</div>
+				)}
+
 				{/* Blocks */}
 				<div style={{ maxWidth: 720, marginTop: 32 }}>
-					{blocks.map((block: any, idx: number) => {
+					{(activePerspective === "default" ? blocks : perspectiveBlocks).map((block: any, idx: number) => {
 						const b = block.content || block;
 						const blockId = block.id || `b${idx}`;
 						const isHovered = hoveredBlock === blockId;
@@ -658,7 +1134,17 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 								)}
 								{b.kind === "prose" && (
 									<>
-										<p style={{ fontSize: 16, lineHeight: 1.75, color: t.ink, margin: "12px 0", fontWeight: 300 }}>{b.markdown}</p>
+										<div
+											onClick={(e) => {
+												const target = e.target as HTMLElement;
+												if (target.tagName === "HYPER") {
+													e.stopPropagation();
+													fetchDeepDive(target.textContent || "", b.markdown || "", 1, []);
+												}
+											}}
+											style={{ fontSize: 16, lineHeight: 1.75, color: t.ink, margin: "12px 0", fontWeight: 300 }}
+											dangerouslySetInnerHTML={{ __html: b.markdown || "" }}
+										/>
 										{askBtn}
 									</>
 								)}
@@ -700,7 +1186,17 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 										<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: b.variant === "warning" ? t.accent : t.inkGhost, display: "block", marginBottom: 8 }}>
 											{b.variant?.toUpperCase() || "NOTE"}
 										</span>
-										<p style={{ fontSize: 14, lineHeight: 1.6, color: t.ink, margin: 0 }}>{b.markdown}</p>
+										<div
+											onClick={(e) => {
+												const target = e.target as HTMLElement;
+												if (target.tagName === "HYPER") {
+													e.stopPropagation();
+													fetchDeepDive(target.textContent || "", b.markdown || "", 1, []);
+												}
+											}}
+											style={{ fontSize: 14, lineHeight: 1.6, color: t.ink, margin: 0 }}
+											dangerouslySetInnerHTML={{ __html: b.markdown || "" }}
+										/>
 										{askBtn}
 									</div>
 								)}

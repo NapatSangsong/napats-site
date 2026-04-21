@@ -2,8 +2,9 @@
  * BlockRenderer — renders a single content block by kind.
  * Each block type follows the design-canvas typography and spacing rules.
  * A hover bullseye button enables "ask AI about this" on any block.
+ * Supports hyper-node deep-dive: <hyper> tags in prose become clickable.
  */
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useState, useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import type { ThemeTokens } from "~/lib/theme";
 import { Tracked } from "./primitives";
 
@@ -57,6 +58,32 @@ interface BlockRendererProps {
 	block: Block;
 	t: ThemeTokens;
 	onAsk?: (block: Block) => void;
+	onDeepDive?: (term: string, context: string) => void;
+}
+
+// ── Hyper-node style injection ────────────────────────────
+
+const HYPER_STYLE_ID = "hyper-node-styles";
+
+function ensureHyperStyles() {
+	if (typeof document === "undefined") return;
+	if (document.getElementById(HYPER_STYLE_ID)) return;
+	const style = document.createElement("style");
+	style.id = HYPER_STYLE_ID;
+	style.textContent = `
+hyper {
+	text-decoration: underline dotted;
+	text-decoration-color: rgba(204, 0, 0, 0.4);
+	text-underline-offset: 3px;
+	cursor: pointer;
+	transition: color 0.2s, text-decoration-color 0.2s;
+}
+hyper:hover {
+	color: #cc0000;
+	text-decoration-color: #cc0000;
+}
+`;
+	document.head.appendChild(style);
 }
 
 // ── Bullseye hover button ─────────────────────────────────
@@ -142,9 +169,33 @@ function BlockWrap({
 
 // ── Kind renderers ────────────────────────────────────────
 
-function ProseBlock({ block, t }: { block: Block; t: ThemeTokens }) {
+function ProseBlock({
+	block,
+	t,
+	onDeepDive,
+}: {
+	block: Block;
+	t: ThemeTokens;
+	onDeepDive?: (term: string, context: string) => void;
+}) {
+	const ref = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		ensureHyperStyles();
+	}, []);
+
+	const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+		const target = e.target as HTMLElement;
+		if (target.tagName === "HYPER" && onDeepDive) {
+			e.stopPropagation();
+			onDeepDive(target.textContent || "", block.content);
+		}
+	};
+
 	return (
 		<div
+			ref={ref}
+			onClick={handleClick}
 			style={{
 				fontFamily: BODY,
 				fontSize: 16,
@@ -353,10 +404,30 @@ const CALLOUT_INDICATORS: Record<string, { label: string; borderColor?: string }
 	aside: { label: "ASIDE" },
 };
 
-function CalloutBlock({ block, t }: { block: Block; t: ThemeTokens }) {
+function CalloutBlock({
+	block,
+	t,
+	onDeepDive,
+}: {
+	block: Block;
+	t: ThemeTokens;
+	onDeepDive?: (term: string, context: string) => void;
+}) {
 	const variant = block.variant || "note";
 	const indicator = CALLOUT_INDICATORS[variant] || CALLOUT_INDICATORS.note;
 	const borderColor = indicator.borderColor || t.dividerStrong;
+
+	useEffect(() => {
+		ensureHyperStyles();
+	}, []);
+
+	const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+		const target = e.target as HTMLElement;
+		if (target.tagName === "HYPER" && onDeepDive) {
+			e.stopPropagation();
+			onDeepDive(target.textContent || "", block.content);
+		}
+	};
 
 	return (
 		<div
@@ -379,6 +450,7 @@ function CalloutBlock({ block, t }: { block: Block; t: ThemeTokens }) {
 				{indicator.label}
 			</Tracked>
 			<div
+				onClick={handleClick}
 				style={{
 					fontFamily: BODY,
 					fontSize: 14,
@@ -456,25 +528,41 @@ function QuoteBlock({ block, t }: { block: Block; t: ThemeTokens }) {
 
 // ── Main renderer ─────────────────────────────────────────
 
-const KIND_MAP: Record<BlockKind, React.ComponentType<{ block: Block; t: ThemeTokens }>> = {
-	prose: ProseBlock,
-	heading: HeadingBlock,
-	mermaid: MermaidBlock,
-	katex: KatexBlock,
-	code: CodeBlock,
-	interactive: InteractiveBlock,
-	callout: CalloutBlock,
-	image: ImageBlock,
-	quote: QuoteBlock,
-};
+// We can't use a simple KIND_MAP anymore because ProseBlock and CalloutBlock
+// now accept onDeepDive. We render them directly in the main function.
 
-export function BlockRenderer({ block, t, onAsk }: BlockRendererProps) {
-	const Renderer = KIND_MAP[block.kind];
-	if (!Renderer) return null;
+export function BlockRenderer({ block, t, onAsk, onDeepDive }: BlockRendererProps) {
+	const renderBlock = () => {
+		switch (block.kind) {
+			case "prose":
+				return <ProseBlock block={block} t={t} onDeepDive={onDeepDive} />;
+			case "callout":
+				return <CalloutBlock block={block} t={t} onDeepDive={onDeepDive} />;
+			case "heading":
+				return <HeadingBlock block={block} t={t} />;
+			case "mermaid":
+				return <MermaidBlock block={block} t={t} />;
+			case "katex":
+				return <KatexBlock block={block} t={t} />;
+			case "code":
+				return <CodeBlock block={block} t={t} />;
+			case "interactive":
+				return <InteractiveBlock block={block} t={t} />;
+			case "image":
+				return <ImageBlock block={block} t={t} />;
+			case "quote":
+				return <QuoteBlock block={block} t={t} />;
+			default:
+				return null;
+		}
+	};
+
+	const content = renderBlock();
+	if (!content) return null;
 
 	return (
 		<BlockWrap t={t} block={block} onAsk={onAsk} style={{ marginBottom: 28 }}>
-			<Renderer block={block} t={t} />
+			{content}
 		</BlockWrap>
 	);
 }
