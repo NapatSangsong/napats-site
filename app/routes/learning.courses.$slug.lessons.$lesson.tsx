@@ -100,6 +100,8 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
 	const [refineBlock, setRefineBlock] = useState<{ id: string; kind: string; text?: string } | null>(null);
 	const [generating, setGenerating] = useState(false);
+	const [genProgress, setGenProgress] = useState(0); // chars received
+	const [genStage, setGenStage] = useState("");
 	const [scrollPercent, setScrollPercent] = useState(progress?.scroll_percent ?? 0);
 	const contentRef = useRef<HTMLDivElement>(null);
 
@@ -150,6 +152,8 @@ hyper:hover {
 	const generateLesson = useCallback(async () => {
 		if (generating) return;
 		setGenerating(true);
+		setGenProgress(0);
+		setGenStage("connecting to AI…");
 		try {
 			const res = await fetch("/learning/api/ai/generate-lesson", {
 				method: "POST",
@@ -157,11 +161,12 @@ hyper:hover {
 				body: JSON.stringify({ lessonId: lesson.id }),
 			});
 			if (!res.ok || !res.body) {
+				setGenStage("failed to connect");
 				setGenerating(false);
 				return;
 			}
 
-			// Accumulate the full SSE stream
+			setGenStage("generating content…");
 			const reader = res.body.getReader();
 			const decoder = new TextDecoder();
 			let sseBuffer = "";
@@ -187,20 +192,32 @@ hyper:hover {
 					const data = dataLines.join("\n");
 					if (eventType === "error") {
 						hasError = true;
+						setGenStage("error during generation");
 						continue;
 					}
 					if (eventType === "end") continue;
-					if (data) fullText += data;
+					if (data) {
+						fullText += data;
+						setGenProgress(fullText.length);
+						// Update stage based on content size
+						if (fullText.length < 500) setGenStage("building concept map…");
+						else if (fullText.length < 2000) setGenStage("writing explanations…");
+						else if (fullText.length < 5000) setGenStage("adding examples & diagrams…");
+						else if (fullText.length < 8000) setGenStage("refining content…");
+						else setGenStage("finalizing lesson…");
+					}
 				}
 			}
 
 			if (!hasError) {
-				// Blocks are saved to DB by the API — reload to fetch them
+				setGenStage("saving to library…");
+				// Short delay so user sees the final stage
+				await new Promise((r) => setTimeout(r, 500));
 				window.location.reload();
 				return;
 			}
 		} catch {
-			// Network error
+			setGenStage("connection lost — try refreshing");
 		} finally {
 			setGenerating(false);
 		}
@@ -1495,9 +1512,24 @@ hyper:hover {
 				{generating && blocks.length === 0 && (
 					<div style={{ marginTop: 48 }}>
 						<span style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkMuted, fontStyle: "italic" }}>
-							composing your lesson…
+							{genStage || "composing your lesson…"}
 						</span>
 						<span className="learning-breathe" style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: "#cc0000", marginLeft: 12 }} />
+						{genProgress > 0 && (
+							<div style={{ marginTop: 16 }}>
+								<div style={{ height: 2, background: t.divider, borderRadius: 1, overflow: "hidden", maxWidth: 320 }}>
+									<div style={{
+										height: "100%",
+										background: t.accent,
+										width: `${Math.min(95, Math.round((genProgress / 10000) * 100))}%`,
+										transition: "width 0.5s ease",
+									}} />
+								</div>
+								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: t.inkGhost, marginTop: 6, display: "block", letterSpacing: "0.15em" }}>
+									{Math.round(genProgress / 1000)}K TOKENS GENERATED
+								</span>
+							</div>
+						)}
 					</div>
 				)}
 
@@ -1622,17 +1654,49 @@ hyper:hover {
 										{askBtn}
 									</div>
 								)}
-								{b.kind === "mermaid" && (
-									<div style={{ margin: "28px 0", border: `1px solid ${t.divider}`, padding: 24, background: t.bgCard }}>
-										<pre style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: t.inkMuted, whiteSpace: "pre-wrap" }}>{b.code || b.diagram || ""}</pre>
-										{b.caption && (
-											<div style={{ marginTop: 16, textAlign: "center" }}>
-												<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.3em", color: t.inkGhost }}>{b.caption}</span>
-											</div>
-										)}
-										{askBtn}
-									</div>
-								)}
+								{b.kind === "mermaid" && (() => {
+									const mermaidCode = (b.code || b.diagram || "").trim();
+									const mermaidTheme = theme === "dark" ? "dark" : "default";
+									const bgColor = theme === "dark" ? "#141414" : "#F5F3EF";
+									const html = `<!DOCTYPE html><html><head><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"><\/script><style>body{margin:0;padding:16px;background:${bgColor};display:flex;justify-content:center;}</style></head><body><pre class="mermaid">${mermaidCode.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</pre><script>mermaid.initialize({startOnLoad:true,theme:'${mermaidTheme}',themeVariables:{fontSize:'13px'}});window.addEventListener('load',()=>{setTimeout(()=>{const h=document.body.scrollHeight;window.parent.postMessage({type:'mermaid-height',height:h},'*')},500)})<\/script></body></html>`;
+									const blob = typeof Blob !== "undefined" ? new Blob([html], { type: "text/html" }) : null;
+									const src = blob ? URL.createObjectURL(blob) : "";
+									return (
+										<div style={{ margin: "28px 0" }}>
+											{src ? (
+												<iframe
+													srcDoc={html}
+													sandbox="allow-scripts"
+													style={{
+														width: "100%",
+														minHeight: 200,
+														border: `1px solid ${t.divider}`,
+														background: t.bgCard,
+														borderRadius: 0,
+													}}
+													onLoad={(e) => {
+														// Auto-resize iframe to content height
+														const iframe = e.currentTarget;
+														const handler = (ev: MessageEvent) => {
+															if (ev.data?.type === "mermaid-height" && ev.data.height) {
+																iframe.style.height = `${ev.data.height + 32}px`;
+															}
+														};
+														window.addEventListener("message", handler);
+													}}
+												/>
+											) : (
+												<pre style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: t.inkMuted, whiteSpace: "pre-wrap", padding: 24, border: `1px solid ${t.divider}`, background: t.bgCard }}>{mermaidCode}</pre>
+											)}
+											{b.caption && (
+												<div style={{ marginTop: 10, textAlign: "center" }}>
+													<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.3em", color: t.inkGhost }}>{b.caption}</span>
+												</div>
+											)}
+											{askBtn}
+										</div>
+									);
+								})()}
 								{b.kind === "katex" && (
 									<div style={{ margin: "28px 0", textAlign: b.display ? "center" : "left" }}>
 										<code style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 14, color: t.ink }}>{b.expression || b.latex || ""}</code>

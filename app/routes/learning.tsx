@@ -76,7 +76,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 	return {
 		session: { dev: session.dev },
-		theme: (savedTheme === "light" ? "light" : "dark") as ThemeMode,
+		theme: (savedTheme === "dark" ? "dark" : "light") as ThemeMode,
 	};
 }
 
