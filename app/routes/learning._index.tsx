@@ -124,9 +124,13 @@ function extractDraft(text: string): CourseDraft | null {
 	return null;
 }
 
-/** Extract conversational text (strip JSON blocks) */
+/** Extract conversational text (strip JSON blocks — complete and in-progress) */
 function extractConversation(text: string): string {
-	return text.replace(/```json\s*[\s\S]*?```/g, "").trim();
+	// Strip complete json blocks
+	let cleaned = text.replace(/```json\s*[\s\S]*?```/g, "");
+	// Strip in-progress json blocks (started but not yet closed — during streaming)
+	cleaned = cleaned.replace(/```json[\s\S]*$/g, "");
+	return cleaned.trim();
 }
 
 /** Extract [suggestion: ...] tags from text */

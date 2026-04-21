@@ -86,7 +86,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 		.single();
 
 	if (courseError || !course) {
-		return Response.json({ message: "failed to create course" }, { status: 500 });
+		return Response.json({ message: "failed to create course", detail: courseError?.message }, { status: 500 });
 	}
 
 	// Insert lessons from the outline
