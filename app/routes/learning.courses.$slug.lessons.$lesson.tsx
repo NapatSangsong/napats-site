@@ -115,6 +115,8 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	const [activePerspective, setActivePerspective] = useState<"default" | "evolutionary" | "neuro" | "philosopher" | "architect">("default");
 	const [perspectiveBlocks, setPerspectiveBlocks] = useState<unknown[]>([]);
 	const [perspectiveLoading, setPerspectiveLoading] = useState(false);
+	const [perspectiveProgress, setPerspectiveProgress] = useState(0);
+	const [perspectiveStage, setPerspectiveStage] = useState("");
 	const perspectiveCacheRef = useRef<Record<string, unknown[]>>({});
 
 	// Deep-dive (hyper-node) state — keyed by block index, then by term
@@ -239,6 +241,8 @@ hyper:hover {
 
 		setPerspectiveLoading(true);
 		setPerspectiveBlocks([]);
+		setPerspectiveProgress(0);
+		setPerspectiveStage("connecting…");
 		try {
 			const res = await fetch("/learning/api/ai/perspective-lesson", {
 				method: "POST",
@@ -246,11 +250,12 @@ hyper:hover {
 				body: JSON.stringify({ lessonId: lesson.id, perspective }),
 			});
 			if (!res.ok || !res.body) {
+				setPerspectiveStage("failed to connect");
 				setPerspectiveLoading(false);
 				return;
 			}
 
-			// Accumulate raw text from SSE deltas, then parse JSON at the end
+			setPerspectiveStage("rewriting through this lens…");
 			const reader = res.body.getReader();
 			const decoder = new TextDecoder();
 			let sseBuffer = "";
@@ -261,7 +266,6 @@ hyper:hover {
 				if (done) break;
 				sseBuffer += decoder.decode(value, { stream: true });
 
-				// Parse SSE messages (separated by double newlines)
 				const messages = sseBuffer.split("\n\n");
 				sseBuffer = messages.pop() || "";
 
@@ -275,25 +279,34 @@ hyper:hover {
 					}
 					const data = dataLines.join("\n");
 					if (eventType === "end" || eventType === "error") continue;
-					if (data) fullText += data;
+					if (data) {
+						fullText += data;
+						setPerspectiveProgress(fullText.length);
+						if (fullText.length < 500) setPerspectiveStage("building new concept map…");
+						else if (fullText.length < 2000) setPerspectiveStage("reframing explanations…");
+						else if (fullText.length < 5000) setPerspectiveStage("adding perspective diagrams…");
+						else setPerspectiveStage("finalizing rewrite…");
+					}
 				}
 			}
 
-			// Parse the accumulated JSON array of blocks
+			setPerspectiveStage("rendering…");
 			try {
-				const jsonMatch = fullText.match(/\[[\s\S]*\]/);
-				const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : fullText);
+				let jsonStr = fullText.trim();
+				const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+				if (fenceMatch) jsonStr = fenceMatch[1].trim();
+				const jsonMatch = jsonStr.match(/\[[\s\S]*\]/);
+				const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : jsonStr);
 				const arr = Array.isArray(parsed) ? parsed : [];
-				// Map to the block format expected by the renderer
 				const newBlocks = arr.map((b: any) => ({ content: b }));
 				setPerspectiveBlocks(newBlocks);
 				perspectiveCacheRef.current[perspective] = newBlocks;
 			} catch {
-				// JSON parse failed — try to show what we got
 				setPerspectiveBlocks([]);
+				setPerspectiveStage("failed to parse — try again");
 			}
 		} catch {
-			// Network error
+			setPerspectiveStage("connection lost");
 		} finally {
 			setPerspectiveLoading(false);
 		}
@@ -1608,11 +1621,26 @@ hyper:hover {
 
 				{/* Perspective loading indicator */}
 				{perspectiveLoading && perspectiveBlocks.length === 0 && (
-					<div style={{ maxWidth: 720, marginTop: 48 }}>
+					<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: 48 }}>
 						<span style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkMuted, fontStyle: "italic" }}>
-							reframing through {activePerspective} lens…
+							{perspectiveStage || `reframing through ${activePerspective} lens…`}
 						</span>
 						<span className="learning-breathe" style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: activePerspective === "evolutionary" ? "#2d6a4f" : activePerspective === "neuro" ? "#1d3557" : activePerspective === "architect" ? "#e65100" : "#6b2fa0", marginLeft: 12 }} />
+						{perspectiveProgress > 0 && (
+							<div style={{ marginTop: 16 }}>
+								<div style={{ height: 2, background: t.divider, borderRadius: 1, overflow: "hidden", maxWidth: 320 }}>
+									<div style={{
+										height: "100%",
+										background: activePerspective === "evolutionary" ? "#2d6a4f" : activePerspective === "neuro" ? "#1d3557" : activePerspective === "architect" ? "#e65100" : "#6b2fa0",
+										width: `${Math.min(95, Math.round((perspectiveProgress / 10000) * 100))}%`,
+										transition: "width 0.5s ease",
+									}} />
+								</div>
+								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: t.inkGhost, marginTop: 6, display: "block", letterSpacing: "0.15em" }}>
+									{Math.round(perspectiveProgress / 1000)}K CHARS PROCESSED
+								</span>
+							</div>
+						)}
 					</div>
 				)}
 
