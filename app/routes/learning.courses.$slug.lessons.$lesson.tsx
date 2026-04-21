@@ -100,8 +100,14 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
 	const [refineBlock, setRefineBlock] = useState<{ id: string; kind: string; text?: string } | null>(null);
 	const [generating, setGenerating] = useState(false);
-	const [genProgress, setGenProgress] = useState(0); // chars received
+	const [genProgress, setGenProgress] = useState(0);
 	const [genStage, setGenStage] = useState("");
+
+	// Translation state
+	const [activeLang, setActiveLang] = useState<"original" | "en" | "th">("original");
+	const [translatedBlocks, setTranslatedBlocks] = useState<unknown[]>([]);
+	const [translating, setTranslating] = useState(false);
+	const translateCacheRef = useRef<Record<string, unknown[]>>({});
 	const [scrollPercent, setScrollPercent] = useState(progress?.scroll_percent ?? 0);
 	const contentRef = useRef<HTMLDivElement>(null);
 
@@ -296,10 +302,52 @@ hyper:hover {
 	// Handle perspective chip click
 	const handlePerspectiveChange = useCallback((perspective: "default" | "evolutionary" | "neuro" | "philosopher" | "architect") => {
 		setActivePerspective(perspective);
+		setActiveLang("original");
+		setTranslatedBlocks([]);
+		translateCacheRef.current = {};
 		if (perspective !== "default") {
 			fetchPerspective(perspective);
 		}
 	}, [fetchPerspective]);
+
+	// Translate blocks
+	const handleTranslate = useCallback(async (lang: "en" | "th" | "original") => {
+		setActiveLang(lang);
+		if (lang === "original") {
+			setTranslatedBlocks([]);
+			return;
+		}
+		// Return cached
+		if (translateCacheRef.current[lang]?.length) {
+			setTranslatedBlocks(translateCacheRef.current[lang]);
+			return;
+		}
+		setTranslating(true);
+		try {
+			// Get current visible blocks (raw content)
+			const currentBlocks = (activePerspective === "default" ? blocks : perspectiveBlocks)
+				.map((b: any) => b.content || b);
+			const res = await fetch("/learning/api/ai/translate", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ blocks: currentBlocks, targetLang: lang }),
+			});
+			if (!res.ok) {
+				setTranslating(false);
+				return;
+			}
+			const data = await res.json();
+			if (data.blocks) {
+				const mapped = data.blocks.map((b: any) => ({ content: b }));
+				setTranslatedBlocks(mapped);
+				translateCacheRef.current[lang] = mapped;
+			}
+		} catch {
+			// error
+		} finally {
+			setTranslating(false);
+		}
+	}, [blocks, perspectiveBlocks, activePerspective]);
 
 	// Auto-generate on mount if pending
 	useEffect(() => {
@@ -1444,10 +1492,35 @@ hyper:hover {
 				{/* Perspective lens selector */}
 				{blocks.length > 0 && !isPending && (
 					<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: 20, marginBottom: 8 }}>
-						<div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+						<div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
 							<Rule width={32} color={t.divider} />
 							<Tracked size={9} tracking={0.35} style={{ color: t.inkGhost }}>LENS</Tracked>
 							<Rule width={32} color={t.divider} />
+							<div style={{ marginLeft: "auto", display: "flex", gap: 4, alignItems: "center" }}>
+								<Tracked size={9} tracking={0.25} style={{ color: t.inkGhost, marginRight: 4 }}>LANG</Tracked>
+								{(["original", "en", "th"] as const).map((lang) => (
+									<button
+										key={lang}
+										onClick={() => !translating && handleTranslate(lang)}
+										style={{
+											fontFamily: "JetBrains Mono, ui-monospace, monospace",
+											fontSize: 9,
+											textTransform: "uppercase",
+											letterSpacing: "0.15em",
+											padding: "4px 8px",
+											border: `1px solid ${activeLang === lang ? t.accent : t.divider}`,
+											color: activeLang === lang ? t.accent : t.inkGhost,
+											background: "transparent",
+											cursor: translating ? "wait" : "pointer",
+											transition: "all .2s",
+											opacity: translating && activeLang !== lang ? 0.4 : 1,
+										}}
+									>
+										{lang === "original" ? "OG" : lang.toUpperCase()}
+									</button>
+								))}
+								{translating && <span className="learning-breathe" style={{ display: "inline-block", width: 4, height: 4, borderRadius: "50%", background: t.accent, marginLeft: 4 }} />}
+							</div>
 						</div>
 						<div style={{ display: "flex", gap: 6, flexWrap: isMobile ? "nowrap" : "wrap", overflowX: isMobile ? "auto" : undefined, WebkitOverflowScrolling: isMobile ? "touch" as any : undefined, paddingBottom: isMobile ? 4 : 0 }}>
 							{([
@@ -1545,7 +1618,10 @@ hyper:hover {
 
 				{/* Blocks */}
 				<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: 32 }}>
-					{(activePerspective === "default" ? blocks : perspectiveBlocks).map((block: any, idx: number) => {
+					{(activeLang !== "original" && translatedBlocks.length > 0
+					? translatedBlocks
+					: activePerspective === "default" ? blocks : perspectiveBlocks
+				).map((block: any, idx: number) => {
 						const raw = block.content || block;
 						// Normalize: AI outputs "type", DB stores "kind" — handle both
 						const b = { ...raw, kind: raw.kind || raw.type };
