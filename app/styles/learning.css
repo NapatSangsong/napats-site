@@ -2,29 +2,29 @@
 
 @theme {
 	--color-learning-bg: #0a0a0a;
-	--color-learning-bg-elevated: #0f0f0f;
-	--color-learning-bg-card: rgba(255, 255, 255, 0.02);
-	--color-learning-ink: #e5e5e5;
+	--color-learning-bg-elevated: #141414;
+	--color-learning-bg-card: rgba(255, 255, 255, 0.04);
+	--color-learning-ink: #e8e8e8;
 	--color-learning-ink-strong: #ffffff;
-	--color-learning-ink-muted: rgba(255, 255, 255, 0.5);
-	--color-learning-ink-ghost: rgba(255, 255, 255, 0.2);
-	--color-learning-ink-faint: rgba(255, 255, 255, 0.1);
-	--color-learning-divider: rgba(255, 255, 255, 0.06);
-	--color-learning-divider-strong: rgba(255, 255, 255, 0.12);
+	--color-learning-ink-muted: rgba(255, 255, 255, 0.65);
+	--color-learning-ink-ghost: rgba(255, 255, 255, 0.38);
+	--color-learning-ink-faint: rgba(255, 255, 255, 0.15);
+	--color-learning-divider: rgba(255, 255, 255, 0.10);
+	--color-learning-divider-strong: rgba(255, 255, 255, 0.20);
 	--color-learning-accent: #cc0000;
 	--color-learning-accent-soft: #7a1f26;
 
-	/* Light mode overrides — applied via .learning-light class */
+	/* Light mode overrides */
 	--color-learning-light-bg: #f5f3ef;
 	--color-learning-light-bg-elevated: #eeebe4;
-	--color-learning-light-bg-card: rgba(10, 9, 8, 0.03);
-	--color-learning-light-ink: #0a0908;
+	--color-learning-light-bg-card: rgba(10, 9, 8, 0.04);
+	--color-learning-light-ink: #1a1a18;
 	--color-learning-light-ink-strong: #000000;
-	--color-learning-light-ink-muted: rgba(10, 9, 8, 0.55);
-	--color-learning-light-ink-ghost: rgba(10, 9, 8, 0.2);
-	--color-learning-light-ink-faint: rgba(10, 9, 8, 0.1);
-	--color-learning-light-divider: rgba(10, 9, 8, 0.1);
-	--color-learning-light-divider-strong: rgba(10, 9, 8, 0.18);
+	--color-learning-light-ink-muted: rgba(10, 9, 8, 0.60);
+	--color-learning-light-ink-ghost: rgba(10, 9, 8, 0.35);
+	--color-learning-light-ink-faint: rgba(10, 9, 8, 0.12);
+	--color-learning-light-divider: rgba(10, 9, 8, 0.12);
+	--color-learning-light-divider-strong: rgba(10, 9, 8, 0.22);
 	--color-learning-light-accent-soft: #e63946;
 }
 
