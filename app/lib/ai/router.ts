@@ -9,6 +9,8 @@ export type AIAction =
   | "gradeShortAnswer"
   | "chat"
   | "socraticRecall"
+  | "deepDive"
+  | "perspectiveLesson"
   | "suggestTitle"
   | "summarise"
   | "buildGraph";
@@ -26,6 +28,8 @@ export function selectModel(action: AIAction, inputLength?: number): string {
     case "generateQuiz":
     case "gradeShortAnswer":
     case "socraticRecall":
+    case "deepDive":
+    case "perspectiveLesson":
       return SONNET;
 
     case "chat":

@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { Route } from "./+types/learning.courses.$slug.lessons.$lesson";
 import { useTheme } from "./learning";
 import { createServiceClient } from "~/lib/supabase.server";
+import { Chip, Rule, Tracked } from "~/components/learning/primitives";
 
 export function meta({ data }: Route.MetaArgs) {
 	return [{ title: `Napat · Learning · ${data?.lesson?.title ?? "Lesson"}` }];
@@ -69,6 +70,12 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	const [scrollPercent, setScrollPercent] = useState(progress?.scroll_percent ?? 0);
 	const contentRef = useRef<HTMLDivElement>(null);
 
+	// Perspective switching state
+	const [activePerspective, setActivePerspective] = useState<"default" | "evolutionary" | "neuro" | "philosopher">("default");
+	const [perspectiveBlocks, setPerspectiveBlocks] = useState<unknown[]>([]);
+	const [perspectiveLoading, setPerspectiveLoading] = useState(false);
+	const perspectiveCacheRef = useRef<Record<string, unknown[]>>({});
+
 	// Recall checkpoint state
 	const [recallActive, setRecallActive] = useState(false);
 	const [recallMessages, setRecallMessages] = useState<{ role: string; content: string }[]>([]);
@@ -129,6 +136,74 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 			setGenerating(false);
 		}
 	}, [lesson.id, generating]);
+
+	// Fetch perspective-shifted lesson content
+	const fetchPerspective = useCallback(async (perspective: "evolutionary" | "neuro" | "philosopher") => {
+		// Return cached if available
+		if (perspectiveCacheRef.current[perspective]?.length) {
+			setPerspectiveBlocks(perspectiveCacheRef.current[perspective]);
+			return;
+		}
+
+		setPerspectiveLoading(true);
+		setPerspectiveBlocks([]);
+		try {
+			const res = await fetch("/learning/api/ai/perspective-lesson", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Origin: window.location.origin },
+				body: JSON.stringify({ lessonId: lesson.id, perspective }),
+			});
+			if (!res.ok || !res.body) return;
+
+			const reader = res.body.getReader();
+			const decoder = new TextDecoder();
+			let buffer = "";
+			const newBlocks: unknown[] = [];
+
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+				buffer += decoder.decode(value, { stream: true });
+
+				const lines = buffer.split("\n");
+				buffer = lines.pop() || "";
+
+				for (const line of lines) {
+					if (line.startsWith("data: ")) {
+						const data = line.slice(6);
+						if (data === "done" || data === "[DONE]") continue;
+						try {
+							const parsed = JSON.parse(data);
+							if (parsed.type) {
+								// This is a block object
+								newBlocks.push({ content: parsed });
+								setPerspectiveBlocks([...newBlocks]);
+							}
+						} catch {
+							// Partial JSON, ignore
+						}
+					}
+				}
+			}
+
+			// Cache the result
+			if (newBlocks.length > 0) {
+				perspectiveCacheRef.current[perspective] = newBlocks;
+			}
+		} catch {
+			// Error handled by UI
+		} finally {
+			setPerspectiveLoading(false);
+		}
+	}, [lesson.id]);
+
+	// Handle perspective chip click
+	const handlePerspectiveChange = useCallback((perspective: "default" | "evolutionary" | "neuro" | "philosopher") => {
+		setActivePerspective(perspective);
+		if (perspective !== "default") {
+			fetchPerspective(perspective);
+		}
+	}, [fetchPerspective]);
 
 	// Auto-generate on mount if pending
 	useEffect(() => {
