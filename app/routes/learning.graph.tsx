@@ -702,6 +702,8 @@ export default function KnowledgeGraph({ loaderData }: Route.ComponentProps) {
 					alignItems: "center",
 					justifyContent: "space-between",
 					padding: "28px 0 20px",
+					flexWrap: "wrap",
+					gap: 12,
 				}}
 			>
 				<div style={{ display: "flex", alignItems: "center", gap: 12 }}>

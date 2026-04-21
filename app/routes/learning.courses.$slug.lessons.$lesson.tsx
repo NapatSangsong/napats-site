@@ -81,6 +81,17 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	const { course, lesson, lessons, blocks: initialBlocks, progress } = loaderData;
 	const [blocks, setBlocks] = useState<unknown[]>(initialBlocks);
 	const [chatOpen, setChatOpen] = useState(true);
+
+	// Mobile responsiveness
+	const [isMobile, setIsMobile] = useState(false);
+	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+	const [mobileChatOpen, setMobileChatOpen] = useState(false);
+	useEffect(() => {
+		const check = () => setIsMobile(window.innerWidth < 768);
+		check();
+		window.addEventListener("resize", check);
+		return () => window.removeEventListener("resize", check);
+	}, []);
 	const [chatInput, setChatInput] = useState("");
 	const [messages, setMessages] = useState<{ who: string; text: string; typing?: boolean }[]>([
 		{ who: "MINSU", text: "we are here. ask anything, anytime." },
@@ -768,8 +779,8 @@ hyper:hover {
 				style={{
 					marginTop: 16,
 					marginBottom: 16,
-					marginLeft: 4,
-					paddingLeft: 20,
+					marginLeft: isMobile ? 0 : 4,
+					paddingLeft: isMobile ? 12 : 20,
 					borderLeft: `2px solid ${borderColor}`,
 					transition: "all .3s ease",
 				}}
@@ -869,11 +880,12 @@ hyper:hover {
 					<div style={{
 						display: "flex",
 						alignItems: "center",
-						flexWrap: "wrap",
+						flexWrap: isMobile ? "nowrap" : "wrap",
 						gap: 0,
 						paddingBottom: 10,
 						marginBottom: 12,
 						borderBottom: `1px solid ${t.divider}`,
+						...(isMobile ? { overflow: "hidden" } : {}),
 					}}>
 						{/* Lesson root */}
 						<span
@@ -889,6 +901,7 @@ hyper:hover {
 								color: t.inkGhost,
 								cursor: "pointer",
 								transition: "color 0.2s",
+								...(isMobile ? { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const, maxWidth: 100, flexShrink: 0 } : {}),
 							}}
 							onMouseEnter={(e) => { (e.target as HTMLElement).style.color = t.inkMuted; }}
 							onMouseLeave={(e) => { (e.target as HTMLElement).style.color = t.inkGhost; }}
@@ -1079,18 +1092,284 @@ hyper:hover {
 	// Navigation is disabled until recall is confirmed (unless already confirmed from progress)
 	const canNavigate = recallConfirmed;
 
+	// Render sidebar lesson list (shared between desktop sidebar and mobile overlay)
+	const renderLessonList = (onNavigate?: () => void) => (
+		<>
+			{sortedLessons.map((l: { id: string; order_index: number; title: string; status: string }) => {
+				const active = l.order_index === lesson.order_index;
+				const done = l.status === "ready" || l.status === "edited";
+				const locked = l.status === "pending" && l.order_index > lesson.order_index;
+				return (
+					<div
+						key={l.id}
+						onClick={() => {
+							if (!locked) {
+								if (onNavigate) onNavigate();
+								window.location.href = `/learning/courses/${course.slug}/lessons/${l.order_index}`;
+							}
+						}}
+						style={{
+							display: "flex",
+							alignItems: "baseline",
+							gap: 10,
+							padding: "10px 0",
+							borderLeft: active ? `1px solid ${t.accent}` : "1px solid transparent",
+							paddingLeft: active ? 10 : 0,
+							marginLeft: active ? -10 : 0,
+							cursor: locked ? "default" : "pointer",
+						}}
+					>
+						<span style={{ fontFamily: "Playfair Display, serif", fontSize: 14, color: locked ? t.inkGhost : t.inkMuted, width: 18 }}>
+							{String(l.order_index).padStart(2, "0")}
+						</span>
+						<div style={{ flex: 1 }}>
+							<div style={{ fontSize: 13, color: active ? t.inkStrong : locked ? t.inkGhost : t.ink, lineHeight: 1.3 }}>
+								{l.title}
+							</div>
+							{active && (
+								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 8, textTransform: "uppercase", letterSpacing: "0.25em", color: t.accent, marginTop: 4, display: "inline-block" }}>
+									CURRENT · {scrollPercent}%
+								</span>
+							)}
+						</div>
+					</div>
+				);
+			})}
+		</>
+	);
+
 	return (
 		<div
 			style={{
-				display: "grid",
-				gridTemplateColumns: `220px 1fr ${chatOpen ? "360px" : "40px"}`,
-				height: "100vh",
+				...(isMobile
+					? { display: "flex", flexDirection: "column" as const, height: "100vh" }
+					: { display: "grid", gridTemplateColumns: `220px 1fr ${chatOpen ? "360px" : "40px"}`, height: "100vh" }),
 				background: t.bg,
 				color: t.ink,
 				fontFamily: "Inter, sans-serif",
 			}}
 		>
-			{/* Left sidebar */}
+			{/* Mobile top header */}
+			{isMobile && (
+				<div style={{
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+					padding: "12px 16px",
+					borderBottom: `1px solid ${t.divider}`,
+					flexShrink: 0,
+				}}>
+					<button
+						onClick={() => setMobileMenuOpen(true)}
+						style={{
+							background: "transparent",
+							border: "none",
+							cursor: "pointer",
+							color: t.inkMuted,
+							padding: 4,
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+						}}
+						aria-label="Open lesson menu"
+					>
+						<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+							<path d="M3 5h12M3 9h12M3 13h12" />
+						</svg>
+					</button>
+					<div style={{ flex: 1, textAlign: "center", minWidth: 0, padding: "0 8px" }}>
+						<div style={{
+							fontFamily: "JetBrains Mono, monospace",
+							fontSize: 8,
+							textTransform: "uppercase",
+							letterSpacing: "0.2em",
+							color: t.inkGhost,
+							overflow: "hidden",
+							textOverflow: "ellipsis",
+							whiteSpace: "nowrap",
+						}}>
+							{course.title}
+						</div>
+						<div style={{
+							fontFamily: "Playfair Display, serif",
+							fontSize: 13,
+							color: t.inkStrong,
+							overflow: "hidden",
+							textOverflow: "ellipsis",
+							whiteSpace: "nowrap",
+						}}>
+							{lesson.title}
+						</div>
+					</div>
+					<div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+						{/* Progress pill */}
+						<span style={{
+							fontFamily: "JetBrains Mono, monospace",
+							fontSize: 8,
+							textTransform: "uppercase",
+							letterSpacing: "0.15em",
+							color: t.inkGhost,
+							border: `1px solid ${t.divider}`,
+							padding: "2px 6px",
+							whiteSpace: "nowrap",
+						}}>
+							{scrollPercent}%
+						</span>
+						<button
+							onClick={toggleTheme}
+							style={{ background: "transparent", border: "none", cursor: "pointer", color: t.inkMuted, padding: 4 }}
+						>
+							{theme === "dark" ? (
+								<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M11 7.5A4 4 0 016.5 3c0-.5.1-1 .2-1.4A5 5 0 1012 7.3c-.3.1-.6.2-1 .2z" /></svg>
+							) : (
+								<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2"><circle cx="7" cy="7" r="3" /><path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13" /></svg>
+							)}
+						</button>
+					</div>
+				</div>
+			)}
+
+			{/* Mobile lesson list overlay */}
+			{isMobile && mobileMenuOpen && (
+				<div style={{
+					position: "fixed",
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					background: t.bg,
+					zIndex: 1000,
+					display: "flex",
+					flexDirection: "column",
+					overflow: "hidden",
+				}}>
+					{/* Overlay header */}
+					<div style={{
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "space-between",
+						padding: "16px 20px",
+						borderBottom: `1px solid ${t.divider}`,
+						flexShrink: 0,
+					}}>
+						<div>
+							<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost, display: "block", marginBottom: 4 }}>
+								COURSE
+							</span>
+							<div style={{ fontFamily: "Playfair Display, serif", fontSize: 18, color: t.inkStrong, lineHeight: 1.15 }}>
+								{course.title}
+							</div>
+						</div>
+						<button
+							onClick={() => setMobileMenuOpen(false)}
+							style={{
+								background: "transparent",
+								border: "none",
+								cursor: "pointer",
+								color: t.inkMuted,
+								fontSize: 22,
+								padding: 4,
+								lineHeight: 1,
+							}}
+							aria-label="Close menu"
+						>
+							×
+						</button>
+					</div>
+					{/* Progress bar */}
+					<div style={{ padding: "0 20px", marginTop: 12, marginBottom: 6 }}>
+						<div style={{ height: 1, background: t.divider, position: "relative" }}>
+							<div style={{ position: "absolute", top: 0, left: 0, height: "100%", width: `${scrollPercent}%`, background: t.accent, transition: "width .4s ease" }} />
+						</div>
+					</div>
+					{/* Lesson list */}
+					<div style={{ flex: 1, overflowY: "auto", padding: "8px 20px 100px" }}>
+						{renderLessonList(() => setMobileMenuOpen(false))}
+					</div>
+				</div>
+			)}
+
+			{/* Mobile chat modal */}
+			{isMobile && mobileChatOpen && (
+				<div style={{
+					position: "fixed",
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					background: t.bg,
+					zIndex: 1000,
+					display: "flex",
+					flexDirection: "column",
+					overflow: "hidden",
+				}}>
+					{/* Chat header */}
+					<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${t.divider}`, flexShrink: 0 }}>
+						<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+							<span style={{ width: 5, height: 5, borderRadius: "50%", background: "#cc0000", display: "inline-block" }} />
+							<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.3em", color: t.ink }}>MINSU</span>
+							<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost, marginLeft: 8 }}>SONNET</span>
+						</div>
+						<button onClick={() => setMobileChatOpen(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: t.inkMuted, fontSize: 22, lineHeight: 1 }}>×</button>
+					</div>
+					{/* Messages */}
+					<div style={{ flex: 1, overflowY: "auto", padding: "18px 20px" }}>
+						{messages.map((m, i) => (
+							<div key={i} style={{ marginBottom: 18, textAlign: m.who === "YOU" ? "right" : "left" }}>
+								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost, display: "block", marginBottom: 6 }}>
+									{m.who}
+								</span>
+								{m.typing ? (
+									<span style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkMuted, letterSpacing: 2 }}>…</span>
+								) : (
+									<div style={{ display: "inline-block", maxWidth: "92%", fontSize: 14, lineHeight: 1.6, color: t.ink, textAlign: "left" }}>
+										{m.text}
+									</div>
+								)}
+							</div>
+						))}
+					</div>
+					{/* Input */}
+					<div style={{ borderTop: `1px solid ${t.divider}`, padding: "14px 20px 28px" }}>
+						{refineBlock && (
+							<div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "8px 10px", marginBottom: 10, borderLeft: `2px solid ${t.accent}`, background: t.bgCard }}>
+								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost }}>
+									ABOUT THIS {refineBlock.kind.toUpperCase()}
+								</span>
+								<button onClick={() => setRefineBlock(null)} style={{ marginLeft: "auto", background: "transparent", border: "none", cursor: "pointer", color: t.inkGhost }}>×</button>
+							</div>
+						)}
+						<div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+							<textarea
+								value={chatInput}
+								onChange={(e) => setChatInput(e.target.value)}
+								onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(chatInput); } }}
+								placeholder="ask, or try 'rewrite this as a cooking analogy'…"
+								rows={2}
+								style={{
+									flex: 1, border: "none", outline: "none", resize: "none",
+									background: "transparent", color: t.ink,
+									fontFamily: "Inter, sans-serif", fontSize: 13, lineHeight: 1.5,
+								}}
+							/>
+							<button
+								onClick={() => sendMessage(chatInput)}
+								disabled={sending || !chatInput.trim()}
+								style={{
+									background: "transparent", border: `1px solid ${t.divider}`,
+									padding: "6px 10px", cursor: sending ? "wait" : "pointer",
+									color: t.inkMuted, fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em",
+								}}
+							>
+								SEND ↵
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Left sidebar — desktop only */}
+			{!isMobile && (
 			<aside style={{ borderRight: `1px solid ${t.divider}`, padding: "24px 20px", overflowY: "auto" }}>
 				<div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
 					<span style={{ fontFamily: "Playfair Display, serif", fontSize: 18, color: t.inkStrong }}>Napat</span>
@@ -1108,48 +1387,14 @@ hyper:hover {
 					</div>
 				</div>
 
-				{sortedLessons.map((l: { id: string; order_index: number; title: string; status: string }) => {
-					const active = l.order_index === lesson.order_index;
-					const done = l.status === "ready" || l.status === "edited";
-					const locked = l.status === "pending" && l.order_index > lesson.order_index;
-					return (
-						<div
-							key={l.id}
-							onClick={() => {
-								if (!locked) window.location.href = `/learning/courses/${course.slug}/lessons/${l.order_index}`;
-							}}
-							style={{
-								display: "flex",
-								alignItems: "baseline",
-								gap: 10,
-								padding: "10px 0",
-								borderLeft: active ? `1px solid ${t.accent}` : "1px solid transparent",
-								paddingLeft: active ? 10 : 0,
-								marginLeft: active ? -10 : 0,
-								cursor: locked ? "default" : "pointer",
-							}}
-						>
-							<span style={{ fontFamily: "Playfair Display, serif", fontSize: 14, color: locked ? t.inkGhost : t.inkMuted, width: 18 }}>
-								{String(l.order_index).padStart(2, "0")}
-							</span>
-							<div style={{ flex: 1 }}>
-								<div style={{ fontSize: 13, color: active ? t.inkStrong : locked ? t.inkGhost : t.ink, lineHeight: 1.3 }}>
-									{l.title}
-								</div>
-								{active && (
-									<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 8, textTransform: "uppercase", letterSpacing: "0.25em", color: t.accent, marginTop: 4, display: "inline-block" }}>
-										CURRENT · {scrollPercent}%
-									</span>
-								)}
-							</div>
-						</div>
-					);
-				})}
+				{renderLessonList()}
 			</aside>
+			)}
 
 			{/* Center content */}
-			<main ref={contentRef} style={{ overflowY: "auto", padding: "28px 56px 80px", position: "relative" }}>
-				{/* Header */}
+			<main ref={contentRef} style={{ overflowY: "auto", padding: isMobile ? "16px 20px 100px" : "28px 56px 80px", position: "relative", flex: isMobile ? 1 : undefined }}>
+				{/* Header — desktop only (mobile has its own top bar) */}
+				{!isMobile && (
 				<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
 					<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.3em", color: t.inkGhost }}>
 						{course.title} · LESSON {lesson.order_index} OF {lessons.length}
@@ -1162,21 +1407,22 @@ hyper:hover {
 						)}
 					</button>
 				</div>
+				)}
 
 				{/* Lesson title */}
-				<h1 style={{ fontFamily: "Playfair Display, serif", fontSize: 52, lineHeight: 1, fontWeight: 500, letterSpacing: "-0.02em", color: t.inkStrong, margin: "0 0 8px", maxWidth: 720 }}>
+				<h1 style={{ fontFamily: "Playfair Display, serif", fontSize: isMobile ? 32 : 52, lineHeight: 1, fontWeight: 500, letterSpacing: "-0.02em", color: t.inkStrong, margin: isMobile ? "0 0 8px" : "0 0 8px", maxWidth: isMobile ? "100%" : 720 }}>
 					{lesson.title}<span style={{ color: t.accent }}>.</span>
 				</h1>
 
 				{/* Perspective lens selector */}
 				{blocks.length > 0 && !isPending && (
-					<div style={{ maxWidth: 720, marginTop: 20, marginBottom: 8 }}>
+					<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: 20, marginBottom: 8 }}>
 						<div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
 							<Rule width={32} color={t.divider} />
 							<Tracked size={9} tracking={0.35} style={{ color: t.inkGhost }}>LENS</Tracked>
 							<Rule width={32} color={t.divider} />
 						</div>
-						<div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+						<div style={{ display: "flex", gap: 6, flexWrap: isMobile ? "nowrap" : "wrap", overflowX: isMobile ? "auto" : undefined, WebkitOverflowScrolling: isMobile ? "touch" as any : undefined, paddingBottom: isMobile ? 4 : 0 }}>
 							{([
 								{ key: "default" as const, label: "DEFAULT", color: t.accent },
 								{ key: "evolutionary" as const, label: "EVOLUTIONARY", color: "#2d6a4f" },
@@ -1256,7 +1502,7 @@ hyper:hover {
 				)}
 
 				{/* Blocks */}
-				<div style={{ maxWidth: 720, marginTop: 32 }}>
+				<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: 32 }}>
 					{(activePerspective === "default" ? blocks : perspectiveBlocks).map((block: any, idx: number) => {
 						const raw = block.content || block;
 						// Normalize: AI outputs "type", DB stores "kind" — handle both
@@ -1295,7 +1541,7 @@ hyper:hover {
 								{b.kind === "heading" && (
 									<>
 										{b.level === 2 ? (
-											<h2 style={{ fontFamily: "Playfair Display, serif", fontSize: 30, color: t.inkStrong, fontWeight: 500, letterSpacing: "-0.015em", margin: "32px 0 8px" }}>{b.text}</h2>
+											<h2 style={{ fontFamily: "Playfair Display, serif", fontSize: isMobile ? 22 : 30, color: t.inkStrong, fontWeight: 500, letterSpacing: "-0.015em", margin: isMobile ? "24px 0 8px" : "32px 0 8px" }}>{b.text}</h2>
 										) : (
 											<h3 style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkStrong, fontWeight: 500, margin: "24px 0 8px" }}>{b.text}</h3>
 										)}
@@ -1348,7 +1594,7 @@ hyper:hover {
 									</div>
 								)}
 								{b.kind === "callout" && (
-									<div style={{ margin: "28px 0", border: `1px solid ${t.divider}`, padding: "20px 24px", background: t.bgCard }}>
+									<div style={{ margin: "28px 0", border: `1px solid ${t.divider}`, padding: isMobile ? "14px 16px" : "20px 24px", background: t.bgCard }}>
 										<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: b.variant === "warning" ? t.accent : t.inkGhost, display: "block", marginBottom: 8 }}>
 											{b.variant?.toUpperCase() || "NOTE"}
 										</span>
@@ -1423,7 +1669,7 @@ hyper:hover {
 
 				{/* Socratic Recall Checkpoint */}
 				{blocks.length > 0 && (recallActive || recallConfirmed) && (
-					<div style={{ maxWidth: 720, marginTop: 48 }}>
+					<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: isMobile ? 32 : 48 }}>
 						{/* Checkpoint divider */}
 						<div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
 							<div style={{ flex: 1, height: 1, background: t.divider }} />
@@ -1443,7 +1689,7 @@ hyper:hover {
 						<div style={{
 							border: `1px solid ${recallConfirmed ? t.accent : t.divider}`,
 							borderLeft: `2px solid ${recallConfirmed ? t.accent : t.inkMuted}`,
-							padding: "24px 28px",
+							padding: isMobile ? "16px 16px" : "24px 28px",
 							background: t.bgCard,
 							position: "relative",
 						}}>
@@ -1594,7 +1840,7 @@ hyper:hover {
 
 				{/* Complete button — triggers recall if not yet active */}
 				{blocks.length > 0 && !recallActive && !recallConfirmed && (
-					<div style={{ maxWidth: 720, marginTop: 40, textAlign: "center" }}>
+					<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: 40, textAlign: "center" }}>
 						<button
 							onClick={() => setRecallActive(true)}
 							style={{
@@ -1622,7 +1868,7 @@ hyper:hover {
 				{blocks.length > 0 && (
 					<div style={{
 						display: "flex", justifyContent: "space-between", alignItems: "center",
-						marginTop: 56, paddingTop: 32, borderTop: `1px solid ${t.divider}`, maxWidth: 720,
+						marginTop: isMobile ? 32 : 56, paddingTop: 32, borderTop: `1px solid ${t.divider}`, maxWidth: isMobile ? "100%" : 720,
 					}}>
 						{currentIdx > 0 ? (
 							<button
@@ -1667,93 +1913,126 @@ hyper:hover {
 				)}
 			</main>
 
-			{/* Right chat panel */}
-			{!chatOpen ? (
-				<aside
-					onClick={() => setChatOpen(true)}
+			{/* Mobile floating "Ask AI" button */}
+			{isMobile && !mobileChatOpen && !mobileMenuOpen && (
+				<button
+					onClick={() => setMobileChatOpen(true)}
 					style={{
-						borderLeft: `1px solid ${t.divider}`,
+						position: "fixed",
+						bottom: 80,
+						right: 16,
+						width: 48,
+						height: 48,
+						borderRadius: "50%",
+						background: t.bg,
+						border: `1px solid ${t.divider}`,
 						cursor: "pointer",
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
 						flexDirection: "column",
-						gap: 10,
-						background: t.bg,
+						gap: 2,
+						zIndex: 100,
+						boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
 					}}
+					aria-label="Ask AI"
 				>
 					<span style={{ width: 5, height: 5, borderRadius: "50%", background: "#cc0000", display: "inline-block" }} />
-					<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.3em", color: t.inkGhost, writingMode: "vertical-rl" }}>
-						MINSU
+					<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 6, textTransform: "uppercase", letterSpacing: "0.15em", color: t.inkGhost }}>
+						AI
 					</span>
-				</aside>
-			) : (
-				<aside style={{ borderLeft: `1px solid ${t.divider}`, display: "flex", flexDirection: "column", background: t.bg }}>
-					{/* Chat header */}
-					<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 20px", borderBottom: `1px solid ${t.divider}` }}>
-						<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-							<span style={{ width: 5, height: 5, borderRadius: "50%", background: "#cc0000", display: "inline-block" }} />
-							<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.3em", color: t.ink }}>MINSU</span>
-							<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost, marginLeft: 8 }}>SONNET</span>
-						</div>
-						<button onClick={() => setChatOpen(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: t.inkMuted, fontSize: 16 }}>×</button>
-					</div>
+				</button>
+			)}
 
-					{/* Messages */}
-					<div style={{ flex: 1, overflowY: "auto", padding: "18px 20px" }}>
-						{messages.map((m, i) => (
-							<div key={i} style={{ marginBottom: 18, textAlign: m.who === "YOU" ? "right" : "left" }}>
-								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost, display: "block", marginBottom: 6 }}>
-									{m.who}
-								</span>
-								{m.typing ? (
-									<span style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkMuted, letterSpacing: 2 }}>…</span>
-								) : (
-									<div style={{ display: "inline-block", maxWidth: "92%", fontSize: 14, lineHeight: 1.6, color: t.ink, textAlign: "left" }}>
-										{m.text}
-									</div>
-								)}
+			{/* Right chat panel — desktop only */}
+			{!isMobile && (
+				!chatOpen ? (
+					<aside
+						onClick={() => setChatOpen(true)}
+						style={{
+							borderLeft: `1px solid ${t.divider}`,
+							cursor: "pointer",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							flexDirection: "column",
+							gap: 10,
+							background: t.bg,
+						}}
+					>
+						<span style={{ width: 5, height: 5, borderRadius: "50%", background: "#cc0000", display: "inline-block" }} />
+						<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.3em", color: t.inkGhost, writingMode: "vertical-rl" }}>
+							MINSU
+						</span>
+					</aside>
+				) : (
+					<aside style={{ borderLeft: `1px solid ${t.divider}`, display: "flex", flexDirection: "column", background: t.bg }}>
+						{/* Chat header */}
+						<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 20px", borderBottom: `1px solid ${t.divider}` }}>
+							<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+								<span style={{ width: 5, height: 5, borderRadius: "50%", background: "#cc0000", display: "inline-block" }} />
+								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.3em", color: t.ink }}>MINSU</span>
+								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost, marginLeft: 8 }}>SONNET</span>
 							</div>
-						))}
-					</div>
-
-					{/* Input */}
-					<div style={{ borderTop: `1px solid ${t.divider}`, padding: "14px 20px 16px" }}>
-						{refineBlock && (
-							<div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "8px 10px", marginBottom: 10, borderLeft: `2px solid ${t.accent}`, background: t.bgCard }}>
-								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost }}>
-									ABOUT THIS {refineBlock.kind.toUpperCase()}
-								</span>
-								<button onClick={() => setRefineBlock(null)} style={{ marginLeft: "auto", background: "transparent", border: "none", cursor: "pointer", color: t.inkGhost }}>×</button>
-							</div>
-						)}
-						<div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-							<textarea
-								value={chatInput}
-								onChange={(e) => setChatInput(e.target.value)}
-								onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(chatInput); } }}
-								placeholder="ask, or try 'rewrite this as a cooking analogy'…"
-								rows={2}
-								style={{
-									flex: 1, border: "none", outline: "none", resize: "none",
-									background: "transparent", color: t.ink,
-									fontFamily: "Inter, sans-serif", fontSize: 13, lineHeight: 1.5,
-								}}
-							/>
-							<button
-								onClick={() => sendMessage(chatInput)}
-								disabled={sending || !chatInput.trim()}
-								style={{
-									background: "transparent", border: `1px solid ${t.divider}`,
-									padding: "6px 10px", cursor: sending ? "wait" : "pointer",
-									color: t.inkMuted, fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em",
-								}}
-							>
-								SEND ↵
-							</button>
+							<button onClick={() => setChatOpen(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: t.inkMuted, fontSize: 16 }}>×</button>
 						</div>
-					</div>
-				</aside>
+
+						{/* Messages */}
+						<div style={{ flex: 1, overflowY: "auto", padding: "18px 20px" }}>
+							{messages.map((m, i) => (
+								<div key={i} style={{ marginBottom: 18, textAlign: m.who === "YOU" ? "right" : "left" }}>
+									<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost, display: "block", marginBottom: 6 }}>
+										{m.who}
+									</span>
+									{m.typing ? (
+										<span style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkMuted, letterSpacing: 2 }}>…</span>
+									) : (
+										<div style={{ display: "inline-block", maxWidth: "92%", fontSize: 14, lineHeight: 1.6, color: t.ink, textAlign: "left" }}>
+											{m.text}
+										</div>
+									)}
+								</div>
+							))}
+						</div>
+
+						{/* Input */}
+						<div style={{ borderTop: `1px solid ${t.divider}`, padding: "14px 20px 16px" }}>
+							{refineBlock && (
+								<div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "8px 10px", marginBottom: 10, borderLeft: `2px solid ${t.accent}`, background: t.bgCard }}>
+									<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost }}>
+										ABOUT THIS {refineBlock.kind.toUpperCase()}
+									</span>
+									<button onClick={() => setRefineBlock(null)} style={{ marginLeft: "auto", background: "transparent", border: "none", cursor: "pointer", color: t.inkGhost }}>×</button>
+								</div>
+							)}
+							<div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+								<textarea
+									value={chatInput}
+									onChange={(e) => setChatInput(e.target.value)}
+									onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(chatInput); } }}
+									placeholder="ask, or try 'rewrite this as a cooking analogy'…"
+									rows={2}
+									style={{
+										flex: 1, border: "none", outline: "none", resize: "none",
+										background: "transparent", color: t.ink,
+										fontFamily: "Inter, sans-serif", fontSize: 13, lineHeight: 1.5,
+									}}
+								/>
+								<button
+									onClick={() => sendMessage(chatInput)}
+									disabled={sending || !chatInput.trim()}
+									style={{
+										background: "transparent", border: `1px solid ${t.divider}`,
+										padding: "6px 10px", cursor: sending ? "wait" : "pointer",
+										color: t.inkMuted, fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em",
+									}}
+								>
+									SEND ↵
+								</button>
+							</div>
+						</div>
+					</aside>
+				)
 			)}
 		</div>
 	);

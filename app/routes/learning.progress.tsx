@@ -183,7 +183,7 @@ export default function ProgressPage({ loaderData }: Route.ComponentProps) {
 	const completedCourses = courses.filter((c) => courseProgress(c) === 100);
 
 	return (
-		<div style={{ padding: "0 48px 120px" }}>
+		<div style={{ padding: "0 20px 120px" }}>
 			<TopBar t={t} theme={theme} onToggleTheme={toggleTheme} />
 
 			<div style={{ maxWidth: 920, margin: "0 auto", paddingTop: "10vh" }}>
@@ -198,7 +198,7 @@ export default function ProgressPage({ loaderData }: Route.ComponentProps) {
 				<h1
 					style={{
 						fontFamily: "Playfair Display, serif",
-						fontSize: 72,
+						fontSize: "clamp(36px, 9vw, 72px)",
 						lineHeight: 0.95,
 						fontWeight: 500,
 						color: t.inkStrong,
@@ -213,7 +213,7 @@ export default function ProgressPage({ loaderData }: Route.ComponentProps) {
 				<div
 					style={{
 						display: "grid",
-						gridTemplateColumns: "repeat(3, 1fr)",
+						gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
 						gap: 0,
 						marginTop: 56,
 						borderTop: `1px solid ${t.divider}`,
@@ -446,7 +446,7 @@ export default function ProgressPage({ loaderData }: Route.ComponentProps) {
 						<div
 							style={{
 								display: "grid",
-								gridTemplateColumns: `repeat(${Math.min(completedCourses.length, 3)}, 1fr)`,
+								gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
 								gap: 0,
 								borderTop: `1px solid ${t.divider}`,
 							}}

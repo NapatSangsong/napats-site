@@ -52,7 +52,7 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 	const totalProg = lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
 
 	return (
-		<div style={{ padding: "0 56px 120px" }}>
+		<div style={{ padding: "0 20px 120px" }}>
 			<TopBar t={t} theme={theme} onToggleTheme={toggleTheme} />
 
 			<div style={{ maxWidth: 920, margin: "0 auto", paddingTop: 64 }}>
@@ -62,7 +62,7 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 				</Tracked>
 
 				{/* Title + monogram */}
-				<div style={{ display: "flex", gap: 32, alignItems: "flex-start", marginBottom: 12 }}>
+				<div style={{ display: "flex", gap: 20, alignItems: "flex-start", marginBottom: 12, flexWrap: "wrap" }}>
 					<div
 						style={{
 							width: 72,
@@ -81,7 +81,7 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 					<div>
 						<h1 style={{
 							fontFamily: "Playfair Display, serif",
-							fontSize: 48,
+							fontSize: "clamp(28px, 6vw, 48px)",
 							fontWeight: 500,
 							color: t.inkStrong,
 							letterSpacing: "-0.02em",
@@ -150,7 +150,7 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 									}}
 									style={{
 										display: "grid",
-										gridTemplateColumns: "48px 1fr auto",
+										gridTemplateColumns: "36px 1fr auto",
 										gap: 16,
 										alignItems: "baseline",
 										padding: "22px 0",

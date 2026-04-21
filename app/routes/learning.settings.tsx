@@ -106,7 +106,7 @@ export default function SettingsPage(_props: Route.ComponentProps) {
 	);
 
 	return (
-		<div style={{ padding: "0 56px 120px" }}>
+		<div style={{ padding: "0 20px 120px" }}>
 			<TopBar t={t} theme={theme} onToggleTheme={toggleTheme} />
 
 			<div style={{ maxWidth: 920, margin: "0 auto", paddingTop: "14vh" }}>
@@ -122,7 +122,7 @@ export default function SettingsPage(_props: Route.ComponentProps) {
 				<h1
 					style={{
 						fontFamily: "Playfair Display, serif",
-						fontSize: 56,
+						fontSize: "clamp(32px, 7vw, 56px)",
 						fontWeight: 500,
 						color: t.inkStrong,
 						letterSpacing: "-0.02em",
@@ -186,7 +186,7 @@ export default function SettingsPage(_props: Route.ComponentProps) {
 					>
 						Choose your preferred language for content.
 					</p>
-					<div style={{ display: "flex", gap: 8 }}>
+					<div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
 						<Chip
 							t={t}
 							active={language === "en"}

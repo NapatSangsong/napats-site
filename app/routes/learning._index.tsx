@@ -550,7 +550,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 	const hasCourses = courses.length > 0;
 
 	return (
-		<div style={{ padding: "0 48px 120px" }}>
+		<div style={{ padding: "0 20px 120px" }}>
 			<TopBar t={t} theme={theme} onToggleTheme={toggleTheme} />
 
 			<div style={{ maxWidth: 920, margin: "0 auto", paddingTop: "14vh" }}>
@@ -566,7 +566,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 				<h1
 					style={{
 						fontFamily: "Playfair Display, serif",
-						fontSize: 88,
+						fontSize: "clamp(40px, 10vw, 88px)",
 						lineHeight: 0.95,
 						fontWeight: 500,
 						color: t.inkStrong,
@@ -580,7 +580,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 					style={{
 						display: "block",
 						fontFamily: "Playfair Display, serif",
-						fontSize: 48,
+						fontSize: "clamp(24px, 6vw, 48px)",
 						lineHeight: 1.1,
 						fontWeight: 400,
 						color: t.inkGhost,
@@ -643,7 +643,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 									QUICK START
 								</Tracked>
 							</div>
-							<div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 0, borderTop: `1px solid ${t.divider}` }}>
+							<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 0, borderTop: `1px solid ${t.divider}` }}>
 								{templates.map((tmpl, i) => (
 									<div
 										key={i}
@@ -651,7 +651,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 										style={{
 											padding: "16px 18px",
 											borderBottom: `1px solid ${t.divider}`,
-											borderRight: i % 2 === 0 ? `1px solid ${t.divider}` : "none",
+											borderRight: "none",
 											cursor: "pointer",
 											transition: "background .25s",
 										}}
@@ -929,7 +929,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 						<div
 							style={{
 								display: "grid",
-								gridTemplateColumns: `repeat(${Math.min(continueCourses.length, 3)}, 1fr)`,
+								gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
 								gap: 0,
 								borderTop: `1px solid ${t.divider}`,
 							}}

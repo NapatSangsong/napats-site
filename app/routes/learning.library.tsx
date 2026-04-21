@@ -87,7 +87,7 @@ export default function LibraryPage({ loaderData }: Route.ComponentProps) {
 				: `${courses.length} volumes.`;
 
 	return (
-		<div style={{ padding: "0 56px 120px" }}>
+		<div style={{ padding: "0 20px 120px" }}>
 			<TopBar t={t} theme={theme} onToggleTheme={toggleTheme} />
 
 			<div style={{ maxWidth: 1200, margin: "0 auto", paddingTop: 48 }}>
@@ -113,7 +113,7 @@ export default function LibraryPage({ loaderData }: Route.ComponentProps) {
 						<h1
 							style={{
 								fontFamily: "Playfair Display, serif",
-								fontSize: 56,
+								fontSize: "clamp(32px, 7vw, 56px)",
 								fontWeight: 500,
 								color: t.inkStrong,
 								margin: 0,
@@ -203,7 +203,7 @@ export default function LibraryPage({ loaderData }: Route.ComponentProps) {
 					<div
 						style={{
 							display: "grid",
-							gridTemplateColumns: "repeat(3, 1fr)",
+							gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
 							gap: 0,
 							borderTop: `1px solid ${t.divider}`,
 							borderLeft: `1px solid ${t.divider}`,

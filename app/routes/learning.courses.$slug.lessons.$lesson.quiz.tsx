@@ -122,7 +122,7 @@ export default function QuizPage({ loaderData }: Route.ComponentProps) {
 	// Loading state
 	if (generating || questions.length === 0) {
 		return (
-			<div style={{ background: t.bg, color: t.ink, minHeight: "100vh", padding: "0 56px 80px" }}>
+			<div style={{ background: t.bg, color: t.ink, minHeight: "100vh", padding: "0 20px 80px" }}>
 				<TopBar t={t} theme={theme} onToggleTheme={toggleTheme} />
 				<div style={{ maxWidth: 720, margin: "0 auto", paddingTop: "20vh", textAlign: "center" }}>
 					<span style={{ fontFamily: "Playfair Display, serif", fontSize: 28, color: t.inkMuted, fontStyle: "italic" }}>
@@ -142,14 +142,14 @@ export default function QuizPage({ loaderData }: Route.ComponentProps) {
 		}).length;
 
 		return (
-			<div style={{ background: t.bg, color: t.ink, minHeight: "100vh", padding: "0 56px 80px" }}>
+			<div style={{ background: t.bg, color: t.ink, minHeight: "100vh", padding: "0 20px 80px" }}>
 				<TopBar t={t} theme={theme} onToggleTheme={toggleTheme} />
 				<div style={{ maxWidth: 720, margin: "0 auto", paddingTop: "14vh" }}>
 					<Tracked size={10} tracking={0.3} style={{ color: t.inkGhost, display: "block", marginBottom: 24 }}>
 						QUIZ · LESSON {lesson.order_index} · RESULT
 					</Tracked>
-					<div style={{ display: "flex", alignItems: "baseline", gap: 24 }}>
-						<div style={{ fontFamily: "Playfair Display, serif", fontSize: 120, lineHeight: 1, color: t.inkStrong, fontWeight: 500 }}>
+					<div style={{ display: "flex", alignItems: "baseline", gap: 24, flexWrap: "wrap" }}>
+						<div style={{ fontFamily: "Playfair Display, serif", fontSize: "clamp(56px, 15vw, 120px)", lineHeight: 1, color: t.inkStrong, fontWeight: 500 }}>
 							{correctCount}<span style={{ color: t.inkGhost, margin: "0 14px" }}>/</span>{questions.length}
 						</div>
 						<FilmDot size={10} />
@@ -177,7 +177,7 @@ export default function QuizPage({ loaderData }: Route.ComponentProps) {
 						))}
 					</div>
 
-					<div style={{ display: "flex", justifyContent: "space-between", marginTop: 48 }}>
+					<div style={{ display: "flex", justifyContent: "space-between", marginTop: 48, flexWrap: "wrap", gap: 12 }}>
 						<TrackedButton t={t} ghost onClick={() => { setShowResult(false); setQi(0); setAnswers({}); }}>
 							RETRY
 						</TrackedButton>
@@ -192,7 +192,7 @@ export default function QuizPage({ loaderData }: Route.ComponentProps) {
 
 	// Question screen
 	return (
-		<div style={{ background: t.bg, color: t.ink, minHeight: "100vh", padding: "0 56px 80px" }}>
+		<div style={{ background: t.bg, color: t.ink, minHeight: "100vh", padding: "0 20px 80px" }}>
 			<TopBar t={t} theme={theme} onToggleTheme={toggleTheme} />
 			<div style={{ maxWidth: 720, margin: "0 auto", paddingTop: "8vh" }}>
 				{/* Progress */}
@@ -208,7 +208,7 @@ export default function QuizPage({ loaderData }: Route.ComponentProps) {
 				</div>
 
 				{/* Question */}
-				<div style={{ fontFamily: "Playfair Display, serif", fontSize: 32, color: t.inkStrong, lineHeight: 1.2, letterSpacing: "-0.01em", marginBottom: 36 }}>
+				<div style={{ fontFamily: "Playfair Display, serif", fontSize: "clamp(22px, 5vw, 32px)", color: t.inkStrong, lineHeight: 1.2, letterSpacing: "-0.01em", marginBottom: 36 }}>
 					{cur.q}
 				</div>
 
@@ -219,7 +219,7 @@ export default function QuizPage({ loaderData }: Route.ComponentProps) {
 							const sel = answers[qi] === o.k;
 							return (
 								<label key={o.k} onClick={() => setAns(o.k)} style={{
-									display: "grid", gridTemplateColumns: "48px 1fr auto", gap: 16,
+									display: "grid", gridTemplateColumns: "36px 1fr auto", gap: 12,
 									alignItems: "center", padding: "20px 4px",
 									borderBottom: `1px solid ${t.divider}`, cursor: "pointer",
 									background: sel ? t.bgCard : "transparent",
@@ -296,7 +296,7 @@ export default function QuizPage({ loaderData }: Route.ComponentProps) {
 				)}
 
 				{/* Navigation */}
-				<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 48 }}>
+				<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 48, flexWrap: "wrap", gap: 12 }}>
 					<TrackedButton t={t} ghost>
 						ask the question differently
 					</TrackedButton>
