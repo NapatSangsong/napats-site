@@ -41,7 +41,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 	// Fetch lesson + course context
 	const { data: lesson, error: lessonError } = await supabase
 		.from("lessons")
-		.select("id, title, summary, outcomes, order, course_id, courses(title, language)")
+		.select("id, title, summary, outcomes, order_index, course_id, courses(title, language)")
 		.eq("id", lessonId)
 		.single();
 
@@ -59,8 +59,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 		.from("lessons")
 		.select("title")
 		.eq("course_id", lesson.course_id)
-		.lt("order", lesson.order)
-		.order("order", { ascending: true });
+		.lt("order_index", lesson.order_index)
+		.order("order_index", { ascending: true });
 
 	const model = requestedModel ?? selectModel("generateLesson");
 	const systemPrompt = generateLessonPrompt({
@@ -103,8 +103,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 		// Write blocks to Supabase
 		const blockRows = blocks.map((block, idx) => ({
 			lesson_id: lessonId,
-			order: idx,
-			type: block.type,
+			order_index: idx,
+			kind: block.type,
 			content: block,
 		}));
 

@@ -1258,7 +1258,9 @@ hyper:hover {
 				{/* Blocks */}
 				<div style={{ maxWidth: 720, marginTop: 32 }}>
 					{(activePerspective === "default" ? blocks : perspectiveBlocks).map((block: any, idx: number) => {
-						const b = block.content || block;
+						const raw = block.content || block;
+						// Normalize: AI outputs "type", DB stores "kind" — handle both
+						const b = { ...raw, kind: raw.kind || raw.type };
 						const blockId = block.id || `b${idx}`;
 						const isHovered = hoveredBlock === blockId;
 
@@ -1319,7 +1321,7 @@ hyper:hover {
 								{b.kind === "quote" && (
 									<div style={{ margin: "28px 0" }}>
 										<blockquote style={{ borderLeft: `2px solid ${t.accent}`, paddingLeft: 22, margin: 0, fontFamily: "Playfair Display, serif", fontSize: 22, fontStyle: "italic", color: t.ink, lineHeight: 1.4 }}>
-											{b.text}
+											{b.markdown || b.text}
 										</blockquote>
 										{b.attribution && (
 											<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.2em", color: t.inkGhost, marginTop: 8, display: "block", paddingLeft: 22 }}>
@@ -1334,18 +1336,14 @@ hyper:hover {
 										<div style={{ background: "#0d0d0d", border: `1px solid ${t.divider}` }}>
 											<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
 												<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: "rgba(255,255,255,0.3)" }}>
-													{b.files?.[0]?.name || b.language || "CODE"}
+													{b.filename || b.language || "CODE"}
 												</span>
-												{b.runnable && (
-													<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: "rgba(255,255,255,0.3)", cursor: "pointer" }}>
-														RUN →
-													</span>
-												)}
 											</div>
 											<pre style={{ margin: 0, padding: 18, fontFamily: "JetBrains Mono, monospace", fontSize: 13, lineHeight: 1.7, color: "#c9c9c9", overflow: "auto" }}>
-												{b.files?.[0]?.content || ""}
+												{b.code || ""}
 											</pre>
 										</div>
+										{b.caption && <div style={{ fontSize: 12, color: t.inkGhost, marginTop: 6, fontStyle: "italic" }}>{b.caption}</div>}
 										{askBtn}
 									</div>
 								)}
@@ -1370,7 +1368,7 @@ hyper:hover {
 								)}
 								{b.kind === "mermaid" && (
 									<div style={{ margin: "28px 0", border: `1px solid ${t.divider}`, padding: 24, background: t.bgCard }}>
-										<pre style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: t.inkMuted, whiteSpace: "pre-wrap" }}>{b.diagram}</pre>
+										<pre style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: t.inkMuted, whiteSpace: "pre-wrap" }}>{b.code || b.diagram || ""}</pre>
 										{b.caption && (
 											<div style={{ marginTop: 16, textAlign: "center" }}>
 												<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.3em", color: t.inkGhost }}>{b.caption}</span>
@@ -1381,13 +1379,14 @@ hyper:hover {
 								)}
 								{b.kind === "katex" && (
 									<div style={{ margin: "28px 0", textAlign: b.display ? "center" : "left" }}>
-										<code style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 14, color: t.ink }}>{b.latex}</code>
+										<code style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 14, color: t.ink }}>{b.expression || b.latex || ""}</code>
+										{b.caption && <div style={{ fontSize: 12, color: t.inkGhost, marginTop: 6, fontStyle: "italic" }}>{b.caption}</div>}
 										{askBtn}
 									</div>
 								)}
 								{b.kind === "image" && (
 									<div style={{ margin: "28px 0" }}>
-										<img src={b.url} alt={b.alt} style={{ maxWidth: "100%", filter: b.treatment === "bw" ? "grayscale(100%)" : undefined }} />
+										<img src={b.src || b.url} alt={b.alt || ""} style={{ maxWidth: "100%", filter: b.bw ? "grayscale(100%)" : undefined }} />
 										{b.caption && (
 											<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.2em", color: t.inkGhost, marginTop: 8, display: "block" }}>{b.caption}</span>
 										)}
