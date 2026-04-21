@@ -103,15 +103,12 @@ export async function action({ request, context }: Route.ActionArgs) {
 		const blockSummaries: string[] = (blockData ?? []).map((b: Record<string, unknown>) => {
 			const content = b.content as Record<string, unknown> | undefined;
 			if (!content) return "";
-			const kind = content.kind as string;
+			const kind = (content.kind || content.type) as string;
 			if (kind === "heading") return `## ${content.text}`;
 			if (kind === "prose") return (content.markdown as string) ?? "";
 			if (kind === "callout") return `[${(content.variant as string)?.toUpperCase() ?? "NOTE"}] ${content.markdown}`;
-			if (kind === "quote") return `> ${content.text}`;
-			if (kind === "code") {
-				const files = content.files as { name?: string; content?: string }[] | undefined;
-				return files?.[0]?.content ? `[code: ${files[0].name ?? "snippet"}]` : "";
-			}
+			if (kind === "quote") return `> ${content.markdown || content.text}`;
+			if (kind === "code") return content.code ? `[code: ${content.filename ?? content.language ?? "snippet"}]` : "";
 			return "";
 		}).filter(Boolean);
 
@@ -175,7 +172,6 @@ export async function action({ request, context }: Route.ActionArgs) {
 			thread_id: threadId,
 			role: "assistant",
 			content: fullResponse,
-			token_count_estimate: Math.ceil(fullResponse.length / 4),
 		});
 
 		send("end", "done");

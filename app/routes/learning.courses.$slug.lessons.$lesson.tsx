@@ -441,34 +441,36 @@ hyper:hover {
 				if (done) break;
 				buffer += decoder.decode(value, { stream: true });
 
-				const lines = buffer.split("\n");
-				buffer = lines.pop() || "";
+				const sseMessages = buffer.split("\n\n");
+				buffer = sseMessages.pop() || "";
 
-				for (const line of lines) {
-					if (line.startsWith("data: ")) {
-						const data = line.slice(6);
-						if (data === "done" || data === "[DONE]") continue;
+				for (const msg of sseMessages) {
+					const lines = msg.split("\n");
+					let eventType = "";
+					const dataLines: string[] = [];
+					for (const line of lines) {
+						if (line.startsWith("event: ")) eventType = line.slice(7);
+						else if (line.startsWith("data: ")) dataLines.push(line.slice(6));
+					}
+					const data = dataLines.join("\n");
+					if (eventType === "end" || eventType === "error") continue;
+					if (eventType === "meta") {
 						try {
 							const parsed = JSON.parse(data);
 							if (parsed.threadId && !threadId) {
 								threadId = parsed.threadId;
 								setRecallThreadId(parsed.threadId);
-							} else if (parsed.text) {
-								fullText += parsed.text;
-								setRecallMessages((m) => {
-									const next = [...m];
-									next[next.length - 1] = { role: "assistant", content: fullText };
-									return next;
-								});
 							}
-						} catch {
-							fullText += data;
-							setRecallMessages((m) => {
-								const next = [...m];
-								next[next.length - 1] = { role: "assistant", content: fullText };
-								return next;
-							});
-						}
+						} catch {}
+						continue;
+					}
+					if (data) {
+						fullText += data;
+						setRecallMessages((m) => {
+							const next = [...m];
+							next[next.length - 1] = { role: "assistant", content: fullText };
+							return next;
+						});
 					}
 				}
 			}
@@ -508,7 +510,7 @@ hyper:hover {
 		try {
 			const res = await fetch("/learning/api/ai/chat", {
 				method: "POST",
-				headers: { "Content-Type": "application/json", Origin: window.location.origin },
+				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					message: text,
 					scope: "recall",
@@ -528,38 +530,39 @@ hyper:hover {
 				if (done) break;
 				buffer += decoder.decode(value, { stream: true });
 
-				const lines = buffer.split("\n");
-				buffer = lines.pop() || "";
+				const sseMessages = buffer.split("\n\n");
+				buffer = sseMessages.pop() || "";
 
-				for (const line of lines) {
-					if (line.startsWith("data: ")) {
-						const data = line.slice(6);
-						if (data === "done" || data === "[DONE]") continue;
+				for (const msg of sseMessages) {
+					const lines = msg.split("\n");
+					let eventType = "";
+					const dataLines: string[] = [];
+					for (const line of lines) {
+						if (line.startsWith("event: ")) eventType = line.slice(7);
+						else if (line.startsWith("data: ")) dataLines.push(line.slice(6));
+					}
+					const data = dataLines.join("\n");
+					if (eventType === "end" || eventType === "error") continue;
+					if (eventType === "meta") {
 						try {
 							const parsed = JSON.parse(data);
 							if (parsed.threadId && !recallThreadId) {
 								setRecallThreadId(parsed.threadId);
-							} else if (parsed.text) {
-								fullText += parsed.text;
-								setRecallMessages((m) => {
-									const next = [...m];
-									next[next.length - 1] = { role: "assistant", content: fullText };
-									return next;
-								});
 							}
-						} catch {
-							fullText += data;
-							setRecallMessages((m) => {
-								const next = [...m];
-								next[next.length - 1] = { role: "assistant", content: fullText };
-								return next;
-							});
-						}
+						} catch {}
+						continue;
+					}
+					if (data) {
+						fullText += data;
+						setRecallMessages((m) => {
+							const next = [...m];
+							next[next.length - 1] = { role: "assistant", content: fullText };
+							return next;
+						});
 					}
 				}
 			}
 
-			// Check for confirmation
 			if (fullText.includes("[UNDERSTANDING_CONFIRMED]")) {
 				handleRecallConfirmed();
 			}
