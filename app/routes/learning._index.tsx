@@ -1,8 +1,8 @@
 /**
  * Command Center — the home of /learning.
- * Interactive AI-powered course composer with conversation thread.
+ * Smart, conversational course composer with visual preview.
  */
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
 import type { Route } from "./+types/learning._index";
 import { useTheme } from "./learning";
@@ -40,7 +40,6 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 	try {
 		const supabase = createServiceClient(env);
-
 		const { data } = await supabase
 			.from("courses")
 			.select(`
@@ -71,6 +70,18 @@ interface ChatMessage {
 	content: string;
 }
 
+interface CourseDraft {
+	title: string;
+	subtitle?: string | null;
+	description?: string | null;
+	language: string;
+	difficulty: "beginner" | "intermediate" | "advanced";
+	estimated_minutes?: number | null;
+	tags: string[];
+	cover_monogram?: string | null;
+	lessons: { title: string; summary?: string | null; outcomes: string[] }[];
+}
+
 // ── Helpers ─────────────────────────────────────────────────
 const MODEL_MAP: Record<string, string | undefined> = {
 	OPUS: "claude-opus-4-7",
@@ -79,23 +90,44 @@ const MODEL_MAP: Record<string, string | undefined> = {
 	AUTO: undefined,
 };
 
-/** Extract the last ```json ... ``` block from AI text */
-function extractDraftJSON(text: string): string | null {
+/** Extract the last ```json ... ``` block and parse it */
+function extractDraft(text: string): CourseDraft | null {
 	const matches = [...text.matchAll(/```json\s*([\s\S]*?)```/g)];
 	if (matches.length > 0) {
-		return matches[matches.length - 1][1].trim();
+		try {
+			return JSON.parse(matches[matches.length - 1][1].trim());
+		} catch {
+			return null;
+		}
 	}
-	// Fallback: try to find a raw { ... } block
 	const braceMatch = text.match(/\{[\s\S]*\}/);
-	return braceMatch ? braceMatch[0] : null;
+	if (braceMatch) {
+		try {
+			return JSON.parse(braceMatch[0]);
+		} catch {
+			return null;
+		}
+	}
+	return null;
 }
 
-/** Strip the JSON block from AI text to get conversational part */
+/** Extract conversational text (strip JSON blocks) */
 function extractConversation(text: string): string {
 	return text.replace(/```json\s*[\s\S]*?```/g, "").trim();
 }
 
-/** Stream SSE from plan-course API, returns full response text */
+/** Extract [suggestion: ...] tags from text */
+function extractSuggestions(text: string): string[] {
+	const matches = [...text.matchAll(/\[suggestion:\s*([^\]]+)\]/g)];
+	return matches.map((m) => m[1].trim());
+}
+
+/** Strip [suggestion: ...] tags from display text */
+function stripSuggestions(text: string): string {
+	return text.replace(/\[suggestion:\s*[^\]]+\]/g, "").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/** Stream SSE from plan-course API */
 async function streamPlanCourse(
 	body: { prompt: string; model?: string; messages?: ChatMessage[] },
 	onDelta: (text: string) => void,
@@ -159,6 +191,184 @@ async function streamPlanCourse(
 	return fullText;
 }
 
+const DIFFICULTY_LABELS: Record<string, string> = {
+	beginner: "Beginner",
+	intermediate: "Intermediate",
+	advanced: "Advanced",
+};
+
+// ── Course Preview Card ─────────────────────────────────────
+function CoursePreviewCard({ draft, t }: { draft: CourseDraft; t: Record<string, string> }) {
+	const hours = draft.estimated_minutes ? Math.round(draft.estimated_minutes / 60) : null;
+	const mins = draft.estimated_minutes ? draft.estimated_minutes % 60 : null;
+	const timeLabel = hours && hours > 0
+		? mins ? `${hours}h ${mins}m` : `${hours}h`
+		: draft.estimated_minutes ? `${draft.estimated_minutes}m` : null;
+
+	return (
+		<div
+			style={{
+				border: `1px solid ${t.divider}`,
+				padding: "28px 28px 24px",
+				marginTop: 20,
+				marginBottom: 8,
+			}}
+		>
+			{/* Header */}
+			<div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+				<div style={{ flex: 1 }}>
+					{/* Monogram */}
+					{draft.cover_monogram && (
+						<span
+							style={{
+								fontFamily: "Playfair Display, serif",
+								fontSize: 32,
+								fontWeight: 500,
+								color: t.inkGhost,
+								display: "block",
+								marginBottom: 8,
+							}}
+						>
+							{draft.cover_monogram}
+						</span>
+					)}
+					<div
+						style={{
+							fontFamily: "Playfair Display, serif",
+							fontSize: 24,
+							fontWeight: 500,
+							color: t.inkStrong,
+							lineHeight: 1.2,
+						}}
+					>
+						{draft.title}
+					</div>
+					{draft.subtitle && (
+						<div
+							style={{
+								fontFamily: "Playfair Display, serif",
+								fontSize: 15,
+								color: t.inkMuted,
+								fontStyle: "italic",
+								marginTop: 4,
+							}}
+						>
+							{draft.subtitle}
+						</div>
+					)}
+				</div>
+				{/* Meta badges */}
+				<div style={{ display: "flex", gap: 8, flexShrink: 0, marginLeft: 16 }}>
+					{draft.difficulty && (
+						<span
+							style={{
+								fontFamily: "JetBrains Mono, monospace",
+								fontSize: 9,
+								textTransform: "uppercase",
+								letterSpacing: "0.15em",
+								padding: "4px 8px",
+								border: `1px solid ${t.divider}`,
+								color: t.inkMuted,
+							}}
+						>
+							{DIFFICULTY_LABELS[draft.difficulty] || draft.difficulty}
+						</span>
+					)}
+					{timeLabel && (
+						<span
+							style={{
+								fontFamily: "JetBrains Mono, monospace",
+								fontSize: 9,
+								textTransform: "uppercase",
+								letterSpacing: "0.15em",
+								padding: "4px 8px",
+								border: `1px solid ${t.divider}`,
+								color: t.inkMuted,
+							}}
+						>
+							{timeLabel}
+						</span>
+					)}
+				</div>
+			</div>
+
+			{draft.description && (
+				<div
+					style={{
+						fontSize: 14,
+						lineHeight: 1.6,
+						color: t.inkMuted,
+						marginBottom: 20,
+					}}
+				>
+					{draft.description}
+				</div>
+			)}
+
+			{/* Lessons list */}
+			<div>
+				<Tracked size={9} tracking={0.25} style={{ color: t.inkGhost, marginBottom: 12, display: "block" }}>
+					{draft.lessons.length} LESSONS
+				</Tracked>
+				{draft.lessons.map((lesson, i) => (
+					<div
+						key={i}
+						style={{
+							display: "flex",
+							gap: 14,
+							padding: "10px 0",
+							borderTop: i === 0 ? `1px solid ${t.divider}` : "none",
+							borderBottom: `1px solid ${t.divider}`,
+						}}
+					>
+						<Tracked size={9} style={{ color: t.inkGhost, width: 20, paddingTop: 3, flexShrink: 0 }}>
+							{String(i + 1).padStart(2, "0")}
+						</Tracked>
+						<div style={{ flex: 1 }}>
+							<div
+								style={{
+									fontFamily: "Playfair Display, serif",
+									fontSize: 15,
+									color: t.ink,
+									lineHeight: 1.4,
+								}}
+							>
+								{lesson.title}
+							</div>
+							{lesson.summary && (
+								<div style={{ fontSize: 12, color: t.inkGhost, marginTop: 3, lineHeight: 1.5 }}>
+									{lesson.summary}
+								</div>
+							)}
+						</div>
+					</div>
+				))}
+			</div>
+
+			{/* Tags */}
+			{draft.tags && draft.tags.length > 0 && (
+				<div style={{ display: "flex", gap: 6, marginTop: 16, flexWrap: "wrap" }}>
+					{draft.tags.map((tag, i) => (
+						<span
+							key={i}
+							style={{
+								fontFamily: "JetBrains Mono, monospace",
+								fontSize: 9,
+								letterSpacing: "0.1em",
+								padding: "3px 8px",
+								background: t.bgCard,
+								color: t.inkGhost,
+							}}
+						>
+							{tag}
+						</span>
+					))}
+				</div>
+			)}
+		</div>
+	);
+}
+
 // ── Component ───────────────────────────────────────────────
 export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 	const { theme, t, toggleTheme } = useTheme();
@@ -184,9 +394,18 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 		chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [chatMessages, streamingContent]);
 
-	// Get the latest draft JSON from the most recent AI message
+	// Get the latest draft from the most recent AI message
 	const latestAIMessage = [...chatMessages].reverse().find((m) => m.role === "assistant");
-	const currentDraftJSON = latestAIMessage ? extractDraftJSON(latestAIMessage.content) : null;
+	const currentDraft = useMemo(
+		() => (latestAIMessage ? extractDraft(latestAIMessage.content) : null),
+		[latestAIMessage],
+	);
+
+	// Get suggestion chips from the latest AI message
+	const suggestions = useMemo(
+		() => (latestAIMessage ? extractSuggestions(latestAIMessage.content) : []),
+		[latestAIMessage],
+	);
 
 	const sendMessage = useCallback(async (userMessage: string, history: ChatMessage[]) => {
 		if (streaming) return;
@@ -203,7 +422,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 		try {
 			const fullResponse = await streamPlanCourse(
 				{
-					prompt: userMessage,
+					prompt: newMessages[0].content,
 					model: MODEL_MAP[selectedModel],
 					messages: newMessages,
 				},
@@ -235,18 +454,20 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 		sendMessage(msg, chatMessages);
 	}, [chatInput, chatMessages, sendMessage]);
 
+	const handleSuggestionClick = useCallback((suggestion: string) => {
+		sendMessage(suggestion, chatMessages);
+	}, [chatMessages, sendMessage]);
+
 	const handleApprove = useCallback(async () => {
-		if (!currentDraftJSON || approving) return;
+		if (!currentDraft || approving) return;
 		setApproving(true);
 		setComposeError("");
 
 		try {
-			const draft = JSON.parse(currentDraftJSON);
-
 			const res = await fetch("/learning/api/courses", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(draft),
+				body: JSON.stringify(currentDraft),
 			});
 
 			if (!res.ok) {
@@ -262,7 +483,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 			setComposeError((err as Error).message || "Failed to create course");
 			setApproving(false);
 		}
-	}, [currentDraftJSON, approving, navigate]);
+	}, [currentDraft, approving, navigate]);
 
 	const handleDiscard = useCallback(() => {
 		setChatMessages([]);
@@ -331,7 +552,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 					a private library.
 				</span>
 
-				{/* Initial compose input — only shown before session starts */}
+				{/* Initial compose — before session */}
 				{!inSession && (
 					<>
 						<div style={{ marginTop: 48, position: "relative" }}>
@@ -362,14 +583,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 							</div>
 						</div>
 
-						<div
-							style={{
-								display: "flex",
-								alignItems: "center",
-								justifyContent: "space-between",
-								marginTop: 18,
-							}}
-						>
+						<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
 							<div style={{ display: "flex", gap: 8 }}>
 								{models.map((m) => (
 									<Chip key={m} t={t} active={m === selectedModel} onClick={() => setSelectedModel(m)}>
@@ -390,13 +604,8 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 						{/* Chat thread */}
 						<div style={{ marginBottom: 24 }}>
 							{chatMessages.map((msg, i) => (
-								<div
-									key={i}
-									style={{
-										padding: "20px 0",
-										borderBottom: `1px solid ${t.divider}`,
-									}}
-								>
+								<div key={i} style={{ padding: "20px 0", borderBottom: `1px solid ${t.divider}` }}>
+									{/* Role label */}
 									<div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
 										{msg.role === "user" ? (
 											<FilmDot size={5} />
@@ -407,54 +616,59 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 											{msg.role === "user" ? "YOU" : "ORACLE"}
 										</Tracked>
 									</div>
+
 									{msg.role === "assistant" ? (
 										<div>
-											{/* Conversational part */}
+											{/* Conversational text (no JSON, no suggestion tags) */}
 											<div
 												style={{
 													fontFamily: "Playfair Display, serif",
 													fontSize: 16,
-													lineHeight: 1.7,
+													lineHeight: 1.75,
 													color: t.ink,
 													whiteSpace: "pre-wrap",
 												}}
 											>
-												{extractConversation(msg.content)}
+												{stripSuggestions(extractConversation(msg.content))}
 											</div>
-											{/* Draft outline preview */}
-											{extractDraftJSON(msg.content) && (
-												<details style={{ marginTop: 16 }}>
-													<summary
-														style={{
-															fontFamily: "JetBrains Mono, monospace",
-															fontSize: 10,
-															textTransform: "uppercase",
-															letterSpacing: "0.2em",
-															color: t.inkGhost,
-															cursor: "pointer",
-															userSelect: "none",
-														}}
-													>
-														VIEW DRAFT OUTLINE
-													</summary>
-													<pre
-														style={{
-															fontFamily: "JetBrains Mono, monospace",
-															fontSize: 12,
-															lineHeight: 1.6,
-															color: t.inkMuted,
-															whiteSpace: "pre-wrap",
-															wordBreak: "break-word",
-															margin: "12px 0 0",
-															padding: 16,
-															background: t.bgCard,
-															borderRadius: 4,
-															border: `1px solid ${t.divider}`,
-														}}
-													>
-														{extractDraftJSON(msg.content)}
-													</pre>
-												</details>
+
+											{/* Visual course preview */}
+											{extractDraft(msg.content) && (
+												<CoursePreviewCard draft={extractDraft(msg.content)!} t={t} />
+											)}
+
+											{/* Suggestion chips — only show on last AI message */}
+											{i === chatMessages.length - 1 && !streaming && extractSuggestions(msg.content).length > 0 && (
+												<div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+													{extractSuggestions(msg.content).map((s, j) => (
+														<button
+															key={j}
+															onClick={() => handleSuggestionClick(s)}
+															style={{
+																fontFamily: "Playfair Display, serif",
+																fontSize: 13,
+																fontStyle: "italic",
+																padding: "8px 16px",
+																border: `1px solid ${t.divider}`,
+																background: "transparent",
+																color: t.ink,
+																cursor: "pointer",
+																transition: "all .25s",
+																borderRadius: 0,
+															}}
+															onMouseEnter={(e) => {
+																e.currentTarget.style.borderColor = t.dividerStrong;
+																e.currentTarget.style.color = t.inkStrong;
+															}}
+															onMouseLeave={(e) => {
+																e.currentTarget.style.borderColor = t.divider;
+																e.currentTarget.style.color = t.ink;
+															}}
+														>
+															{s}
+														</button>
+													))}
+												</div>
 											)}
 										</div>
 									) : (
@@ -462,7 +676,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 											style={{
 												fontFamily: "Playfair Display, serif",
 												fontSize: 16,
-												lineHeight: 1.7,
+												lineHeight: 1.75,
 												color: t.ink,
 												fontStyle: "italic",
 											}}
@@ -486,17 +700,17 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 										style={{
 											fontFamily: "Playfair Display, serif",
 											fontSize: 16,
-											lineHeight: 1.7,
+											lineHeight: 1.75,
 											color: t.ink,
 											whiteSpace: "pre-wrap",
 										}}
 									>
-										{extractConversation(streamingContent)}
+										{stripSuggestions(extractConversation(streamingContent))}
 									</div>
 								</div>
 							)}
 
-							{/* Streaming indicator when no content yet */}
+							{/* Thinking indicator */}
 							{streaming && !streamingContent && (
 								<div style={{ padding: "20px 0", display: "flex", alignItems: "center", gap: 10 }}>
 									<FilmDot size={5} breathe />
@@ -512,10 +726,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 						{/* Chat input */}
 						{!streaming && (
 							<div style={{ marginBottom: 20 }}>
-								<div
-									style={{ display: "flex", gap: 12, alignItems: "flex-end" }}
-									onKeyDown={handleKeyDown}
-								>
+								<div style={{ display: "flex", gap: 12, alignItems: "flex-end" }} onKeyDown={handleKeyDown}>
 									<div style={{ flex: 1 }}>
 										<UnderlineInput
 											t={t}
@@ -523,7 +734,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 											rows={1}
 											value={chatInput}
 											onChange={setChatInput}
-											placeholder="Answer questions, ask for changes, or say 'looks good'…"
+											placeholder="Tell me more, ask for changes, or pick a suggestion above…"
 										/>
 									</div>
 									<TrackedButton t={t} disabled={!chatInput.trim()} onClick={handleChatSend}>
@@ -548,7 +759,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 							</div>
 						)}
 
-						{/* Action buttons */}
+						{/* Action bar */}
 						{!streaming && (
 							<div
 								style={{
@@ -560,14 +771,9 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 								}}
 							>
 								<TrackedButton t={t} onClick={handleDiscard}>
-									DISCARD
+									START OVER
 								</TrackedButton>
-								<TrackedButton
-									t={t}
-									primary
-									disabled={!currentDraftJSON || approving}
-									onClick={handleApprove}
-								>
+								<TrackedButton t={t} primary disabled={!currentDraft || approving} onClick={handleApprove}>
 									{approving ? "CREATING…" : "APPROVE & CREATE"}
 								</TrackedButton>
 							</div>
@@ -575,7 +781,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 					</div>
 				)}
 
-				{/* Continue learning strip OR starters — hidden during session */}
+				{/* Continue learning — hidden during session */}
 				{!inSession && hasCourses && (
 					<div style={{ marginTop: 100 }}>
 						<div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 22 }}>
@@ -611,56 +817,22 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 											cursor: "pointer",
 											transition: "background .3s",
 										}}
-										onMouseEnter={(e) => {
-											e.currentTarget.style.background = t.bgCard;
-										}}
-										onMouseLeave={(e) => {
-											e.currentTarget.style.background = "transparent";
-										}}
+										onMouseEnter={(e) => { e.currentTarget.style.background = t.bgCard; }}
+										onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
 									>
-										<div
-											style={{
-												display: "flex",
-												alignItems: "baseline",
-												justifyContent: "space-between",
-												marginBottom: 12,
-											}}
-										>
-											<span
-												style={{
-													fontFamily: "Playfair Display, serif",
-													fontSize: 22,
-													color: t.inkGhost,
-													fontWeight: 500,
-												}}
-											>
+										<div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
+											<span style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkGhost, fontWeight: 500 }}>
 												{c.cover_monogram || c.title[0]}
 											</span>
 											<Tracked size={9} tracking={0.22} style={{ color: t.inkGhost }}>
 												{sourceLabel} · {prog}%
 											</Tracked>
 										</div>
-										<div
-											style={{
-												fontFamily: "Playfair Display, serif",
-												fontSize: 22,
-												color: t.inkStrong,
-												lineHeight: 1.15,
-												marginBottom: 6,
-											}}
-										>
+										<div style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkStrong, lineHeight: 1.15, marginBottom: 6 }}>
 											{c.title}
 										</div>
 										{c.subtitle && (
-											<div
-												style={{
-													fontSize: 13,
-													color: t.inkMuted,
-													fontStyle: "italic",
-													fontFamily: "Playfair Display, serif",
-													marginBottom: 20,
-												}}
-											>
+											<div style={{ fontSize: 13, color: t.inkMuted, fontStyle: "italic", fontFamily: "Playfair Display, serif", marginBottom: 20 }}>
 												{c.subtitle}
 											</div>
 										)}
@@ -697,15 +869,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 									<Tracked size={9} style={{ color: t.inkGhost, width: 20 }}>
 										{String(i + 1).padStart(2, "0")}
 									</Tracked>
-									<span
-										style={{
-											fontFamily: "Playfair Display, serif",
-											fontSize: 18,
-											color: t.ink,
-											fontStyle: "italic",
-											flex: 1,
-										}}
-									>
+									<span style={{ fontFamily: "Playfair Display, serif", fontSize: 18, color: t.ink, fontStyle: "italic", flex: 1 }}>
 										"{s}"
 									</span>
 									<span style={{ color: t.inkGhost }}>→</span>
@@ -715,7 +879,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 					</div>
 				)}
 
-				{/* Footer stats */}
+				{/* Footer */}
 				<div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 44 }}>
 					<FilmDot size={5} />
 					<Tracked size={9} tracking={0.3} style={{ color: t.inkGhost }}>
