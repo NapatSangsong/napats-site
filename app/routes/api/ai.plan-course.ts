@@ -1,6 +1,7 @@
 /**
  * POST /api/ai/plan-course
  * Stream a course outline from a user prompt via SSE.
+ * Supports multi-turn conversation for interactive course planning.
  */
 import type { Route } from "./+types/ai.plan-course";
 import { PlanCourseBody } from "~/lib/ai/schemas";
@@ -33,14 +34,19 @@ export async function action({ request, context }: Route.ActionArgs) {
 		);
 	}
 
-	const { prompt, model: requestedModel } = body.data;
+	const { prompt, model: requestedModel, messages: history } = body.data;
 	const model = requestedModel ?? selectModel("planCourse");
 	const systemPrompt = planCoursePrompt({ topic: prompt });
+
+	// Build messages: use conversation history if provided, otherwise single prompt
+	const messages = history && history.length > 0
+		? history
+		: [{ role: "user" as const, content: prompt }];
 
 	const stream = createSSEStream(async ({ send }) => {
 		const textStream = await streamChat(
 			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
-			[{ role: "user", content: prompt }],
+			messages,
 			{ model, system: systemPrompt, maxTokens: 8192 },
 		);
 

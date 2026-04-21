@@ -146,6 +146,10 @@ export type QuizQuestion = z.infer<typeof QuizQuestionSchema>;
 export const PlanCourseBody = z.object({
 	prompt: z.string().min(1).max(5000),
 	model: z.string().optional(),
+	messages: z.array(z.object({
+		role: z.enum(["user", "assistant"]),
+		content: z.string(),
+	})).optional(),
 });
 
 export const GenerateLessonBody = z.object({
