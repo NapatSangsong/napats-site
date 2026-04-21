@@ -182,3 +182,11 @@ export const GradeBody = z.object({
 	questionId: z.string().uuid(),
 	answer: z.string().min(1).max(5000),
 });
+
+export const DeepDiveBody = z.object({
+	term: z.string().min(1).max(500),
+	context: z.string().min(1).max(5000),
+	lessonTitle: z.string().min(1).max(500),
+	courseTitle: z.string().min(1).max(500),
+	depth: z.number().int().min(1).max(3),
+});

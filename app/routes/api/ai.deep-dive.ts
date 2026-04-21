@@ -4,22 +4,12 @@
  * Streams SSE response with the generated blocks.
  */
 import type { Route } from "./+types/ai.deep-dive";
-import { BlockSchema } from "~/lib/ai/schemas";
+import { BlockSchema, DeepDiveBody } from "~/lib/ai/schemas";
 import { streamChat } from "~/lib/ai/client";
 import { selectModel } from "~/lib/ai/router";
 import { deepDivePrompt } from "~/lib/ai/prompts/deepDive";
 import { requireAuth, sseResponse, createSSEStream } from "~/lib/ai/helpers.server";
 import { z } from "zod";
-
-const MAX_DEPTH = 3;
-
-const DeepDiveBody = z.object({
-	term: z.string().min(1).max(500),
-	context: z.string().min(1).max(5000),
-	lessonTitle: z.string().min(1).max(500),
-	courseTitle: z.string().min(1).max(500),
-	depth: z.number().int().min(1).max(MAX_DEPTH),
-});
 
 export async function action({ request, context }: Route.ActionArgs) {
 	const env = context.cloudflare.env as Record<string, string> & Env;

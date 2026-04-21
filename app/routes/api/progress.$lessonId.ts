@@ -29,7 +29,7 @@ export async function action({ params, request, context }: Route.ActionArgs) {
 		return Response.json({ error: "method not allowed" }, { status: 405 });
 	}
 
-	const body = await request.json() as { scroll_percent?: number; status?: string };
+	const body = await request.json() as { scroll_percent?: number; status?: string; recall_status?: string };
 	const supabase = createServiceClient(env);
 
 	const now = new Date().toISOString();
@@ -48,6 +48,14 @@ export async function action({ params, request, context }: Route.ActionArgs) {
 		}
 		if (body.status === "completed") {
 			update.completed_at = now;
+		}
+	}
+
+	// Socratic recall checkpoint status
+	if (body.recall_status === "pending" || body.recall_status === "in_progress" || body.recall_status === "confirmed") {
+		update.recall_status = body.recall_status;
+		if (body.recall_status === "confirmed") {
+			update.recall_confirmed_at = now;
 		}
 	}
 

@@ -112,6 +112,29 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 
 	const isPending = lesson.status === "pending";
 
+	// Inject hyper-node CSS styles
+	useEffect(() => {
+		if (typeof document === "undefined") return;
+		const id = "hyper-node-styles";
+		if (document.getElementById(id)) return;
+		const style = document.createElement("style");
+		style.id = id;
+		style.textContent = `
+hyper {
+	text-decoration: underline dotted;
+	text-decoration-color: rgba(204, 0, 0, 0.4);
+	text-underline-offset: 3px;
+	cursor: pointer;
+	transition: color 0.2s, text-decoration-color 0.2s;
+}
+hyper:hover {
+	color: #cc0000;
+	text-decoration-color: #cc0000;
+}
+`;
+		document.head.appendChild(style);
+	}, []);
+
 	// Generate lesson content if pending
 	const generateLesson = useCallback(async () => {
 		if (generating) return;
@@ -1243,6 +1266,15 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 							</div>
 						);
 					})}
+
+					{/* Deep-dive sections (top-level) */}
+					{deepDives.size > 0 && (
+						<div style={{ marginTop: 8 }}>
+							{Array.from(deepDives.entries()).map(([term, entry]) =>
+								renderDeepDiveSection(entry, []),
+							)}
+						</div>
+					)}
 				</div>
 
 				{/* Socratic Recall Checkpoint */}
