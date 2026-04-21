@@ -153,44 +153,54 @@ hyper:hover {
 		try {
 			const res = await fetch("/learning/api/ai/generate-lesson", {
 				method: "POST",
-				headers: { "Content-Type": "application/json", Origin: window.location.origin },
+				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ lessonId: lesson.id }),
 			});
-			if (!res.ok || !res.body) return;
+			if (!res.ok || !res.body) {
+				setGenerating(false);
+				return;
+			}
 
+			// Accumulate the full SSE stream
 			const reader = res.body.getReader();
 			const decoder = new TextDecoder();
-			let buffer = "";
-			const newBlocks: unknown[] = [];
+			let sseBuffer = "";
+			let fullText = "";
+			let hasError = false;
 
 			while (true) {
 				const { done, value } = await reader.read();
 				if (done) break;
-				buffer += decoder.decode(value, { stream: true });
+				sseBuffer += decoder.decode(value, { stream: true });
 
-				const lines = buffer.split("\n");
-				buffer = lines.pop() || "";
+				const messages = sseBuffer.split("\n\n");
+				sseBuffer = messages.pop() || "";
 
-				for (const line of lines) {
-					if (line.startsWith("data: ")) {
-						const data = line.slice(6);
-						if (data === "done" || data === "[DONE]") continue;
-						try {
-							const parsed = JSON.parse(data);
-							if (parsed.block) {
-								newBlocks.push(parsed.block);
-								setBlocks([...newBlocks]);
-							} else if (parsed.text) {
-								// Streaming text accumulation
-							}
-						} catch {
-							// Partial JSON, ignore
-						}
+				for (const msg of messages) {
+					const lines = msg.split("\n");
+					let eventType = "";
+					const dataLines: string[] = [];
+					for (const line of lines) {
+						if (line.startsWith("event: ")) eventType = line.slice(7);
+						else if (line.startsWith("data: ")) dataLines.push(line.slice(6));
 					}
+					const data = dataLines.join("\n");
+					if (eventType === "error") {
+						hasError = true;
+						continue;
+					}
+					if (eventType === "end") continue;
+					if (data) fullText += data;
 				}
 			}
+
+			if (!hasError) {
+				// Blocks are saved to DB by the API — reload to fetch them
+				window.location.reload();
+				return;
+			}
 		} catch {
-			// Error handled by UI
+			// Network error
 		} finally {
 			setGenerating(false);
 		}
