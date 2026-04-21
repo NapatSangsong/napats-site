@@ -1,12 +1,14 @@
 /**
  * POST /api/ai/chat
  * Streaming chat endpoint with thread persistence.
+ * Supports scope "lesson" (general chat) and "recall" (Socratic active recall).
  */
 import type { Route } from "./+types/ai.chat";
 import { ChatBody } from "~/lib/ai/schemas";
 import { streamChat, type ChatMessage } from "~/lib/ai/client";
 import { selectModel } from "~/lib/ai/router";
 import { chatPrompt } from "~/lib/ai/prompts/chat";
+import { socraticRecallPrompt } from "~/lib/ai/prompts/socraticRecall";
 import { createServiceClient } from "~/lib/supabase.server";
 import { requireAuth, sseResponse, createSSEStream } from "~/lib/ai/helpers.server";
 
@@ -76,33 +78,78 @@ export async function action({ request, context }: Route.ActionArgs) {
 		content: m.content,
 	}));
 
-	// Resolve scope context for system prompt
-	let courseTitle: string | undefined;
-	let lessonTitle: string | undefined;
+	// Build system prompt based on scope
+	let systemPrompt: string;
 
-	if (scope === "lesson") {
+	if (scope === "recall") {
+		// Socratic Active Recall — load lesson details for the prompt
 		const { data: lesson } = await supabase
 			.from("lessons")
-			.select("title, courses(title)")
+			.select("title, outcomes, courses(title)")
 			.eq("id", scopeId)
 			.single();
-		if (lesson) {
-			lessonTitle = lesson.title;
-			courseTitle = (lesson as Record<string, unknown>).courses
-				? ((lesson as Record<string, unknown>).courses as { title: string }).title
-				: undefined;
+
+		// Load block summaries for context
+		const { data: blockData } = await supabase
+			.from("lesson_blocks")
+			.select("content, order_index")
+			.eq("lesson_id", scopeId)
+			.order("order_index", { ascending: true });
+
+		const lessonTitle = lesson?.title ?? "Unknown lesson";
+		const outcomes: string[] = (lesson as Record<string, unknown>)?.outcomes as string[] ?? [];
+
+		// Extract summaries from blocks — use heading text and prose markdown
+		const blockSummaries: string[] = (blockData ?? []).map((b: Record<string, unknown>) => {
+			const content = b.content as Record<string, unknown> | undefined;
+			if (!content) return "";
+			const kind = content.kind as string;
+			if (kind === "heading") return `## ${content.text}`;
+			if (kind === "prose") return (content.markdown as string) ?? "";
+			if (kind === "callout") return `[${(content.variant as string)?.toUpperCase() ?? "NOTE"}] ${content.markdown}`;
+			if (kind === "quote") return `> ${content.text}`;
+			if (kind === "code") {
+				const files = content.files as { name?: string; content?: string }[] | undefined;
+				return files?.[0]?.content ? `[code: ${files[0].name ?? "snippet"}]` : "";
+			}
+			return "";
+		}).filter(Boolean);
+
+		systemPrompt = socraticRecallPrompt({
+			lessonTitle,
+			outcomes,
+			blockSummaries,
+		});
+	} else {
+		// Regular lesson/course chat
+		let courseTitle: string | undefined;
+		let lessonTitle: string | undefined;
+
+		if (scope === "lesson") {
+			const { data: lesson } = await supabase
+				.from("lessons")
+				.select("title, courses(title)")
+				.eq("id", scopeId)
+				.single();
+			if (lesson) {
+				lessonTitle = lesson.title;
+				courseTitle = (lesson as Record<string, unknown>).courses
+					? ((lesson as Record<string, unknown>).courses as { title: string }).title
+					: undefined;
+			}
+		} else if (scope === "course") {
+			const { data: course } = await supabase
+				.from("courses")
+				.select("title")
+				.eq("id", scopeId)
+				.single();
+			if (course) courseTitle = course.title;
 		}
-	} else if (scope === "course") {
-		const { data: course } = await supabase
-			.from("courses")
-			.select("title")
-			.eq("id", scopeId)
-			.single();
-		if (course) courseTitle = course.title;
+
+		systemPrompt = chatPrompt({ courseTitle, lessonTitle });
 	}
 
 	const model = requestedModel ?? selectModel("chat", message.length);
-	const systemPrompt = chatPrompt({ courseTitle, lessonTitle });
 
 	const stream = createSSEStream(async ({ send }) => {
 		// Send threadId so client knows the ID if it was newly created

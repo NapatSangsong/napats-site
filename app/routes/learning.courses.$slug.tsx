@@ -1,6 +1,7 @@
 /**
  * Course overview — shows course details + lesson list.
  */
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import type { Route } from "./+types/learning.courses.$slug";
 import { useTheme } from "./learning";
@@ -238,7 +239,117 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 						))}
 					</div>
 				)}
+
+				{/* What's Next — shown when course is 100% complete */}
+				{totalProg === 100 && (
+					<WhatsNextSection courseId={course.id} t={t} />
+				)}
 			</div>
+		</div>
+	);
+}
+
+type Suggestion = {
+	title: string;
+	description: string;
+	prompt: string;
+	connection: string;
+};
+
+function WhatsNextSection({ courseId, t }: { courseId: string; t: Record<string, string> }) {
+	const navigate = useNavigate();
+	const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(false);
+
+	useEffect(() => {
+		let cancelled = false;
+		fetch("/learning/api/ai/related-courses", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ courseId }),
+		})
+			.then((res) => {
+				if (!res.ok) throw new Error("fetch failed");
+				return res.json();
+			})
+			.then((data: { suggestions: Suggestion[] }) => {
+				if (!cancelled) setSuggestions(data.suggestions || []);
+			})
+			.catch(() => {
+				if (!cancelled) setError(true);
+			})
+			.finally(() => {
+				if (!cancelled) setLoading(false);
+			});
+		return () => { cancelled = true; };
+	}, [courseId]);
+
+	if (error || (!loading && suggestions.length === 0)) return null;
+
+	return (
+		<div style={{ marginTop: 72 }}>
+			<div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
+				<Rule width={40} color={t.inkGhost} />
+				<Tracked size={10} tracking={0.3} style={{ color: t.inkGhost }}>
+					WHAT&apos;S NEXT
+				</Tracked>
+			</div>
+
+			{loading ? (
+				<Tracked size={9} tracking={0.22} style={{ color: t.inkGhost }}>
+					FINDING RELATED COURSES...
+				</Tracked>
+			) : (
+				<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
+					{suggestions.map((s) => (
+						<div
+							key={s.prompt}
+							onClick={() => navigate(`/learning?prompt=${encodeURIComponent(s.prompt)}`)}
+							style={{
+								border: `1px solid ${t.divider}`,
+								padding: "24px 20px",
+								cursor: "pointer",
+								transition: "border-color .3s, background .3s",
+							}}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.borderColor = t.accent;
+								e.currentTarget.style.background = t.bgCard;
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.borderColor = t.divider;
+								e.currentTarget.style.background = "transparent";
+							}}
+						>
+							<h3 style={{
+								fontFamily: "Playfair Display, serif",
+								fontSize: 20,
+								fontWeight: 500,
+								color: t.inkStrong,
+								margin: 0,
+								lineHeight: 1.25,
+							}}>
+								{s.title}<span style={{ color: t.accent }}>.</span>
+							</h3>
+							<p style={{
+								fontSize: 13,
+								lineHeight: 1.6,
+								color: t.ink,
+								fontWeight: 300,
+								margin: "10px 0 14px",
+							}}>
+								{s.description}
+							</p>
+							<Tracked size={8} tracking={0.25} style={{ color: t.inkGhost }}>
+								<span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+									<FilmDot size={3} />
+									{s.connection}
+								</span>
+							</Tracked>
+						</div>
+					))}
+				</div>
+			)}
 		</div>
 	);
 }

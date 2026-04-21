@@ -1,6 +1,7 @@
 /**
  * Lesson reader — three-pane layout: sidebar, content, chat.
  * Streams AI content for pending lessons, renders blocks for ready ones.
+ * Includes Socratic Active Recall checkpoint before navigation.
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Route } from "./+types/learning.courses.$slug.lessons.$lesson";
@@ -67,6 +68,15 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	const [generating, setGenerating] = useState(false);
 	const [scrollPercent, setScrollPercent] = useState(progress?.scroll_percent ?? 0);
 	const contentRef = useRef<HTMLDivElement>(null);
+
+	// Recall checkpoint state
+	const [recallActive, setRecallActive] = useState(false);
+	const [recallMessages, setRecallMessages] = useState<{ role: string; content: string }[]>([]);
+	const [recallConfirmed, setRecallConfirmed] = useState(progress?.recall_status === "confirmed");
+	const [recallStreaming, setRecallStreaming] = useState(false);
+	const [recallInput, setRecallInput] = useState("");
+	const [recallThreadId, setRecallThreadId] = useState<string | null>(null);
+	const recallEndRef = useRef<HTMLDivElement>(null);
 
 	const isPending = lesson.status === "pending";
 
@@ -136,6 +146,12 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 		const handleScroll = () => {
 			const pct = Math.round((el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100);
 			setScrollPercent(Math.min(pct, 100));
+
+			// Activate recall checkpoint at 90% scroll
+			if (pct >= 90 && blocks.length > 0 && !recallActive && !recallConfirmed) {
+				setRecallActive(true);
+			}
+
 			clearTimeout(timeout);
 			timeout = setTimeout(() => {
 				fetch(`/learning/api/progress/${lesson.id}`, {
@@ -151,7 +167,191 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 			el.removeEventListener("scroll", handleScroll);
 			clearTimeout(timeout);
 		};
-	}, [lesson.id]);
+	}, [lesson.id, blocks.length, recallActive, recallConfirmed]);
+
+	// Auto-scroll recall messages
+	useEffect(() => {
+		recallEndRef.current?.scrollIntoView({ behavior: "smooth" });
+	}, [recallMessages]);
+
+	// Start recall: send initial empty message to get AI's opening question
+	const startRecall = useCallback(async () => {
+		if (recallStreaming || recallMessages.length > 0) return;
+		setRecallActive(true);
+		setRecallStreaming(true);
+
+		try {
+			const res = await fetch("/learning/api/ai/chat", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Origin: window.location.origin },
+				body: JSON.stringify({
+					message: "I just finished this lesson. I'm ready for the recall checkpoint.",
+					scope: "recall",
+					scopeId: lesson.id,
+				}),
+			});
+			if (!res.ok || !res.body) throw new Error();
+
+			const reader = res.body.getReader();
+			const decoder = new TextDecoder();
+			let fullText = "";
+			let buffer = "";
+			let threadId = recallThreadId;
+
+			// Add user message and placeholder
+			setRecallMessages([
+				{ role: "user", content: "I just finished this lesson. I'm ready for the recall checkpoint." },
+				{ role: "assistant", content: "" },
+			]);
+
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+				buffer += decoder.decode(value, { stream: true });
+
+				const lines = buffer.split("\n");
+				buffer = lines.pop() || "";
+
+				for (const line of lines) {
+					if (line.startsWith("data: ")) {
+						const data = line.slice(6);
+						if (data === "done" || data === "[DONE]") continue;
+						try {
+							const parsed = JSON.parse(data);
+							if (parsed.threadId && !threadId) {
+								threadId = parsed.threadId;
+								setRecallThreadId(parsed.threadId);
+							} else if (parsed.text) {
+								fullText += parsed.text;
+								setRecallMessages((m) => {
+									const next = [...m];
+									next[next.length - 1] = { role: "assistant", content: fullText };
+									return next;
+								});
+							}
+						} catch {
+							fullText += data;
+							setRecallMessages((m) => {
+								const next = [...m];
+								next[next.length - 1] = { role: "assistant", content: fullText };
+								return next;
+							});
+						}
+					}
+				}
+			}
+
+			// Check for confirmation
+			if (fullText.includes("[UNDERSTANDING_CONFIRMED]")) {
+				handleRecallConfirmed();
+			}
+		} catch {
+			setRecallMessages((m) => {
+				const next = [...m];
+				next[next.length - 1] = { role: "assistant", content: "something went wrong. try again in a moment." };
+				return next;
+			});
+		} finally {
+			setRecallStreaming(false);
+		}
+	}, [lesson.id, recallStreaming, recallMessages.length, recallThreadId]);
+
+	// Auto-start recall when activated
+	useEffect(() => {
+		if (recallActive && recallMessages.length === 0 && !recallConfirmed) {
+			startRecall();
+		}
+	}, [recallActive]); // eslint-disable-line react-hooks/exhaustive-deps
+
+	// Send recall message
+	const sendRecallMessage = async (text: string) => {
+		if (!text.trim() || recallStreaming) return;
+		setRecallInput("");
+		setRecallStreaming(true);
+
+		const userMsg = { role: "user", content: text };
+		const assistantPlaceholder = { role: "assistant", content: "" };
+		setRecallMessages((m) => [...m, userMsg, assistantPlaceholder]);
+
+		try {
+			const res = await fetch("/learning/api/ai/chat", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Origin: window.location.origin },
+				body: JSON.stringify({
+					message: text,
+					scope: "recall",
+					scopeId: lesson.id,
+					threadId: recallThreadId,
+				}),
+			});
+			if (!res.ok || !res.body) throw new Error();
+
+			const reader = res.body.getReader();
+			const decoder = new TextDecoder();
+			let fullText = "";
+			let buffer = "";
+
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+				buffer += decoder.decode(value, { stream: true });
+
+				const lines = buffer.split("\n");
+				buffer = lines.pop() || "";
+
+				for (const line of lines) {
+					if (line.startsWith("data: ")) {
+						const data = line.slice(6);
+						if (data === "done" || data === "[DONE]") continue;
+						try {
+							const parsed = JSON.parse(data);
+							if (parsed.threadId && !recallThreadId) {
+								setRecallThreadId(parsed.threadId);
+							} else if (parsed.text) {
+								fullText += parsed.text;
+								setRecallMessages((m) => {
+									const next = [...m];
+									next[next.length - 1] = { role: "assistant", content: fullText };
+									return next;
+								});
+							}
+						} catch {
+							fullText += data;
+							setRecallMessages((m) => {
+								const next = [...m];
+								next[next.length - 1] = { role: "assistant", content: fullText };
+								return next;
+							});
+						}
+					}
+				}
+			}
+
+			// Check for confirmation
+			if (fullText.includes("[UNDERSTANDING_CONFIRMED]")) {
+				handleRecallConfirmed();
+			}
+		} catch {
+			setRecallMessages((m) => {
+				const next = [...m];
+				next[next.length - 1] = { role: "assistant", content: "something went wrong. try again in a moment." };
+				return next;
+			});
+		} finally {
+			setRecallStreaming(false);
+		}
+	};
+
+	// Handle recall confirmed
+	const handleRecallConfirmed = () => {
+		setRecallConfirmed(true);
+		// Update progress
+		fetch(`/learning/api/progress/${lesson.id}`, {
+			method: "PUT",
+			headers: { "Content-Type": "application/json", Origin: window.location.origin },
+			body: JSON.stringify({ status: "completed", recall_status: "confirmed" }),
+		}).catch(() => {});
+	};
 
 	// Send chat message
 	const sendMessage = async (text: string) => {
@@ -233,6 +433,9 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 		(a: { order_index: number }, b: { order_index: number }) => a.order_index - b.order_index,
 	);
 	const currentIdx = sortedLessons.findIndex((l: { order_index: number }) => l.order_index === lesson.order_index);
+
+	// Navigation is disabled until recall is confirmed (unless already confirmed from progress)
+	const canNavigate = recallConfirmed;
 
 	return (
 		<div
@@ -471,9 +674,209 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 					})}
 				</div>
 
+				{/* Socratic Recall Checkpoint */}
+				{blocks.length > 0 && (recallActive || recallConfirmed) && (
+					<div style={{ maxWidth: 720, marginTop: 48 }}>
+						{/* Checkpoint divider */}
+						<div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
+							<div style={{ flex: 1, height: 1, background: t.divider }} />
+							<span style={{
+								fontFamily: "JetBrains Mono, monospace",
+								fontSize: 9,
+								textTransform: "uppercase",
+								letterSpacing: "0.35em",
+								color: recallConfirmed ? t.accent : t.inkGhost,
+							}}>
+								{recallConfirmed ? "CHECKPOINT CLEARED" : "CHECKPOINT"}
+							</span>
+							<div style={{ flex: 1, height: 1, background: t.divider }} />
+						</div>
+
+						{/* Checkpoint container */}
+						<div style={{
+							border: `1px solid ${recallConfirmed ? t.accent : t.divider}`,
+							borderLeft: `2px solid ${recallConfirmed ? t.accent : t.inkMuted}`,
+							padding: "24px 28px",
+							background: t.bgCard,
+							position: "relative",
+						}}>
+							{/* Header */}
+							<div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+								<span style={{
+									width: 6, height: 6, borderRadius: "50%",
+									background: recallConfirmed ? t.accent : "#cc0000",
+									display: "inline-block",
+								}} />
+								<span style={{
+									fontFamily: "JetBrains Mono, monospace",
+									fontSize: 10,
+									textTransform: "uppercase",
+									letterSpacing: "0.3em",
+									color: recallConfirmed ? t.accent : t.ink,
+								}}>
+									ACTIVE RECALL
+								</span>
+								<span style={{
+									fontFamily: "JetBrains Mono, monospace",
+									fontSize: 9,
+									textTransform: "uppercase",
+									letterSpacing: "0.25em",
+									color: t.inkGhost,
+									marginLeft: "auto",
+								}}>
+									FEYNMAN TECHNIQUE
+								</span>
+							</div>
+
+							{!recallConfirmed && recallMessages.length === 0 && (
+								<p style={{
+									fontSize: 14, lineHeight: 1.6, color: t.inkMuted,
+									fontStyle: "italic", margin: "0 0 16px",
+								}}>
+									preparing your recall checkpoint…
+								</p>
+							)}
+
+							{/* Conversation */}
+							<div style={{ maxHeight: 420, overflowY: "auto", marginBottom: recallConfirmed ? 0 : 20 }}>
+								{recallMessages.map((m, i) => {
+									const isUser = m.role === "user";
+									// Strip the confirmation tag from display
+									const displayContent = m.content.replace("[UNDERSTANDING_CONFIRMED]", "").trim();
+									// Hide the initial trigger message from the user
+									if (isUser && i === 0) return null;
+									return (
+										<div key={i} style={{ marginBottom: 16 }}>
+											<span style={{
+												fontFamily: "JetBrains Mono, monospace",
+												fontSize: 9,
+												textTransform: "uppercase",
+												letterSpacing: "0.25em",
+												color: t.inkGhost,
+												display: "block",
+												marginBottom: 6,
+											}}>
+												{isUser ? "YOU" : "MINSU"}
+											</span>
+											<div style={{
+												fontSize: 14, lineHeight: 1.7, color: t.ink,
+												paddingLeft: isUser ? 0 : 0,
+												textAlign: isUser ? "right" : "left",
+											}}>
+												{displayContent || (
+													<span style={{ fontFamily: "Playfair Display, serif", fontSize: 18, color: t.inkMuted, letterSpacing: 2 }}>…</span>
+												)}
+											</div>
+										</div>
+									);
+								})}
+								<div ref={recallEndRef} />
+							</div>
+
+							{/* Confirmed success */}
+							{recallConfirmed && (
+								<div style={{
+									marginTop: 16,
+									padding: "16px 20px",
+									border: `1px solid ${t.accent}`,
+									background: "transparent",
+								}}>
+									<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+										<span style={{ width: 5, height: 5, borderRadius: "50%", background: t.accent, display: "inline-block" }} />
+										<span style={{
+											fontFamily: "JetBrains Mono, monospace",
+											fontSize: 10,
+											textTransform: "uppercase",
+											letterSpacing: "0.3em",
+											color: t.accent,
+										}}>
+											UNDERSTANDING CONFIRMED
+										</span>
+									</div>
+									<p style={{ fontSize: 13, lineHeight: 1.5, color: t.inkMuted, margin: "10px 0 0" }}>
+										You've demonstrated a solid grasp of this material. Navigation to the next lesson is now unlocked.
+									</p>
+								</div>
+							)}
+
+							{/* Input area */}
+							{!recallConfirmed && recallMessages.length > 0 && (
+								<div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 16 }}>
+									<div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+										<textarea
+											value={recallInput}
+											onChange={(e) => setRecallInput(e.target.value)}
+											onKeyDown={(e) => {
+												if (e.key === "Enter" && !e.shiftKey) {
+													e.preventDefault();
+													sendRecallMessage(recallInput);
+												}
+											}}
+											placeholder="explain what you learned in your own words…"
+											rows={3}
+											style={{
+												flex: 1, border: "none", outline: "none", resize: "none",
+												background: "transparent", color: t.ink,
+												fontFamily: "Inter, sans-serif", fontSize: 13, lineHeight: 1.5,
+											}}
+										/>
+										<button
+											onClick={() => sendRecallMessage(recallInput)}
+											disabled={recallStreaming || !recallInput.trim()}
+											style={{
+												background: "transparent",
+												border: `1px solid ${t.divider}`,
+												padding: "6px 12px",
+												cursor: recallStreaming ? "wait" : "pointer",
+												color: t.inkMuted,
+												fontFamily: "JetBrains Mono, monospace",
+												fontSize: 9,
+												textTransform: "uppercase",
+												letterSpacing: "0.25em",
+												opacity: recallStreaming || !recallInput.trim() ? 0.4 : 1,
+											}}
+										>
+											SEND
+										</button>
+									</div>
+								</div>
+							)}
+						</div>
+					</div>
+				)}
+
+				{/* Complete button — triggers recall if not yet active */}
+				{blocks.length > 0 && !recallActive && !recallConfirmed && (
+					<div style={{ maxWidth: 720, marginTop: 40, textAlign: "center" }}>
+						<button
+							onClick={() => setRecallActive(true)}
+							style={{
+								fontFamily: "JetBrains Mono, monospace",
+								fontSize: 11,
+								textTransform: "uppercase",
+								letterSpacing: "0.25em",
+								background: "transparent",
+								border: `1px solid ${t.divider}`,
+								color: t.inkMuted,
+								cursor: "pointer",
+								padding: "14px 28px",
+								display: "inline-flex",
+								alignItems: "center",
+								gap: 10,
+							}}
+						>
+							BEGIN RECALL CHECKPOINT
+							<span style={{ width: 5, height: 5, borderRadius: "50%", background: "#cc0000", opacity: 0.6 }} />
+						</button>
+					</div>
+				)}
+
 				{/* Bottom navigation */}
 				{blocks.length > 0 && (
-					<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 56, paddingTop: 32, borderTop: `1px solid ${t.divider}`, maxWidth: 720 }}>
+					<div style={{
+						display: "flex", justifyContent: "space-between", alignItems: "center",
+						marginTop: 56, paddingTop: 32, borderTop: `1px solid ${t.divider}`, maxWidth: 720,
+					}}>
 						{currentIdx > 0 ? (
 							<button
 								onClick={() => { window.location.href = `/learning/courses/${course.slug}/lessons/${sortedLessons[currentIdx - 1].order_index}`; }}
@@ -484,11 +887,33 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 						) : <div />}
 						{currentIdx < sortedLessons.length - 1 ? (
 							<button
-								onClick={() => { window.location.href = `/learning/courses/${course.slug}/lessons/${sortedLessons[currentIdx + 1].order_index}`; }}
-								style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.25em", background: "transparent", border: `1px solid ${t.divider}`, color: t.inkMuted, cursor: "pointer", padding: "12px 22px", display: "inline-flex", alignItems: "center", gap: 10 }}
+								onClick={() => {
+									if (!canNavigate) return;
+									window.location.href = `/learning/courses/${course.slug}/lessons/${sortedLessons[currentIdx + 1].order_index}`;
+								}}
+								style={{
+									fontFamily: "JetBrains Mono, monospace",
+									fontSize: 11,
+									textTransform: "uppercase",
+									letterSpacing: "0.25em",
+									background: "transparent",
+									border: `1px solid ${canNavigate ? t.accent : t.divider}`,
+									color: canNavigate ? t.inkStrong : t.inkGhost,
+									cursor: canNavigate ? "pointer" : "not-allowed",
+									padding: "12px 22px",
+									display: "inline-flex",
+									alignItems: "center",
+									gap: 10,
+									opacity: canNavigate ? 1 : 0.5,
+									transition: "all .3s ease",
+								}}
 							>
-								MARK COMPLETE & NEXT
-								<span style={{ width: 5, height: 5, borderRadius: "50%", background: "#cc0000", opacity: 0.5 }} />
+								{canNavigate ? "NEXT LESSON" : "COMPLETE RECALL TO CONTINUE"}
+								<span style={{
+									width: 5, height: 5, borderRadius: "50%",
+									background: canNavigate ? t.accent : "#cc0000",
+									opacity: canNavigate ? 1 : 0.3,
+								}} />
 							</button>
 						) : null}
 					</div>

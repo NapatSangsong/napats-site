@@ -1,7 +1,9 @@
 /**
  * POST /api/ai/plan-course
  * Stream a course outline from a user prompt via SSE.
- * Supports multi-turn conversation for interactive course planning.
+ * Supports multi-turn conversation with context-awareness:
+ * - Loads user's learning style preferences
+ * - Loads existing course library for smart prerequisites
  */
 import type { Route } from "./+types/ai.plan-course";
 import { PlanCourseBody } from "~/lib/ai/schemas";
@@ -9,6 +11,7 @@ import { streamChat } from "~/lib/ai/client";
 import { selectModel } from "~/lib/ai/router";
 import { planCoursePrompt } from "~/lib/ai/prompts/planCourse";
 import { requireAuth, sseResponse, createSSEStream } from "~/lib/ai/helpers.server";
+import { createServiceClient } from "~/lib/supabase.server";
 
 export async function action({ request, context }: Route.ActionArgs) {
 	const env = context.cloudflare.env as Record<string, string> & Env;
@@ -20,7 +23,6 @@ export async function action({ request, context }: Route.ActionArgs) {
 	const denied = await requireAuth(request, env);
 	if (denied) return denied;
 
-	// Parse and validate body
 	let body: ReturnType<typeof PlanCourseBody.safeParse>;
 	try {
 		body = PlanCourseBody.safeParse(await request.json());
@@ -36,9 +38,46 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const { prompt, model: requestedModel, messages: history } = body.data;
 	const model = requestedModel ?? selectModel("planCourse");
-	const systemPrompt = planCoursePrompt({ topic: prompt });
 
-	// Build messages: use conversation history if provided, otherwise single prompt
+	// Load context from database
+	const supabase = createServiceClient(env);
+
+	// Learning style preference
+	let learningStyle: { reading: boolean; watching: boolean; doing: boolean } | undefined;
+	try {
+		const { data: styleSetting } = await supabase
+			.from("settings")
+			.select("value")
+			.eq("key", "learning_style")
+			.single();
+		if (styleSetting?.value) {
+			learningStyle = styleSetting.value as any;
+		}
+	} catch {
+		// Settings not available yet
+	}
+
+	// Existing courses for smart prerequisites
+	let existingCourses: { title: string; tags: string[]; difficulty: string }[] | undefined;
+	try {
+		const { data: courses } = await supabase
+			.from("courses")
+			.select("title, tags, difficulty")
+			.eq("archived", false)
+			.limit(20);
+		if (courses && courses.length > 0) {
+			existingCourses = courses;
+		}
+	} catch {
+		// DB not available
+	}
+
+	const systemPrompt = planCoursePrompt({
+		topic: prompt,
+		learningStyle,
+		existingCourses,
+	});
+
 	const messages = history && history.length > 0
 		? history
 		: [{ role: "user" as const, content: prompt }];

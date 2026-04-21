@@ -37,6 +37,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 	const env = context.cloudflare.env;
 	let courses: CourseRow[] = [];
 	let totalLessons = 0;
+	let reviewsDue = 0;
 
 	try {
 		const supabase = createServiceClient(env);
@@ -57,11 +58,23 @@ export async function loader({ context }: Route.LoaderArgs) {
 				totalLessons += c.lessons?.length ?? 0;
 			}
 		}
+
+		// Count reviews due
+		try {
+			const { count } = await supabase
+				.from("review_schedule")
+				.select("id", { count: "exact", head: true })
+				.is("completed_at", null)
+				.lte("due_at", new Date().toISOString());
+			reviewsDue = count ?? 0;
+		} catch {
+			// review_schedule table may not exist yet
+		}
 	} catch {
 		// Supabase may not be set up yet
 	}
 
-	return { courses, totalLessons };
+	return { courses, totalLessons, reviewsDue };
 }
 
 // ── Types ───────────────────────────────────────────────────
@@ -386,7 +399,11 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 	const abortRef = useRef<AbortController | null>(null);
 	const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-	const { courses, totalLessons } = loaderData;
+	// AI suggestions
+	const [aiSuggestions, setAiSuggestions] = useState<{ title: string; reason: string; prompt: string }[]>([]);
+	const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+	const { courses, totalLessons, reviewsDue } = loaderData;
 	const inSession = chatMessages.length > 0 || streaming;
 
 	// Auto-scroll chat
@@ -500,8 +517,30 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 		}
 	}, [handleChatSend]);
 
+	// Load AI suggestions when courses exist
+	useEffect(() => {
+		if (courses.length > 0 && aiSuggestions.length === 0 && !loadingSuggestions) {
+			setLoadingSuggestions(true);
+			fetch("/learning/api/ai/suggest-courses", { method: "POST" })
+				.then((r) => r.json())
+				.then((data) => {
+					if (data.suggestions) setAiSuggestions(data.suggestions);
+				})
+				.catch(() => {})
+				.finally(() => setLoadingSuggestions(false));
+		}
+	}, [courses.length]);
+
 	const models = ["OPUS", "SONNET", "HAIKU", "AUTO"] as const;
 	const continueCourses = courses.slice(0, 3);
+
+	const templates = [
+		{ label: "Quick intro", desc: "30 min · 3-4 focused lessons", prompt: "Create a focused 30-minute introduction to " },
+		{ label: "Weekend deep dive", desc: "4-6 hours · 8-10 lessons", prompt: "Design a comprehensive weekend course on " },
+		{ label: "30-day challenge", desc: "Daily micro-lessons · 15 min each", prompt: "Build a 30-day learning challenge for " },
+		{ label: "Project-based", desc: "Learn by building something real", prompt: "Create a project-based course where I build something real with " },
+	];
+
 	const starters = [
 		"Teach me CSS Grid, from zero to layout mastery.",
 		"Why does Rust hate me? Explain ownership with a cooking analogy.",
@@ -595,6 +634,103 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 								COMPOSE
 							</TrackedButton>
 						</div>
+
+						{/* Course templates */}
+						<div style={{ marginTop: 32 }}>
+							<div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
+								<Rule width={40} color={t.inkGhost} />
+								<Tracked size={10} tracking={0.3} style={{ color: t.inkGhost }}>
+									QUICK START
+								</Tracked>
+							</div>
+							<div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 0, borderTop: `1px solid ${t.divider}` }}>
+								{templates.map((tmpl, i) => (
+									<div
+										key={i}
+										onClick={() => setPrompt(tmpl.prompt)}
+										style={{
+											padding: "16px 18px",
+											borderBottom: `1px solid ${t.divider}`,
+											borderRight: i % 2 === 0 ? `1px solid ${t.divider}` : "none",
+											cursor: "pointer",
+											transition: "background .25s",
+										}}
+										onMouseEnter={(e) => { e.currentTarget.style.background = t.bgCard; }}
+										onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+									>
+										<div style={{ fontFamily: "Playfair Display, serif", fontSize: 15, color: t.ink, marginBottom: 4 }}>
+											{tmpl.label}
+										</div>
+										<Tracked size={9} tracking={0.15} style={{ color: t.inkGhost }}>
+											{tmpl.desc}
+										</Tracked>
+									</div>
+								))}
+							</div>
+						</div>
+
+						{/* Review due alert */}
+						{reviewsDue > 0 && (
+							<div
+								onClick={() => navigate("/learning/progress")}
+								style={{
+									marginTop: 24,
+									padding: "14px 18px",
+									border: `1px solid ${t.accent}`,
+									display: "flex",
+									alignItems: "center",
+									gap: 12,
+									cursor: "pointer",
+								}}
+							>
+								<FilmDot size={6} breathe />
+								<span style={{ fontFamily: "Playfair Display, serif", fontSize: 14, color: t.ink, flex: 1 }}>
+									{reviewsDue} {reviewsDue === 1 ? "lesson" : "lessons"} due for review
+								</span>
+								<Tracked size={9} tracking={0.2} style={{ color: t.inkGhost }}>
+									REVIEW NOW →
+								</Tracked>
+							</div>
+						)}
+
+						{/* AI-powered suggestions */}
+						{aiSuggestions.length > 0 && (
+							<div style={{ marginTop: 32 }}>
+								<div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
+									<Rule width={40} color={t.inkGhost} />
+									<Tracked size={10} tracking={0.3} style={{ color: t.inkGhost }}>
+										SUGGESTED FOR YOU
+									</Tracked>
+								</div>
+								{aiSuggestions.map((s, i) => (
+									<div
+										key={i}
+										onClick={() => { setPrompt(s.prompt); }}
+										style={{
+											padding: "16px 0",
+											borderTop: `1px solid ${t.divider}`,
+											cursor: "pointer",
+											display: "flex",
+											gap: 16,
+											alignItems: "baseline",
+										}}
+									>
+										<Tracked size={9} style={{ color: t.inkGhost, width: 20 }}>
+											{String(i + 1).padStart(2, "0")}
+										</Tracked>
+										<div style={{ flex: 1 }}>
+											<div style={{ fontFamily: "Playfair Display, serif", fontSize: 16, color: t.ink }}>
+												{s.title}
+											</div>
+											<div style={{ fontSize: 12, color: t.inkGhost, marginTop: 4, fontStyle: "italic" }}>
+												{s.reason}
+											</div>
+										</div>
+										<span style={{ color: t.inkGhost }}>→</span>
+									</div>
+								))}
+							</div>
+						)}
 					</>
 				)}
 

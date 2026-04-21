@@ -8,8 +8,10 @@ export type AIAction =
   | "generateQuiz"
   | "gradeShortAnswer"
   | "chat"
+  | "socraticRecall"
   | "suggestTitle"
-  | "summarise";
+  | "summarise"
+  | "buildGraph";
 
 const OPUS = "claude-opus-4-7";
 const SONNET = "claude-sonnet-4-6";
@@ -23,6 +25,7 @@ export function selectModel(action: AIAction, inputLength?: number): string {
     case "generateLesson":
     case "generateQuiz":
     case "gradeShortAnswer":
+    case "socraticRecall":
       return SONNET;
 
     case "chat":
@@ -30,6 +33,7 @@ export function selectModel(action: AIAction, inputLength?: number): string {
 
     case "suggestTitle":
     case "summarise":
+    case "buildGraph":
       return HAIKU;
   }
 }
