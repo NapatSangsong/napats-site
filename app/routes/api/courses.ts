@@ -75,12 +75,12 @@ export async function action({ request, context }: Route.ActionArgs) {
 			slug,
 			subtitle: draft.subtitle ?? null,
 			description: draft.description ?? null,
+			source: "ai",
 			language: draft.language,
 			difficulty: draft.difficulty,
 			estimated_minutes: draft.estimated_minutes ?? null,
 			tags: draft.tags,
 			cover_monogram: draft.cover_monogram ?? null,
-			status: "draft",
 		})
 		.select("id, slug")
 		.single();
@@ -95,7 +95,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 		title: lesson.title,
 		summary: lesson.summary ?? null,
 		outcomes: lesson.outcomes,
-		order: idx,
+		order_index: idx,
 		status: "pending",
 	}));
 

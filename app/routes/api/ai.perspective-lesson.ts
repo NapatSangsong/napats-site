@@ -1,10 +1,9 @@
 /**
  * POST /api/ai/perspective-lesson
  * Re-generate lesson content through a specific analytical lens.
- * Streams blocks via SSE (does NOT persist to Supabase — ephemeral view).
+ * Streams raw text via SSE, client parses the final JSON.
  */
 import type { Route } from "./+types/ai.perspective-lesson";
-import { BlockSchema } from "~/lib/ai/schemas";
 import { streamChat } from "~/lib/ai/client";
 import { selectModel } from "~/lib/ai/router";
 import { perspectiveLessonPrompt } from "~/lib/ai/prompts/perspectiveLesson";
@@ -43,12 +42,12 @@ export async function action({ request, context }: Route.ActionArgs) {
 	}
 
 	const { lessonId, perspective, model: requestedModel } = body.data;
-	const supabase = createServiceClient(env as unknown as { SUPABASE_URL: string; SUPABASE_SERVICE_ROLE_KEY: string });
+	const supabase = createServiceClient(env);
 
 	// Fetch lesson + course context
 	const { data: lesson, error: lessonError } = await supabase
 		.from("lessons")
-		.select("id, title, summary, outcomes, order, course_id, courses(title, language)")
+		.select("id, title, summary, outcomes, order_index, course_id, courses(title, language)")
 		.eq("id", lessonId)
 		.single();
 
@@ -74,35 +73,16 @@ export async function action({ request, context }: Route.ActionArgs) {
 	const stream = createSSEStream(async ({ send }) => {
 		const textStream = await streamChat(
 			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
-			[{ role: "user", content: `Rewrite the full lesson content for "${lesson.title}" through the ${perspective} perspective.` }],
+			[{ role: "user", content: `Rewrite the full lesson "${lesson.title}" through the ${perspective} perspective. Return ONLY the JSON array of blocks.` }],
 			{ model, system: systemPrompt, maxTokens: 16384 },
 		);
 
-		// Accumulate full text
-		let fullText = "";
 		const reader = textStream.getReader();
 		while (true) {
 			const { done, value } = await reader.read();
 			if (done) break;
-			fullText += value;
 			send("delta", value);
 		}
-
-		// Parse blocks from accumulated JSON
-		try {
-			const parsed = JSON.parse(fullText);
-			const arr = Array.isArray(parsed) ? parsed : [];
-			const blocks = z.array(BlockSchema).parse(arr);
-
-			// Send parsed blocks (ephemeral — not saved to DB)
-			for (const block of blocks) {
-				send("block", JSON.stringify(block));
-			}
-		} catch {
-			send("error", JSON.stringify({ message: "failed to parse generated blocks" }));
-			return;
-		}
-
 		send("end", "done");
 	});
 

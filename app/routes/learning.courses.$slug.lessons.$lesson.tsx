@@ -198,48 +198,58 @@ hyper:hover {
 		try {
 			const res = await fetch("/learning/api/ai/perspective-lesson", {
 				method: "POST",
-				headers: { "Content-Type": "application/json", Origin: window.location.origin },
+				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ lessonId: lesson.id, perspective }),
 			});
-			if (!res.ok || !res.body) return;
+			if (!res.ok || !res.body) {
+				setPerspectiveLoading(false);
+				return;
+			}
 
+			// Accumulate raw text from SSE deltas, then parse JSON at the end
 			const reader = res.body.getReader();
 			const decoder = new TextDecoder();
-			let buffer = "";
-			const newBlocks: unknown[] = [];
+			let sseBuffer = "";
+			let fullText = "";
 
 			while (true) {
 				const { done, value } = await reader.read();
 				if (done) break;
-				buffer += decoder.decode(value, { stream: true });
+				sseBuffer += decoder.decode(value, { stream: true });
 
-				const lines = buffer.split("\n");
-				buffer = lines.pop() || "";
+				// Parse SSE messages (separated by double newlines)
+				const messages = sseBuffer.split("\n\n");
+				sseBuffer = messages.pop() || "";
 
-				for (const line of lines) {
-					if (line.startsWith("data: ")) {
-						const data = line.slice(6);
-						if (data === "done" || data === "[DONE]") continue;
-						try {
-							const parsed = JSON.parse(data);
-							if (parsed.type) {
-								// This is a block object
-								newBlocks.push({ content: parsed });
-								setPerspectiveBlocks([...newBlocks]);
-							}
-						} catch {
-							// Partial JSON, ignore
-						}
+				for (const msg of messages) {
+					const lines = msg.split("\n");
+					let eventType = "";
+					const dataLines: string[] = [];
+					for (const line of lines) {
+						if (line.startsWith("event: ")) eventType = line.slice(7);
+						else if (line.startsWith("data: ")) dataLines.push(line.slice(6));
 					}
+					const data = dataLines.join("\n");
+					if (eventType === "end" || eventType === "error") continue;
+					if (data) fullText += data;
 				}
 			}
 
-			// Cache the result
-			if (newBlocks.length > 0) {
+			// Parse the accumulated JSON array of blocks
+			try {
+				const jsonMatch = fullText.match(/\[[\s\S]*\]/);
+				const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : fullText);
+				const arr = Array.isArray(parsed) ? parsed : [];
+				// Map to the block format expected by the renderer
+				const newBlocks = arr.map((b: any) => ({ content: b }));
+				setPerspectiveBlocks(newBlocks);
 				perspectiveCacheRef.current[perspective] = newBlocks;
+			} catch {
+				// JSON parse failed — try to show what we got
+				setPerspectiveBlocks([]);
 			}
 		} catch {
-			// Error handled by UI
+			// Network error
 		} finally {
 			setPerspectiveLoading(false);
 		}
