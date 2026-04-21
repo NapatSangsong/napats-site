@@ -63,10 +63,15 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 		// Parse the response
 		try {
-			const parsed = JSON.parse(fullText);
-			const blocks = z.array(BlockSchema).parse(
-				Array.isArray(parsed.blocks) ? parsed.blocks : [],
-			);
+			let jsonStr = fullText.trim();
+			const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+			if (fenceMatch) jsonStr = fenceMatch[1].trim();
+			if (!jsonStr.startsWith("{") && !jsonStr.startsWith("[")) {
+				const objMatch = jsonStr.match(/\{[\s\S]*\}/);
+				if (objMatch) jsonStr = objMatch[0];
+			}
+			const parsed = JSON.parse(jsonStr);
+			const blocks = Array.isArray(parsed.blocks) ? parsed.blocks : Array.isArray(parsed) ? parsed : [];
 			const hyperNodes = Array.isArray(parsed.hyperNodes)
 				? parsed.hyperNodes.filter((n: unknown) => typeof n === "string")
 				: [];

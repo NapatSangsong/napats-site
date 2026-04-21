@@ -49,9 +49,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const { data: blocks } = await supabase
 		.from("lesson_blocks")
-		.select("type, content")
+		.select("kind, content")
 		.eq("lesson_id", lessonId)
-		.order("order", { ascending: true });
+		.order("order_index", { ascending: true });
 
 	const lessonContent = (blocks ?? [])
 		.map((b) => JSON.stringify(b.content))

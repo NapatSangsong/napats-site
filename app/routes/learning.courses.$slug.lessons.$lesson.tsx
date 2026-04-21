@@ -619,32 +619,27 @@ hyper:hover {
 				if (done) break;
 				buffer += decoder.decode(value, { stream: true });
 
-				const lines = buffer.split("\n");
-				buffer = lines.pop() || "";
+				const sseMessages = buffer.split("\n\n");
+				buffer = sseMessages.pop() || "";
 
-				for (const line of lines) {
-					if (line.startsWith("data: ")) {
-						const data = line.slice(6);
-						if (data === "done" || data === "[DONE]") continue;
-						try {
-							const parsed = JSON.parse(data);
-							if (parsed.text) {
-								fullText += parsed.text;
-								setMessages((m) => {
-									const next = [...m];
-									next[next.length - 1] = { who: "MINSU", text: fullText };
-									return next;
-								});
-							}
-						} catch {
-							// partial text delta
-							fullText += data;
-							setMessages((m) => {
-								const next = [...m];
-								next[next.length - 1] = { who: "MINSU", text: fullText };
-								return next;
-							});
-						}
+				for (const msg of sseMessages) {
+					const lines = msg.split("\n");
+					let eventType = "";
+					const dataLines: string[] = [];
+					for (const line of lines) {
+						if (line.startsWith("event: ")) eventType = line.slice(7);
+						else if (line.startsWith("data: ")) dataLines.push(line.slice(6));
+					}
+					const data = dataLines.join("\n");
+					if (eventType === "end" || eventType === "error") continue;
+					if (eventType === "meta") continue;
+					if (data) {
+						fullText += data;
+						setMessages((m) => {
+							const next = [...m];
+							next[next.length - 1] = { who: "MINSU", text: fullText };
+							return next;
+						});
 					}
 				}
 			}
@@ -757,19 +752,26 @@ hyper:hover {
 				const { done, value } = await reader.read();
 				if (done) break;
 				buf += decoder.decode(value, { stream: true });
-				const lines = buf.split("\n");
-				buf = lines.pop() || "";
-				for (const line of lines) {
-					if (line.startsWith("data: ")) {
-						const data = line.slice(6);
-						if (data === "done" || data === "[DONE]") continue;
+				const sseMessages = buf.split("\n\n");
+				buf = sseMessages.pop() || "";
+				for (const msg of sseMessages) {
+					const lines = msg.split("\n");
+					let eventType = "";
+					const dataLines: string[] = [];
+					for (const line of lines) {
+						if (line.startsWith("event: ")) eventType = line.slice(7);
+						else if (line.startsWith("data: ")) dataLines.push(line.slice(6));
+					}
+					const data = dataLines.join("\n");
+					if (eventType === "end" || eventType === "error") continue;
+					if (eventType === "result" && data) {
 						try {
 							const parsed = JSON.parse(data);
 							if (parsed.blocks) {
 								const resultBlocks = parsed.blocks.map((b: unknown, i: number) => ({ content: b, id: `dd-${term}-${i}` }));
 								setDeepDives((prev) => updateAtPath(prev, fullPath, (e) => ({ ...e, blocks: resultBlocks, loading: false })));
 							}
-						} catch { /* streaming delta */ }
+						} catch { /* parse error */ }
 					}
 				}
 			}

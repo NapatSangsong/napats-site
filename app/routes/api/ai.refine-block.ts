@@ -39,7 +39,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 	// Fetch current block
 	const { data: block, error: blockError } = await supabase
 		.from("lesson_blocks")
-		.select("id, type, content")
+		.select("id, kind, content")
 		.eq("id", blockId)
 		.single();
 
@@ -49,7 +49,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const model = requestedModel ?? selectModel("generateLesson");
 	const systemPrompt = refineBlockSystem({
-		blockType: block.type,
+		blockType: block.kind,
 		blockContent: JSON.stringify(block.content),
 		instruction,
 	});

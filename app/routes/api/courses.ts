@@ -18,8 +18,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 	const { data: courses, error } = await supabase
 		.from("courses")
-		.select("id, title, slug, subtitle, description, language, difficulty, estimated_minutes, tags, cover_monogram, status, created_at, updated_at")
-		.neq("status", "archived")
+		.select("id, title, slug, subtitle, description, source, language, difficulty, estimated_minutes, tags, cover_monogram, created_at, updated_at")
+		.eq("archived", false)
 		.order("created_at", { ascending: false });
 
 	if (error) {

@@ -46,21 +46,30 @@ export async function loader({ context }: Route.LoaderArgs) {
 	const [coursesRes, relsRes] = await Promise.all([
 		supabase
 			.from("courses")
-			.select("id, title, slug, cover_monogram, difficulty, tags, progress"),
+			.select("id, title, slug, cover_monogram, difficulty, tags, lessons(id, lesson_progress(status))")
+			.eq("archived", false),
 		supabase
 			.from("course_relationships")
 			.select("from_course_id, to_course_id, relationship, strength"),
 	]);
 
-	const courses = (coursesRes.data ?? []) as Array<{
+	const rawCourses = (coursesRes.data ?? []) as Array<{
 		id: string;
 		title: string;
 		slug: string;
 		cover_monogram: string;
 		difficulty: string;
 		tags: string[];
-		progress: number;
+		lessons?: { id: string; lesson_progress?: { status: string }[] }[];
 	}>;
+	// Calculate progress from lessons
+	const courses = rawCourses.map((c) => {
+		const total = c.lessons?.length || 0;
+		const completed = c.lessons?.filter(
+			(l) => l.lesson_progress?.some((p) => p.status === "completed"),
+		).length || 0;
+		return { ...c, progress: total > 0 ? Math.round((completed / total) * 100) : 0 };
+	});
 
 	// Fetch lesson progress and review schedule data for entropy calculation
 	const courseIds = courses.map((c) => c.id);
