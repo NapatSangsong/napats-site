@@ -1,0 +1,17 @@
+# Copy this file to .dev.vars and fill in real values.
+# .dev.vars is gitignored — never commit it.
+
+# Supabase (same project as vault, service role for server-side access)
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+
+# Anthropic API (for AI course generation)
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Learning platform auth
+# Generate with: npx tsx scripts/set-master-password.ts
+MASTER_PASSWORD_HASH=SALT_BASE64:HASH_BASE64
+
+# Session signing key (32 random bytes, base64-encoded)
+# Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+SESSION_HMAC_SECRET=BASE64_32_BYTES

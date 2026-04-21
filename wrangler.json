@@ -9,6 +9,17 @@
 	},
 	"upload_source_maps": true,
 	"vars": {
-		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
-	}
+		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare",
+		"LEARNING_DEFAULT_MODEL": "claude-sonnet-4-6",
+		"LEARNING_SESSION_DAYS": "30",
+		"LEARNING_REMEMBER_DAYS": "90",
+		"LEARNING_RATE_LIMIT_MAX": "5",
+		"LEARNING_RATE_LIMIT_WINDOW_MINUTES": "15"
+	},
+	"kv_namespaces": [
+		{
+			"binding": "RATE_LIMIT_KV",
+			"id": "4ebcc5d79c3641369a028a9c97af9f2c"
+		}
+	]
 }

@@ -59,6 +59,9 @@ export default function Home() {
 						<a href="#contact" className="link-reveal hover:text-white transition-colors duration-300">
 							Contact
 						</a>
+						<a href="/learning" className="link-reveal hover:text-white transition-colors duration-300">
+							Learning
+						</a>
 					</div>
 				</div>
 			</nav>
