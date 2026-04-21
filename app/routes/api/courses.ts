@@ -32,12 +32,26 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export async function action({ request, context }: Route.ActionArgs) {
 	const env = context.cloudflare.env as Record<string, string> & Env;
 
+	const denied = await requireAuth(request, env);
+	if (denied) return denied;
+
+	// DELETE: remove a course by id
+	if (request.method === "DELETE") {
+		const body = await request.json() as { courseId?: string };
+		if (!body.courseId) {
+			return Response.json({ message: "courseId required" }, { status: 400 });
+		}
+		const supabase = createServiceClient(env as unknown as { SUPABASE_URL: string; SUPABASE_SERVICE_ROLE_KEY: string });
+		const { error } = await supabase.from("courses").delete().eq("id", body.courseId);
+		if (error) {
+			return Response.json({ message: "failed to delete course" }, { status: 500 });
+		}
+		return Response.json({ ok: true });
+	}
+
 	if (request.method !== "POST") {
 		return Response.json({ message: "method not allowed" }, { status: 405 });
 	}
-
-	const denied = await requireAuth(request, env);
-	if (denied) return denied;
 
 	let body: ReturnType<typeof CourseDraftSchema.safeParse>;
 	try {

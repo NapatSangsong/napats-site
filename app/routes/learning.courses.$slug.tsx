@@ -1,7 +1,7 @@
 /**
  * Course overview — shows course details + lesson list.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import type { Route } from "./+types/learning.courses.$slug";
 import { useTheme } from "./learning";
@@ -50,6 +50,29 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 
 	const completedCount = progress.filter((p: { status: string }) => p.status === "completed").length;
 	const totalProg = lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
+
+	const [deleting, setDeleting] = useState(false);
+	const [confirmDelete, setConfirmDelete] = useState(false);
+
+	const handleDelete = useCallback(async () => {
+		if (deleting) return;
+		setDeleting(true);
+		try {
+			const res = await fetch("/learning/api/courses", {
+				method: "DELETE",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ courseId: course.id }),
+			});
+			if (res.ok) {
+				navigate("/learning");
+			}
+		} catch {
+			// error
+		} finally {
+			setDeleting(false);
+			setConfirmDelete(false);
+		}
+	}, [course.id, deleting, navigate]);
 
 	return (
 		<div style={{ padding: "0 20px 120px" }}>
@@ -111,6 +134,30 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 					</Tracked>
 				</div>
 				<ProgressBar value={totalProg} t={t} />
+
+				{/* Course actions */}
+				<div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
+					<TrackedButton t={t} onClick={() => navigate(`/learning/courses/${course.slug}/lessons/0`)}>
+						{totalProg > 0 ? "CONTINUE LEARNING" : "START LEARNING"}
+					</TrackedButton>
+					{!confirmDelete ? (
+						<TrackedButton t={t} onClick={() => setConfirmDelete(true)}>
+							DELETE COURSE
+						</TrackedButton>
+					) : (
+						<div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+							<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: t.accent, textTransform: "uppercase", letterSpacing: "0.15em" }}>
+								{deleting ? "DELETING…" : "ARE YOU SURE?"}
+							</span>
+							<TrackedButton t={t} onClick={handleDelete} disabled={deleting}>
+								YES, DELETE
+							</TrackedButton>
+							<TrackedButton t={t} onClick={() => setConfirmDelete(false)}>
+								CANCEL
+							</TrackedButton>
+						</div>
+					)}
+				</div>
 
 				{/* Description */}
 				{course.description && (
