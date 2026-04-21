@@ -4,13 +4,12 @@
  * On completion, writes blocks to Supabase and marks lesson as ready.
  */
 import type { Route } from "./+types/ai.generate-lesson";
-import { GenerateLessonBody, BlockSchema } from "~/lib/ai/schemas";
+import { GenerateLessonBody } from "~/lib/ai/schemas";
 import { streamChat } from "~/lib/ai/client";
 import { selectModel } from "~/lib/ai/router";
 import { generateLessonPrompt } from "~/lib/ai/prompts/generateLesson";
 import { createServiceClient } from "~/lib/supabase.server";
 import { requireAuth, sseResponse, createSSEStream } from "~/lib/ai/helpers.server";
-import { z } from "zod";
 
 export async function action({ request, context }: Route.ActionArgs) {
 	const env = context.cloudflare.env as Record<string, string> & Env;
@@ -90,23 +89,38 @@ export async function action({ request, context }: Route.ActionArgs) {
 		}
 
 		// Parse blocks from accumulated JSON
-		let blocks: z.infer<typeof BlockSchema>[];
+		let blocks: Record<string, unknown>[];
 		try {
-			const parsed = JSON.parse(fullText);
-			const arr = Array.isArray(parsed) ? parsed : [];
-			blocks = z.array(BlockSchema).parse(arr);
+			// Strip markdown fences if the AI wrapped the JSON
+			let jsonStr = fullText.trim();
+			const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+			if (fenceMatch) jsonStr = fenceMatch[1].trim();
+			// Also try extracting a raw JSON array
+			if (!jsonStr.startsWith("[")) {
+				const arrMatch = jsonStr.match(/\[[\s\S]*\]/);
+				if (arrMatch) jsonStr = arrMatch[0];
+			}
+			const parsed = JSON.parse(jsonStr);
+			blocks = Array.isArray(parsed) ? parsed : [];
+			if (blocks.length === 0) {
+				send("error", JSON.stringify({ message: "AI returned empty block array" }));
+				return;
+			}
 		} catch (err) {
-			send("error", JSON.stringify({ message: "failed to parse generated blocks" }));
+			send("error", JSON.stringify({ message: "failed to parse generated blocks", detail: (err as Error).message, preview: fullText.slice(0, 200) }));
 			return;
 		}
 
-		// Write blocks to Supabase
-		const blockRows = blocks.map((block, idx) => ({
-			lesson_id: lessonId,
-			order_index: idx,
-			kind: block.type,
-			content: block,
-		}));
+		// Write blocks to Supabase (save raw AI output — no strict validation)
+		const VALID_KINDS = new Set(["prose", "heading", "mermaid", "katex", "code", "interactive", "callout", "image", "quote"]);
+		const blockRows = blocks
+			.filter((block) => typeof block.type === "string" && VALID_KINDS.has(block.type))
+			.map((block, idx) => ({
+				lesson_id: lessonId,
+				order_index: idx,
+				kind: block.type as string,
+				content: block,
+			}));
 
 		const { error: insertError } = await supabase
 			.from("lesson_blocks")
