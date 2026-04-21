@@ -76,6 +76,8 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 	const [outline, setOutline] = useState("");
 	const [composeError, setComposeError] = useState("");
 	const [approving, setApproving] = useState(false);
+	const [refineInput, setRefineInput] = useState("");
+	const [refining, setRefining] = useState(false);
 	const abortRef = useRef<AbortController | null>(null);
 	const { courses, totalLessons } = loaderData;
 
@@ -227,6 +229,93 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 			setApproving(false);
 		}
 	}, [outline, approving, navigate]);
+
+	const handleRefine = useCallback(async () => {
+		if (!refineInput.trim() || !outline.trim() || refining) return;
+		setRefining(true);
+		setComposeError("");
+
+		const controller = new AbortController();
+		abortRef.current = controller;
+
+		const refinedPrompt = `Here is the current course outline:\n\n${outline}\n\nThe user wants the following changes:\n${refineInput.trim()}\n\nPlease return the updated course outline as a single JSON object with the same schema. Return ONLY the JSON object, no commentary.`;
+
+		try {
+			const res = await fetch("/learning/api/ai/plan-course", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					prompt: refinedPrompt,
+					model: MODEL_MAP[selectedModel],
+				}),
+				signal: controller.signal,
+			});
+
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({ message: "request failed" }));
+				setComposeError(err.message || `Error ${res.status}`);
+				setRefining(false);
+				return;
+			}
+
+			const reader = res.body?.getReader();
+			if (!reader) {
+				setComposeError("No response stream");
+				setRefining(false);
+				return;
+			}
+
+			setOutline("");
+			setRefineInput("");
+			const decoder = new TextDecoder();
+			let buffer = "";
+
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+
+				buffer += decoder.decode(value, { stream: true });
+				const messages = buffer.split("\n\n");
+				buffer = messages.pop() || "";
+
+				for (const msg of messages) {
+					const lines = msg.split("\n");
+					let eventType = "";
+					const dataLines: string[] = [];
+
+					for (const line of lines) {
+						if (line.startsWith("event: ")) {
+							eventType = line.slice(7);
+						} else if (line.startsWith("data: ")) {
+							dataLines.push(line.slice(6));
+						}
+					}
+					const data = dataLines.join("\n");
+
+					if (eventType === "error") {
+						try {
+							const parsed = JSON.parse(data);
+							setComposeError(parsed.message || data);
+						} catch {
+							setComposeError(data);
+						}
+						continue;
+					}
+					if (eventType === "end") continue;
+					if (data) {
+						setOutline((prev) => prev + data);
+					}
+				}
+			}
+		} catch (err) {
+			if ((err as Error).name !== "AbortError") {
+				setComposeError((err as Error).message || "Connection failed");
+			}
+		} finally {
+			setRefining(false);
+			abortRef.current = null;
+		}
+	}, [refineInput, outline, selectedModel, refining]);
 
 	const models = ["OPUS", "SONNET", "HAIKU", "AUTO"] as const;
 
@@ -392,21 +481,56 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 						>
 							{outline}
 						</pre>
-						{!composing && (
-							<div style={{ display: "flex", gap: 12, marginTop: 18, justifyContent: "flex-end" }}>
-								<TrackedButton
-									t={t}
-									onClick={() => { setOutline(""); setComposeError(""); }}
-								>
-									DISCARD
-								</TrackedButton>
-								<TrackedButton
-									t={t}
-									primary
-									disabled={approving}
-									onClick={handleApprove}
-								>
-									{approving ? "CREATING…" : "APPROVE & CREATE"}
+						{!composing && !refining && (
+							<>
+								{/* Refine input */}
+								<div style={{ marginTop: 20 }}>
+									<div style={{ display: "flex", gap: 12, alignItems: "flex-end" }}>
+										<div style={{ flex: 1 }}>
+											<UnderlineInput
+												t={t}
+												value={refineInput}
+												onChange={setRefineInput}
+												placeholder="Add more lessons on…  /  Make it more advanced…  /  Change the title to…"
+											/>
+										</div>
+										<TrackedButton
+											t={t}
+											disabled={!refineInput.trim()}
+											onClick={handleRefine}
+										>
+											REFINE
+										</TrackedButton>
+									</div>
+								</div>
+
+								{/* Action buttons */}
+								<div style={{ display: "flex", gap: 12, marginTop: 18, justifyContent: "flex-end" }}>
+									<TrackedButton
+										t={t}
+										onClick={() => { setOutline(""); setComposeError(""); setRefineInput(""); }}
+									>
+										DISCARD
+									</TrackedButton>
+									<TrackedButton
+										t={t}
+										primary
+										disabled={approving}
+										onClick={handleApprove}
+									>
+										{approving ? "CREATING…" : "APPROVE & CREATE"}
+									</TrackedButton>
+								</div>
+							</>
+						)}
+						{refining && (
+							<div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 18 }}>
+								<FilmDot size={5} breathe />
+								<Tracked size={10} tracking={0.25} style={{ color: t.inkGhost }}>
+									REFINING OUTLINE…
+								</Tracked>
+								<TrackedButton t={t} onClick={() => abortRef.current?.abort()}>
+									STOP
 								</TrackedButton>
 							</div>
 						)}
