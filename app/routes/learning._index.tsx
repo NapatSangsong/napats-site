@@ -122,34 +122,44 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 
 			const decoder = new TextDecoder();
 			let buffer = "";
+			let currentEvent = "";
 
 			while (true) {
 				const { done, value } = await reader.read();
 				if (done) break;
 
 				buffer += decoder.decode(value, { stream: true });
-				const lines = buffer.split("\n");
-				buffer = lines.pop() || "";
 
-				for (const line of lines) {
-					if (line.startsWith("event: error")) {
-						// Next data line has the error
-						continue;
+				// SSE messages are separated by double newlines
+				const messages = buffer.split("\n\n");
+				buffer = messages.pop() || "";
+
+				for (const msg of messages) {
+					const lines = msg.split("\n");
+					let eventType = "";
+					let data = "";
+
+					for (const line of lines) {
+						if (line.startsWith("event: ")) {
+							eventType = line.slice(7);
+						} else if (line.startsWith("data: ")) {
+							data = line.slice(6);
+						}
 					}
-					if (line.startsWith("data: ")) {
-						const data = line.slice(6);
-						// Check if this is the end signal
-						if (data === "done") continue;
-						// Check if this is an error JSON
+
+					if (eventType === "error") {
 						try {
 							const parsed = JSON.parse(data);
-							if (parsed.message) {
-								setComposeError(parsed.message);
-								continue;
-							}
+							setComposeError(parsed.message || data);
 						} catch {
-							// Not JSON — it's a text delta
+							setComposeError(data);
 						}
+						continue;
+					}
+
+					if (eventType === "end") continue;
+
+					if (data) {
 						setOutline((prev) => prev + data);
 					}
 				}
@@ -170,17 +180,29 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 		setComposeError("");
 
 		try {
-			// Try to parse the outline as JSON (the AI should return a CourseDraft JSON)
+			// Parse the outline as JSON — the AI returns a CourseDraft JSON object
 			let draft;
-			// Extract JSON from markdown code block if present
+			// Extract JSON from markdown code block if wrapped, or use raw
 			const jsonMatch = outline.match(/```(?:json)?\s*([\s\S]*?)```/);
-			const jsonStr = jsonMatch ? jsonMatch[1].trim() : outline.trim();
+			let jsonStr = jsonMatch ? jsonMatch[1].trim() : outline.trim();
+			// Also try extracting the first { ... } block if parsing fails
 			try {
 				draft = JSON.parse(jsonStr);
 			} catch {
-				setComposeError("Could not parse course outline. Try composing again.");
-				setApproving(false);
-				return;
+				const braceMatch = outline.match(/\{[\s\S]*\}/);
+				if (braceMatch) {
+					try {
+						draft = JSON.parse(braceMatch[0]);
+					} catch {
+						setComposeError("Could not parse course outline as JSON. Try composing again.");
+						setApproving(false);
+						return;
+					}
+				} else {
+					setComposeError("Could not parse course outline as JSON. Try composing again.");
+					setApproving(false);
+					return;
+				}
 			}
 
 			const res = await fetch("/learning/api/courses", {
