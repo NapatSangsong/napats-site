@@ -137,15 +137,16 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 				for (const msg of messages) {
 					const lines = msg.split("\n");
 					let eventType = "";
-					let data = "";
+					const dataLines: string[] = [];
 
 					for (const line of lines) {
 						if (line.startsWith("event: ")) {
 							eventType = line.slice(7);
 						} else if (line.startsWith("data: ")) {
-							data = line.slice(6);
+							dataLines.push(line.slice(6));
 						}
 					}
+					const data = dataLines.join("\n");
 
 					if (eventType === "error") {
 						try {

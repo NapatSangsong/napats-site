@@ -60,7 +60,9 @@ export function createSSEStream(
 	return new ReadableStream({
 		async start(controller) {
 			const send = (event: string, data: string) => {
-				controller.enqueue(encoder.encode(`event: ${event}\ndata: ${data}\n\n`));
+				// SSE spec: multi-line data must use separate data: lines
+				const dataLines = data.split("\n").map((line) => `data: ${line}`).join("\n");
+				controller.enqueue(encoder.encode(`event: ${event}\n${dataLines}\n\n`));
 			};
 			try {
 				await handler({ send, controller });
