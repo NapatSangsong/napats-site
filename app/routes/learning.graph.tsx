@@ -1,6 +1,7 @@
 /**
  * Knowledge Graph — force-directed visualization of course relationships.
  * Canvas-based with pan/zoom interaction.
+ * Includes "Knowledge Entropy" visualization based on Ebbinghaus forgetting curve.
  */
 import { useRef, useEffect, useCallback, useState } from "react";
 import { useNavigate } from "react-router";
@@ -20,6 +21,8 @@ interface CourseNode {
 	difficulty: string;
 	tags: string[];
 	progress: number;
+	entropy: number;
+	daysSinceReview: number | null;
 	// simulation state
 	x: number;
 	y: number;
@@ -49,16 +52,109 @@ export async function loader({ context }: Route.LoaderArgs) {
 			.select("from_course_id, to_course_id, relationship, strength"),
 	]);
 
+	const courses = (coursesRes.data ?? []) as Array<{
+		id: string;
+		title: string;
+		slug: string;
+		cover_monogram: string;
+		difficulty: string;
+		tags: string[];
+		progress: number;
+	}>;
+
+	// Fetch lesson progress and review schedule data for entropy calculation
+	const courseIds = courses.map((c) => c.id);
+
+	const [lessonProgressRes, reviewScheduleRes] = await Promise.all([
+		courseIds.length > 0
+			? supabase
+					.from("lesson_progress")
+					.select("course_id, last_accessed_at, completed_at")
+					.in("course_id", courseIds)
+			: Promise.resolve({ data: [] }),
+		courseIds.length > 0
+			? supabase
+					.from("review_schedule")
+					.select("course_id, completed_at")
+					.in("course_id", courseIds)
+					.not("completed_at", "is", null)
+					.order("completed_at", { ascending: false })
+			: Promise.resolve({ data: [] }),
+	]);
+
+	const lessonProgress = (lessonProgressRes.data ?? []) as Array<{
+		course_id: string;
+		last_accessed_at: string | null;
+		completed_at: string | null;
+	}>;
+
+	const reviewSchedule = (reviewScheduleRes.data ?? []) as Array<{
+		course_id: string;
+		completed_at: string | null;
+	}>;
+
+	// Build a map of course_id -> most recent activity timestamp and review count
+	const now = Date.now();
+	const courseActivityMap = new Map<
+		string,
+		{ mostRecentMs: number; reviewCount: number }
+	>();
+
+	for (const lp of lessonProgress) {
+		const ts = lp.last_accessed_at || lp.completed_at;
+		if (!ts) continue;
+		const ms = new Date(ts).getTime();
+		const existing = courseActivityMap.get(lp.course_id);
+		if (!existing || ms > existing.mostRecentMs) {
+			courseActivityMap.set(lp.course_id, {
+				mostRecentMs: ms,
+				reviewCount: existing?.reviewCount ?? 0,
+			});
+		}
+	}
+
+	for (const rs of reviewSchedule) {
+		if (!rs.completed_at) continue;
+		const ms = new Date(rs.completed_at).getTime();
+		const existing = courseActivityMap.get(rs.course_id);
+		if (existing) {
+			existing.reviewCount += 1;
+			if (ms > existing.mostRecentMs) {
+				existing.mostRecentMs = ms;
+			}
+		} else {
+			courseActivityMap.set(rs.course_id, {
+				mostRecentMs: ms,
+				reviewCount: 1,
+			});
+		}
+	}
+
+	// Calculate entropy for each course using Ebbinghaus forgetting curve
+	// retention = e^(-t/S) where t = days since last review, S = stability factor
+	const coursesWithEntropy = courses.map((c) => {
+		const activity = courseActivityMap.get(c.id);
+
+		if (!activity) {
+			// Never accessed
+			return { ...c, entropy: 1, daysSinceReview: null as number | null };
+		}
+
+		const daysSince = (now - activity.mostRecentMs) / (1000 * 60 * 60 * 24);
+		// Stability factor: starts at 7 days, doubles with each review (capped)
+		const S = Math.min(7 * Math.pow(2, activity.reviewCount), 180);
+		const retention = Math.exp(-daysSince / S);
+		const entropy = Math.max(0, Math.min(1, 1 - retention));
+
+		return {
+			...c,
+			entropy,
+			daysSinceReview: Math.round(daysSince),
+		};
+	});
+
 	return {
-		courses: (coursesRes.data ?? []) as Array<{
-			id: string;
-			title: string;
-			slug: string;
-			cover_monogram: string;
-			difficulty: string;
-			tags: string[];
-			progress: number;
-		}>,
+		courses: coursesWithEntropy,
 		edges: (relsRes.data ?? []) as Edge[],
 	};
 }
@@ -78,6 +174,55 @@ function nodeRadius(difficulty: string): number {
 	}
 }
 
+/** Parse a hex color string to {r, g, b} */
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+	const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+	if (!m) return null;
+	return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+}
+
+/** Blend a color toward a desaturated gray based on entropy (0-1) */
+function blendToGray(hexColor: string, entropy: number): string {
+	const rgb = hexToRgb(hexColor);
+	if (!rgb) return hexColor;
+	// Target gray: luminance-preserving
+	const gray = Math.round(rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114);
+	const factor = entropy * 0.7; // max 70% desaturation
+	const r = Math.round(rgb.r + (gray - rgb.r) * factor);
+	const g = Math.round(rgb.g + (gray - rgb.g) * factor);
+	const b = Math.round(rgb.b + (gray - rgb.b) * factor);
+	return `rgb(${r},${g},${b})`;
+}
+
+/** Blend an rgba() color string toward gray */
+function blendRgbaToGray(rgbaColor: string, entropy: number): string {
+	// Parse rgba(r,g,b,a) or rgb(r,g,b)
+	const m = rgbaColor.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\)/);
+	if (!m) {
+		// Try hex
+		if (rgbaColor.startsWith("#")) return blendToGray(rgbaColor, entropy);
+		return rgbaColor;
+	}
+	const r = parseInt(m[1]);
+	const g = parseInt(m[2]);
+	const b = parseInt(m[3]);
+	const a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+	const gray = Math.round(r * 0.299 + g * 0.587 + b * 0.114);
+	const factor = entropy * 0.7;
+	const nr = Math.round(r + (gray - r) * factor);
+	const ng = Math.round(g + (gray - g) * factor);
+	const nb = Math.round(b + (gray - b) * factor);
+	if (a < 1) return `rgba(${nr},${ng},${nb},${a})`;
+	return `rgb(${nr},${ng},${nb})`;
+}
+
+/** Desaturate any color string toward gray based on entropy */
+function desaturateColor(color: string, entropy: number): string {
+	if (color.startsWith("#")) return blendToGray(color, entropy);
+	if (color.startsWith("rgb")) return blendRgbaToGray(color, entropy);
+	return color;
+}
+
 // ── Component ───────────────────────────────────────────────
 
 export default function KnowledgeGraph({ loaderData }: Route.ComponentProps) {
@@ -92,6 +237,7 @@ export default function KnowledgeGraph({ loaderData }: Route.ComponentProps) {
 	const nodesRef = useRef<CourseNode[]>([]);
 	const iterRef = useRef(0);
 	const rafRef = useRef<number>(0);
+	const frameRef = useRef(0);
 
 	// Camera state
 	const cameraRef = useRef({ x: 0, y: 0, zoom: 1 });
@@ -248,6 +394,7 @@ export default function KnowledgeGraph({ loaderData }: Route.ComponentProps) {
 		const nodes = nodesRef.current;
 		const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 		const hovered = hoveredRef.current;
+		const frame = frameRef.current;
 
 		// Connected set for highlight
 		const connectedToHover = new Set<string>();
@@ -289,30 +436,56 @@ export default function KnowledgeGraph({ loaderData }: Route.ComponentProps) {
 			const isHovered = hovered === node.id;
 			const isConnected = connectedToHover.has(node.id);
 			const dimmed = hovered && !isConnected;
+			const entropy = node.entropy;
 
-			// Node color based on progress
+			// Entropy-based opacity: min 0.3, max 1.0
+			const entropyOpacity = 1 - entropy * 0.7;
+
+			// Glitch offset for high-entropy nodes (>0.7)
+			let glitchX = 0;
+			let glitchY = 0;
+			if (entropy > 0.7) {
+				// Deterministic-ish random based on frame + node id hash
+				const seed = frame + node.id.charCodeAt(0) * 31 + node.id.charCodeAt(1) * 17;
+				glitchX = (Math.sin(seed * 0.73) * 2) * (entropy - 0.7) / 0.3;
+				glitchY = (Math.cos(seed * 1.13) * 2) * (entropy - 0.7) / 0.3;
+			}
+
+			const nx = node.x + glitchX;
+			const ny = node.y + glitchY;
+
+			// Node color based on progress, desaturated by entropy
 			let fillColor: string;
 			if (node.progress >= 100) {
-				fillColor = t.accent; // completed — red
+				fillColor = desaturateColor(t.accent, entropy); // completed — red, fades to gray
 			} else if (node.progress > 0) {
-				fillColor = t.ink; // in progress
+				fillColor = desaturateColor(t.ink, entropy); // in progress
 			} else {
-				fillColor = t.inkGhost; // not started
+				fillColor = desaturateColor(t.inkGhost, entropy); // not started
 			}
 
 			// Circle
 			ctx.beginPath();
-			ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+			ctx.arc(nx, ny, r, 0, Math.PI * 2);
 			ctx.fillStyle = dimmed ? t.inkFaint : fillColor;
-			ctx.globalAlpha = dimmed ? 0.3 : 1;
+			ctx.globalAlpha = (dimmed ? 0.3 : entropyOpacity);
 			ctx.fill();
 			ctx.globalAlpha = 1;
 
-			// Border on hover
+			// Border: solid for normal, dashed for high entropy
 			if (isHovered) {
 				ctx.strokeStyle = t.accent;
 				ctx.lineWidth = 2;
+				ctx.setLineDash([]);
 				ctx.stroke();
+			} else if (entropy > 0.7) {
+				ctx.strokeStyle = dimmed ? t.inkFaint : t.inkGhost;
+				ctx.lineWidth = 1;
+				ctx.globalAlpha = dimmed ? 0.3 : entropyOpacity;
+				ctx.setLineDash([3, 3]);
+				ctx.stroke();
+				ctx.setLineDash([]);
+				ctx.globalAlpha = 1;
 			}
 
 			// Monogram text
@@ -321,21 +494,69 @@ export default function KnowledgeGraph({ loaderData }: Route.ComponentProps) {
 			ctx.textAlign = "center";
 			ctx.textBaseline = "middle";
 			ctx.fillStyle = node.progress >= 100 ? t.bg : (dimmed ? t.inkGhost : t.bg);
-			ctx.globalAlpha = dimmed ? 0.3 : 1;
-			ctx.fillText(node.cover_monogram || "?", node.x, node.y);
+			ctx.globalAlpha = (dimmed ? 0.3 : entropyOpacity);
+			ctx.fillText(node.cover_monogram || "?", nx, ny);
 			ctx.globalAlpha = 1;
 
 			// Title below node
 			if (isHovered || !hovered) {
 				ctx.font = "10px JetBrains Mono, monospace";
 				ctx.fillStyle = isHovered ? t.inkStrong : t.inkMuted;
-				ctx.globalAlpha = dimmed ? 0.2 : isHovered ? 1 : 0.7;
-				ctx.fillText(node.title, node.x, node.y + r + 14);
+				ctx.globalAlpha = dimmed ? 0.2 : isHovered ? 1 : 0.7 * entropyOpacity;
+				ctx.fillText(node.title, nx, ny + r + 14);
 				ctx.globalAlpha = 1;
 			}
 		}
 
 		ctx.restore();
+
+		// ── Draw legend (bottom-left, in screen space) ──────
+		const legendX = 16;
+		const legendY = h - 70;
+		const dotR = 5;
+		const spacing = 22;
+
+		ctx.globalAlpha = 0.8;
+		ctx.font = "9px JetBrains Mono, monospace";
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+
+		// FRESH — bright circle
+		ctx.beginPath();
+		ctx.arc(legendX + dotR, legendY, dotR, 0, Math.PI * 2);
+		ctx.fillStyle = t.accent;
+		ctx.globalAlpha = 1;
+		ctx.fill();
+		ctx.fillStyle = t.inkMuted;
+		ctx.fillText("FRESH", legendX + dotR * 2 + 8, legendY);
+
+		// FADING — medium opacity circle
+		ctx.beginPath();
+		ctx.arc(legendX + dotR, legendY + spacing, dotR, 0, Math.PI * 2);
+		ctx.fillStyle = desaturateColor(t.accent, 0.5);
+		ctx.globalAlpha = 0.65;
+		ctx.fill();
+		ctx.globalAlpha = 1;
+		ctx.fillStyle = t.inkMuted;
+		ctx.fillText("FADING", legendX + dotR * 2 + 8, legendY + spacing);
+
+		// NEEDS REVIEW — faded dashed circle
+		ctx.beginPath();
+		ctx.arc(legendX + dotR, legendY + spacing * 2, dotR, 0, Math.PI * 2);
+		ctx.fillStyle = desaturateColor(t.accent, 0.9);
+		ctx.globalAlpha = 0.3;
+		ctx.fill();
+		ctx.globalAlpha = 0.5;
+		ctx.strokeStyle = t.inkGhost;
+		ctx.lineWidth = 1;
+		ctx.setLineDash([2, 2]);
+		ctx.stroke();
+		ctx.setLineDash([]);
+		ctx.globalAlpha = 1;
+		ctx.fillStyle = t.inkMuted;
+		ctx.fillText("NEEDS REVIEW", legendX + dotR * 2 + 8, legendY + spacing * 2);
+
+		ctx.globalAlpha = 1;
 	}, [t, edges]);
 
 	// ── Animation loop ──────────────────────────────────────
@@ -343,6 +564,7 @@ export default function KnowledgeGraph({ loaderData }: Route.ComponentProps) {
 		if (courses.length < 2) return;
 
 		const tick = () => {
+			frameRef.current++;
 			if (iterRef.current < 200) {
 				simulate();
 			}
@@ -435,6 +657,11 @@ export default function KnowledgeGraph({ loaderData }: Route.ComponentProps) {
 		}
 	}, []);
 
+	// ── Hovered node data for tooltip ───────────────────────
+	const hoveredNode = hoveredId
+		? courses.find((c) => c.id === hoveredId) ?? null
+		: null;
+
 	// ── Empty state ─────────────────────────────────────────
 	if (courses.length < 2) {
 		return (
@@ -488,7 +715,7 @@ export default function KnowledgeGraph({ loaderData }: Route.ComponentProps) {
 					onClick={handleRebuild}
 					disabled={rebuilding}
 				>
-					{rebuilding ? "Rebuilding…" : "Rebuild Graph"}
+					{rebuilding ? "Rebuilding..." : "Rebuild Graph"}
 				</TrackedButton>
 			</div>
 
@@ -520,6 +747,27 @@ export default function KnowledgeGraph({ loaderData }: Route.ComponentProps) {
 					onMouseLeave={handleMouseUp}
 					onWheel={handleWheel}
 				/>
+
+				{/* Entropy tooltip for hovered node */}
+				{hoveredNode && hoveredNode.entropy > 0.5 && (
+					<div
+						style={{
+							position: "absolute",
+							top: 12,
+							right: 12,
+							padding: "8px 12px",
+							background: t.bgElevated,
+							border: `1px solid ${t.divider}`,
+							pointerEvents: "none",
+						}}
+					>
+						<Tracked size={9} tracking={0.15} style={{ color: t.inkMuted }}>
+							{hoveredNode.daysSinceReview !== null
+								? `Last reviewed ${hoveredNode.daysSinceReview} day${hoveredNode.daysSinceReview === 1 ? "" : "s"} ago \u2014 review recommended`
+								: "Never reviewed \u2014 review recommended"}
+						</Tracked>
+					</div>
+				)}
 			</div>
 
 			{/* Footer stats */}

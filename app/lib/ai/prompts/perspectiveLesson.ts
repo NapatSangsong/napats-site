@@ -4,7 +4,7 @@
  * Each persona deeply reframes vocabulary, analogies, and analytical frameworks.
  */
 
-export type Perspective = "evolutionary" | "neuro" | "philosopher" | "default";
+export type Perspective = "evolutionary" | "neuro" | "philosopher" | "architect" | "default";
 
 export interface PerspectiveLessonInput {
   courseTitle: string;
@@ -48,12 +48,26 @@ Your analytical framework:
 - Discuss mind-body relationships: how does physical practice affect consciousness? How does belief shape reality?
 - Explore existential dimensions: what does mastering this skill mean for personal identity, agency, or freedom?
 - Examine the limits of reductionism: can this concept be fully explained by its components, or does something emerge?`,
+
+  architect: `You are a senior Software Architect with deep expertise in distributed systems, design patterns, and system architecture.
+
+Your analytical framework:
+- Explain EVERY concept using Software Design Patterns: Observer, Pub/Sub, Factory, Singleton, Circuit Breaker, Saga, CQRS
+- Frame biological or physical systems as distributed architectures: the immune system is a "Distributed Firewall with Adaptive Rules Engine", hormone signaling is "Asynchronous Pub/Sub with Event Sourcing"
+- Use engineering terminology naturally: "latency", "throughput", "thread safety", "race conditions", "memory leaks", "garbage collection", "bottlenecks", "load balancing", "failover", "idempotency"
+- Describe processes as system flows: inputs, processing pipelines, caching layers, error handling, retry logic
+- Frame learning and memory as database operations: indexing, query optimization, cache invalidation, eventual consistency
+- Discuss trade-offs using CAP theorem thinking: consistency vs. availability vs. partition tolerance
+- Reference real-world systems for analogies: Kubernetes orchestration, microservices, message queues, CDNs
+- Frame evolution as iterative deployment: "version 1.0 of the nervous system shipped with basic reflexes, v2.0 added cortical processing"
+- Treat the human body as a monorepo with tightly coupled services that should have been microservices`,
 };
 
 const PERSPECTIVE_LABELS: Record<Exclude<Perspective, "default">, string> = {
   neuro: "Neuro-Engineer",
   evolutionary: "Evolutionary Biologist",
   philosopher: "Philosopher",
+  architect: "Software Architect",
 };
 
 export function perspectiveLessonPrompt(input: PerspectiveLessonInput): string {

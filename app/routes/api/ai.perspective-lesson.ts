@@ -14,7 +14,7 @@ import { z } from "zod";
 
 const PerspectiveLessonBody = z.object({
 	lessonId: z.string().uuid(),
-	perspective: z.enum(["evolutionary", "neuro", "philosopher"]),
+	perspective: z.enum(["evolutionary", "neuro", "philosopher", "architect"]),
 	model: z.string().optional(),
 });
 

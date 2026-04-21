@@ -93,7 +93,7 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	const contentRef = useRef<HTMLDivElement>(null);
 
 	// Perspective switching state
-	const [activePerspective, setActivePerspective] = useState<"default" | "evolutionary" | "neuro" | "philosopher">("default");
+	const [activePerspective, setActivePerspective] = useState<"default" | "evolutionary" | "neuro" | "philosopher" | "architect">("default");
 	const [perspectiveBlocks, setPerspectiveBlocks] = useState<unknown[]>([]);
 	const [perspectiveLoading, setPerspectiveLoading] = useState(false);
 	const perspectiveCacheRef = useRef<Record<string, unknown[]>>({});
@@ -256,7 +256,7 @@ hyper:hover {
 	}, [lesson.id]);
 
 	// Handle perspective chip click
-	const handlePerspectiveChange = useCallback((perspective: "default" | "evolutionary" | "neuro" | "philosopher") => {
+	const handlePerspectiveChange = useCallback((perspective: "default" | "evolutionary" | "neuro" | "philosopher" | "architect") => {
 		setActivePerspective(perspective);
 		if (perspective !== "default") {
 			fetchPerspective(perspective);
@@ -707,6 +707,50 @@ hyper:hover {
 		});
 	}, []);
 
+	/** Close all deep-dives starting from a given depth in a path.
+	 *  E.g. clicking breadcrumb at depth 1 closes depth-2+ children. */
+	const closeDeepDivesFromPath = useCallback((path: string[], keepUpTo: number) => {
+		// keepUpTo = number of path segments to keep (0 = close all, 1 = keep first, etc.)
+		if (keepUpTo === 0) {
+			// Close everything — clear all top-level deep dives
+			setDeepDives(new Map());
+			return;
+		}
+
+		// We need to remove children from the entry at path[keepUpTo - 1]
+		setDeepDives((prev) => {
+			const next = new Map(prev);
+			if (keepUpTo >= path.length) return next;
+
+			// Navigate to the entry at keepUpTo-1 and clear its children
+			const rootTerm = path[0];
+			const root = next.get(rootTerm);
+			if (!root) return next;
+
+			if (keepUpTo === 1) {
+				// Clear root's children
+				next.set(rootTerm, { ...root, children: new Map() });
+				return next;
+			}
+
+			// Recurse to depth keepUpTo-1 and clear children there
+			const clearChildrenAt = (entry: DeepDiveEntry, segments: string[], depth: number): DeepDiveEntry => {
+				if (depth === keepUpTo - 1) {
+					return { ...entry, children: new Map() };
+				}
+				const childTerm = segments[depth + 1];
+				const child = entry.children.get(childTerm);
+				if (!child) return entry;
+				const nc = new Map(entry.children);
+				nc.set(childTerm, clearChildrenAt(child, segments, depth + 1));
+				return { ...entry, children: nc };
+			};
+
+			next.set(rootTerm, clearChildrenAt(root, path, 0));
+			return next;
+		});
+	}, []);
+
 	// ── Render a deep-dive section recursively ────────────────
 
 	const renderDeepDiveSection = (
@@ -819,6 +863,96 @@ hyper:hover {
 						×
 					</button>
 				</div>
+
+				{/* Breadcrumb path */}
+				{!entry.collapsed && (
+					<div style={{
+						display: "flex",
+						alignItems: "center",
+						flexWrap: "wrap",
+						gap: 0,
+						paddingBottom: 10,
+						marginBottom: 12,
+						borderBottom: `1px solid ${t.divider}`,
+					}}>
+						{/* Lesson root */}
+						<span
+							onClick={(e) => {
+								e.stopPropagation();
+								closeDeepDivesFromPath(currentPath, 0);
+							}}
+							style={{
+								fontFamily: "JetBrains Mono, monospace",
+								fontSize: 10,
+								textTransform: "uppercase",
+								letterSpacing: "0.2em",
+								color: t.inkGhost,
+								cursor: "pointer",
+								transition: "color 0.2s",
+							}}
+							onMouseEnter={(e) => { (e.target as HTMLElement).style.color = t.inkMuted; }}
+							onMouseLeave={(e) => { (e.target as HTMLElement).style.color = t.inkGhost; }}
+						>
+							{lesson.title}
+						</span>
+
+						{/* Intermediate ancestors */}
+						{parentPath.map((ancestorTerm, i) => (
+							<span key={`bc-${i}`} style={{ display: "inline-flex", alignItems: "center" }}>
+								<span style={{
+									fontFamily: "JetBrains Mono, monospace",
+									fontSize: 10,
+									color: t.inkGhost,
+									margin: "0 6px",
+									userSelect: "none",
+								}}>
+									{"\u2192"}
+								</span>
+								<span
+									onClick={(e) => {
+										e.stopPropagation();
+										closeDeepDivesFromPath(currentPath, i + 1);
+									}}
+									style={{
+										fontFamily: "JetBrains Mono, monospace",
+										fontSize: 10,
+										textTransform: "uppercase",
+										letterSpacing: "0.2em",
+										color: t.inkGhost,
+										cursor: "pointer",
+										transition: "color 0.2s",
+									}}
+									onMouseEnter={(e) => { (e.target as HTMLElement).style.color = t.inkMuted; }}
+									onMouseLeave={(e) => { (e.target as HTMLElement).style.color = t.inkGhost; }}
+								>
+									{ancestorTerm}
+								</span>
+							</span>
+						))}
+
+						{/* Current term (active, not clickable) */}
+						<span style={{ display: "inline-flex", alignItems: "center" }}>
+							<span style={{
+								fontFamily: "JetBrains Mono, monospace",
+								fontSize: 10,
+								color: t.inkGhost,
+								margin: "0 6px",
+								userSelect: "none",
+							}}>
+								{"\u2192"}
+							</span>
+							<span style={{
+								fontFamily: "JetBrains Mono, monospace",
+								fontSize: 10,
+								textTransform: "uppercase",
+								letterSpacing: "0.2em",
+								color: "#cc0000",
+							}}>
+								{entry.term}
+							</span>
+						</span>
+					</div>
+				)}
 
 				{/* Content */}
 				{!entry.collapsed && (
@@ -1048,6 +1182,7 @@ hyper:hover {
 								{ key: "evolutionary" as const, label: "EVOLUTIONARY", color: "#2d6a4f" },
 								{ key: "neuro" as const, label: "NEURO-ENGINEER", color: "#1d3557" },
 								{ key: "philosopher" as const, label: "PHILOSOPHER", color: "#6b2fa0" },
+								{ key: "architect" as const, label: "SOFTWARE ARCHITECT", color: "#e65100" },
 							] as const).map(({ key, label, color }) => {
 								const isActive = activePerspective === key;
 								const isLoading = perspectiveLoading && activePerspective === key;
@@ -1116,7 +1251,7 @@ hyper:hover {
 						<span style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkMuted, fontStyle: "italic" }}>
 							reframing through {activePerspective} lens…
 						</span>
-						<span className="learning-breathe" style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: activePerspective === "evolutionary" ? "#2d6a4f" : activePerspective === "neuro" ? "#1d3557" : "#6b2fa0", marginLeft: 12 }} />
+						<span className="learning-breathe" style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: activePerspective === "evolutionary" ? "#2d6a4f" : activePerspective === "neuro" ? "#1d3557" : activePerspective === "architect" ? "#e65100" : "#6b2fa0", marginLeft: 12 }} />
 					</div>
 				)}
 
