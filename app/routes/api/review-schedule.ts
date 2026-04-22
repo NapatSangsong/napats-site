@@ -45,12 +45,50 @@ export async function action({ request, context }: Route.ActionArgs) {
 	const denied = await requireAuth(request, env);
 	if (denied) return denied;
 
-	const body = await request.json() as { reviewId: string; score?: number };
-	if (!body.reviewId) {
-		return Response.json({ message: "reviewId required" }, { status: 400 });
+	const body = await request.json() as { reviewId?: string; lessonId?: string; confidence?: string; score?: number };
+	const supabase = createServiceClient(env);
+
+	// Save confidence by lessonId (from Socratic Recall)
+	if (body.lessonId && body.confidence) {
+		const validConfidence = ["sure", "maybe", "guessed"];
+		if (!validConfidence.includes(body.confidence)) {
+			return Response.json({ message: "invalid confidence" }, { status: 400 });
+		}
+		// Find latest review for this lesson, or create one
+		const { data: existing } = await supabase
+			.from("review_schedule")
+			.select("id")
+			.eq("lesson_id", body.lessonId)
+			.is("completed_at", null)
+			.order("created_at", { ascending: false })
+			.limit(1)
+			.maybeSingle();
+
+		if (existing) {
+			await supabase.from("review_schedule").update({ confidence: body.confidence }).eq("id", existing.id);
+		} else {
+			// Get course_id from lesson
+			const { data: lesson } = await supabase.from("lessons").select("course_id").eq("id", body.lessonId).single();
+			if (lesson) {
+				// Adjust interval based on confidence
+				const intervalDays = body.confidence === "sure" ? 3 : body.confidence === "maybe" ? 1 : 1;
+				const dueAt = new Date();
+				dueAt.setDate(dueAt.getDate() + intervalDays);
+				await supabase.from("review_schedule").insert({
+					lesson_id: body.lessonId,
+					course_id: lesson.course_id,
+					interval_days: intervalDays,
+					due_at: dueAt.toISOString(),
+					confidence: body.confidence,
+				});
+			}
+		}
+		return Response.json({ ok: true });
 	}
 
-	const supabase = createServiceClient(env);
+	if (!body.reviewId) {
+		return Response.json({ message: "reviewId or lessonId+confidence required" }, { status: 400 });
+	}
 
 	// Get the current review
 	const { data: review } = await supabase
