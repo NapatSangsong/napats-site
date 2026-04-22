@@ -437,7 +437,56 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 					</div>
 				</div>
 
-				{/* Tags */}
+				{/* Certificate */}
+			{totalProg === 100 && (
+				<div style={{ marginTop: 56, padding: "40px 32px", border: `1px solid ${t.dividerStrong}`, textAlign: "center" }}>
+					<Tracked size={10} tracking={0.4} style={{ color: t.inkGhost, display: "block", marginBottom: 16 }}>
+						CERTIFICATE OF COMPLETION
+					</Tracked>
+					<FilmDot size={6} style={{ margin: "0 auto 20px" }} />
+					<div style={{ fontFamily: "Playfair Display, serif", fontSize: 32, color: t.inkStrong, fontWeight: 500, lineHeight: 1.2, marginBottom: 12 }}>
+						{course.title}
+					</div>
+					<div style={{ fontFamily: "Playfair Display, serif", fontSize: 16, color: t.inkMuted, fontStyle: "italic", marginBottom: 24 }}>
+						completed by Napat Sangsong
+					</div>
+					<Rule width={80} color={t.dividerStrong} />
+					<div style={{ marginTop: 20 }}>
+						<Tracked size={9} tracking={0.2} style={{ color: t.inkGhost }}>
+							{lessons.length} LESSONS · ALL UNDERSTANDING CONFIRMED · {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+						</Tracked>
+					</div>
+					<div style={{ marginTop: 24 }}>
+						<TrackedButton t={t} primary onClick={() => {
+							const certHtml = `<!DOCTYPE html><html><head><title>Certificate - ${course.title}</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&display=swap');
+body{margin:0;padding:80px 60px;background:#F5F3EF;font-family:'Playfair Display',serif;text-align:center;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+h1{font-size:14px;letter-spacing:0.4em;text-transform:uppercase;color:#999;font-family:monospace;margin-bottom:40px;}
+h2{font-size:48px;color:#000;font-weight:500;line-height:1.1;margin:0 0 12px;}
+.sub{font-size:20px;color:#666;font-style:italic;margin-bottom:40px;}
+.dot{width:8px;height:8px;border-radius:50%;background:#cc0000;margin:0 auto 30px;}
+.meta{font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:#999;font-family:monospace;}
+hr{border:none;border-top:1px solid #ddd;width:120px;margin:30px auto;}
+@media print{body{padding:40px;}}
+</style></head><body>
+<h1>Certificate of Completion</h1>
+<div class="dot"></div>
+<h2>${course.title}</h2>
+<p class="sub">completed by Napat Sangsong</p>
+<hr/>
+<p class="meta">${lessons.length} LESSONS · ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
+</body></html>`;
+							const w = window.open("", "_blank");
+							if (w) { w.document.write(certHtml); w.document.close(); setTimeout(() => w.print(), 500); }
+						}}>
+							DOWNLOAD CERTIFICATE
+						</TrackedButton>
+					</div>
+				</div>
+			)}
+
+			{/* Tags */}
 				{course.tags && course.tags.length > 0 && (
 					<div style={{ marginTop: 48, display: "flex", flexWrap: "wrap", gap: 8 }}>
 						{course.tags.map((tag: string) => (

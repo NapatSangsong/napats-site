@@ -1874,9 +1874,9 @@ hyper:hover {
 
 						const noteBtn = (
 							<button
-								onClick={() => setNoteEditing({ blockIndex: idx, content: "", color: "default" })}
+								onClick={(e) => { e.stopPropagation(); setNoteEditing({ blockIndex: idx, content: "", color: "default" }); }}
 								style={{
-									position: "absolute", right: -60, top: 16,
+									position: "absolute", right: -34, top: 46,
 									width: 24, height: 24, borderRadius: "50%",
 									border: `1px solid ${t.divider}`, background: "transparent",
 									cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
@@ -1976,36 +1976,46 @@ hyper:hover {
 									const mermaidCode = (b.code || b.diagram || "").trim();
 									const mermaidTheme = theme === "dark" ? "dark" : "default";
 									const bgColor = theme === "dark" ? "#141414" : "#F5F3EF";
-									const html = `<!DOCTYPE html><html><head><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"><\/script><style>body{margin:0;padding:16px;background:${bgColor};display:flex;justify-content:center;}</style></head><body><pre class="mermaid">${mermaidCode.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</pre><script>mermaid.initialize({startOnLoad:true,theme:'${mermaidTheme}',themeVariables:{fontSize:'13px'}});window.addEventListener('load',()=>{setTimeout(()=>{const h=document.body.scrollHeight;window.parent.postMessage({type:'mermaid-height',height:h},'*')},500)})<\/script></body></html>`;
-									const blob = typeof Blob !== "undefined" ? new Blob([html], { type: "text/html" }) : null;
-									const src = blob ? URL.createObjectURL(blob) : "";
+									const textColor = theme === "dark" ? "#e8e8e8" : "#1a1a18";
+									// Don't escape < > — mermaid needs them for arrows (-->)
+									const escapedCode = mermaidCode.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+									const html = `<!DOCTYPE html><html><head>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"><\/script>
+<style>
+body{margin:0;padding:24px;background:${bgColor};overflow:auto;}
+.mermaid{display:flex;justify-content:center;}
+.mermaid svg{max-width:100%;height:auto;}
+</style></head><body>
+<pre class="mermaid">${escapedCode}</pre>
+<script>
+mermaid.initialize({startOnLoad:true,theme:'${mermaidTheme}',themeVariables:{fontSize:'14px',primaryColor:'${theme === "dark" ? "#333" : "#e8e8e8"}',primaryTextColor:'${textColor}',lineColor:'${textColor}'}});
+window.addEventListener('load',()=>{setTimeout(()=>{
+  const svg=document.querySelector('.mermaid svg');
+  const h=svg?svg.getBoundingClientRect().height+48:document.body.scrollHeight;
+  window.parent.postMessage({type:'mermaid-height',height:Math.max(h,150)},'*');
+},800)});
+<\/script></body></html>`;
 									return (
-										<div style={{ margin: "28px 0" }}>
-											{src ? (
-												<iframe
-													srcDoc={html}
-													sandbox="allow-scripts"
-													style={{
-														width: "100%",
-														minHeight: 200,
-														border: `1px solid ${t.divider}`,
-														background: t.bgCard,
-														borderRadius: 0,
-													}}
-													onLoad={(e) => {
-														// Auto-resize iframe to content height
-														const iframe = e.currentTarget;
-														const handler = (ev: MessageEvent) => {
-															if (ev.data?.type === "mermaid-height" && ev.data.height) {
-																iframe.style.height = `${ev.data.height + 32}px`;
-															}
-														};
-														window.addEventListener("message", handler);
-													}}
-												/>
-											) : (
-												<pre style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: t.inkMuted, whiteSpace: "pre-wrap", padding: 24, border: `1px solid ${t.divider}`, background: t.bgCard }}>{mermaidCode}</pre>
-											)}
+										<div style={{ margin: "28px 0", border: `1px solid ${t.divider}`, overflow: "hidden" }}>
+											<iframe
+												srcDoc={html}
+												sandbox="allow-scripts"
+												style={{
+													width: "100%",
+													minHeight: 300,
+													border: "none",
+													background: t.bgCard,
+												}}
+												onLoad={(e) => {
+													const iframe = e.currentTarget;
+													const handler = (ev: MessageEvent) => {
+														if (ev.data?.type === "mermaid-height" && ev.data.height) {
+															iframe.style.height = `${Math.min(ev.data.height, 800)}px`;
+														}
+													};
+													window.addEventListener("message", handler);
+												}}
+											/>
 											{b.caption && (
 												<div style={{ marginTop: 10, textAlign: "center" }}>
 													<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.3em", color: t.inkGhost }}>{b.caption}</span>

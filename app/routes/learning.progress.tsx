@@ -88,6 +88,24 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 // ── Helpers ─────────────────────────────────────────────────
 
+function flattenProgress(c: CourseRow): ProgressRow[] {
+	// lesson_progress comes from a nested join: lessons -> lesson_progress
+	// Each entry in c.lesson_progress is a lesson object with a nested lesson_progress array
+	const raw = c.lesson_progress as unknown;
+	if (!Array.isArray(raw)) return [];
+	const rows: ProgressRow[] = [];
+	for (const item of raw) {
+		if (item && typeof item === "object" && "lesson_progress" in item) {
+			const nested = (item as { lesson_progress: ProgressRow[] }).lesson_progress;
+			if (Array.isArray(nested)) rows.push(...nested);
+		} else if (item && typeof item === "object" && "lesson_id" in item) {
+			// Already flat
+			rows.push(item as ProgressRow);
+		}
+	}
+	return rows;
+}
+
 function computeCourseStats(courses: CourseRow[]) {
 	let totalLessons = 0;
 	let completedLessons = 0;
@@ -96,20 +114,18 @@ function computeCourseStats(courses: CourseRow[]) {
 	for (const c of courses) {
 		const lessons = c.lessons?.length ?? 0;
 		totalLessons += lessons;
-		const completed = c.lesson_progress?.filter(
+		const progressRows = flattenProgress(c);
+		const completed = progressRows.filter(
 			(p) => p.status === "completed",
-		).length ?? 0;
-		const inProgress = c.lesson_progress?.filter(
+		).length;
+		const inProgress = progressRows.filter(
 			(p) => p.status === "in_progress",
-		).length ?? 0;
+		).length;
 		completedLessons += completed;
-		const touchedLessons = completed + inProgress;
-		if (touchedLessons > 0) {
-			const avgMinutes = (c.estimated_minutes && lessons > 0)
-				? c.estimated_minutes / lessons
-				: 15;
-			totalMinutes += Math.round(completed * avgMinutes + inProgress * avgMinutes * 0.5);
-		}
+		const perLesson = (c.estimated_minutes && lessons > 0)
+			? c.estimated_minutes / lessons
+			: 15;
+		totalMinutes += Math.round(completed * perLesson + inProgress * 7);
 	}
 
 	return { totalLessons, completedLessons, totalMinutes };
@@ -117,9 +133,10 @@ function computeCourseStats(courses: CourseRow[]) {
 
 function courseProgress(c: CourseRow) {
 	const total = c.lessons?.length ?? 0;
-	const completed = c.lesson_progress?.filter(
+	const progressRows = flattenProgress(c);
+	const completed = progressRows.filter(
 		(p) => p.status === "completed",
-	).length ?? 0;
+	).length;
 	return total > 0 ? Math.round((completed / total) * 100) : 0;
 }
 
