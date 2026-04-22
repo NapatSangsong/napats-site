@@ -63,7 +63,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 	const selection = selectModel("perspectiveLesson");
 	const model = requestedModel ?? selection.model;
 	const provider = requestedModel
-		? requestedModel.startsWith("gemini") ? "gemini" as const : "anthropic" as const
+		? requestedModel.includes("/") ? "openrouter" as const : requestedModel.startsWith("gemini") ? "gemini" as const : "anthropic" as const
 		: selection.provider;
 	const systemPrompt = perspectiveLessonPrompt({
 		courseTitle: course?.title ?? "Untitled Course",
