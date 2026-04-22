@@ -78,9 +78,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	try {
 		const raw = await completeUnified(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
+			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 			[{ role: "user", content: `Grade this answer: "${answer}"` }],
-			{ model: selection.model, provider: selection.provider, system: systemPrompt, maxTokens: 1024, temperature: 0.2 },
+			{ model: selection.model, provider: selection.provider, route: selection.route, system: systemPrompt, maxTokens: 1024, temperature: 0.2 },
 		);
 
 		const result = JSON.parse(raw) as { score: number; feedback: string };

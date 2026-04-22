@@ -54,9 +54,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const selection = selectModel("summarise"); // Use Haiku for speed
 	const response = await completeUnified(
-		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
+		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 		[{ role: "user", content: "Generate course suggestions for me." }],
-		{ model: selection.model, provider: selection.provider, system, maxTokens: 2048 },
+		{ model: selection.model, provider: selection.provider, route: selection.route, system, maxTokens: 2048 },
 	);
 
 	try {

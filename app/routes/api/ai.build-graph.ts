@@ -35,9 +35,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 	const system = buildGraphPrompt({ courses });
 	const selection = selectModel("summarise");
 	const response = await completeUnified(
-		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
+		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 		[{ role: "user", content: "Analyze the relationships between these courses." }],
-		{ model: selection.model, provider: selection.provider, system, maxTokens: 4096 },
+		{ model: selection.model, provider: selection.provider, route: selection.route, system, maxTokens: 4096 },
 	);
 
 	let edges: any[] = [];

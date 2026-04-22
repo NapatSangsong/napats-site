@@ -97,11 +97,9 @@ interface CourseDraft {
 
 // ── Helpers ─────────────────────────────────────────────────
 const MODEL_MAP: Record<string, string | undefined> = {
-	"GEMINI PRO": "gemini-2.5-pro-preview-06-05",
-	"GEMINI FLASH": "gemini-2.5-flash-preview-05-20",
+	AUTO: undefined, // Uses free OpenRouter models
 	OPUS: "claude-opus-4-7",
 	SONNET: "claude-sonnet-4-6",
-	AUTO: undefined,
 };
 
 /** Extract the last ```json ... ``` block and parse it */
@@ -536,7 +534,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 		}
 	}, [courses.length]);
 
-	const models = ["AUTO", "GEMINI PRO", "GEMINI FLASH", "OPUS", "SONNET"] as const;
+	const models = ["AUTO", "OPUS", "SONNET"] as const;
 	const continueCourses = courses.slice(0, 3);
 
 	const templates = [

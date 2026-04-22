@@ -49,9 +49,9 @@ Rules:
 
 	const selection = selectModel("summarise"); // Haiku for speed
 	const response = await completeUnified(
-		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
+		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 		[{ role: "user", content: JSON.stringify(blocks) }],
-		{ model: selection.model, provider: selection.provider, system, maxTokens: 16384 },
+		{ model: selection.model, provider: selection.provider, route: selection.route, system, maxTokens: 16384 },
 	);
 
 	try {

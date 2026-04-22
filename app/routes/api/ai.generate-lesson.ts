@@ -77,9 +77,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const stream = createSSEStream(async ({ send }) => {
 		const textStream = await streamUnified(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
+			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 			[{ role: "user", content: `Generate the full lesson content for "${lesson.title}".` }],
-			{ model, provider, system: systemPrompt, maxTokens: 16384 },
+			{ model, provider, route: selection.route, system: systemPrompt, maxTokens: 16384 },
 		);
 
 		// Accumulate full text

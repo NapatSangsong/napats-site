@@ -49,9 +49,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const stream = createSSEStream(async ({ send }) => {
 		const textStream = await streamUnified(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
+			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 			[{ role: "user", content: `Explain "${term}" in depth. Generate the deep-dive sub-lesson.` }],
-			{ model, provider, system: systemPrompt, maxTokens: 4096 },
+			{ model, provider, route: selection.route, system: systemPrompt, maxTokens: 4096 },
 		);
 
 		let fullText = "";
