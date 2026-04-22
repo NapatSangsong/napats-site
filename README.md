@@ -8,8 +8,8 @@ Personal portfolio + AI-powered learning platform by [Napat Sangsong](https://na
 |-------|-----------|
 | Framework | React Router 7 (SSR) |
 | Runtime | Cloudflare Workers (Edge) |
-| Database | Supabase PostgreSQL |
-| AI | OpenRouter (Gemini Flash/Pro + free models) with Claude fallback |
+| Database | Supabase PostgreSQL (14 tables) |
+| AI | OpenRouter (12 models) with Claude fallback |
 | Styling | Tailwind CSS 4 + Inline Styles |
 | Language | TypeScript 5.9 |
 | Build | Vite 6 |
@@ -51,37 +51,51 @@ docs/migrations/006_lesson_notes.sql
 pnpm run deploy
 ```
 
-## Learning Platform — 34 Features
+## Learning Platform — 40+ Features
 
 ### Course Creation
-- **Interactive AI Coach** — multi-turn chat with warm learning coach persona
+- **Interactive AI Coach** — multi-turn chat to design courses
+- **12 AI Models** — pick from Gemini Pro, Claude Sonnet, Qwen, Mistral, Gemma (free) and more
+- **Smart Model Picker** — Thai descriptions + badges (BEST/PREMIUM/FAST/FREE)
 - **Adaptive Difficulty** — auto-detects level from your language
-- **Learning Style Awareness** — tailors to reading/visual/hands-on preferences
-- **Smart Prerequisites** — checks your library, suggests what you need first
+- **Learning Style** — tailors to reading/visual/hands-on preferences
+- **Smart Prerequisites** — checks your library, suggests what to learn first
 - **8 Course Templates** — Quick intro, Deep dive, 30-day challenge, Project-based, ELI5, Interview prep, Cheat sheet, Compare & contrast
+- **Thai Language Support** — type in Thai → course generated in Thai
 - **Visual Preview Card** — beautiful card with lessons, difficulty, time estimate
 - **AI Suggestions** — "Suggested For You" based on progress
-- **Progress Bar** — live stage labels + animated bar during AI generation
+- **Live Progress Bar** — stage labels + animated bar during AI generation
+
+### Course Editing
+- **Edit Course Metadata** — title, subtitle, description inline editing
+- **Lesson Management** — regenerate, delete, or add individual lessons
+- **Per-Lesson Model Picker** — choose which AI model generates each lesson
+- **Regenerate All** — regenerate all lessons with a different model
+- **Model Tags** — each lesson shows which model created it
+- **Delete Course** — with confirmation
 
 ### Lesson Viewer
 - **9 Block Types** — prose, heading, code, callout, mermaid, katex, image, quote, interactive
 - **Markdown Tables** — pipe-delimited tables render as HTML
-- **Mermaid Diagrams** — rendered via CDN in themed iframe
+- **Mermaid Diagrams** — rendered via CDN with zoom/pan/expand controls
+- **Mermaid Popup** — click EXPAND for full-screen overlay view
 - **KaTeX Math** — LaTeX rendered via KaTeX CDN
 - **Interactive Blocks** — sandboxed iframe with HTML wrapper
-- **Mandatory Concept Maps** — Mermaid diagram at lesson start
+- **Concept Maps** — Mermaid diagram at lesson start
+- **Model Picker** — choose AI model before generating lesson content
 
 ### Perspective Switching (5 Lenses)
 - Default, Evolutionary Biologist, Neuro-Engineer, Philosopher, Software Architect
+- Each completely reframes vocabulary, analogies, and diagrams
 
 ### Hyper-Nodes (Recursive Deep-Dive)
 - Click `<hyper>` terms for inline sub-lessons (3 levels deep)
 - Breadcrumb navigation for drill-down path
 
 ### Personal Notes
-- Add colored sticky notes on any block
-- 5 color options, inline editor, persisted to database
-- Edit and delete on hover
+- Add colored sticky notes on any block (📝 icon)
+- 5 color options (default, yellow, blue, green, pink)
+- Inline editor with save/delete, persisted to database
 
 ### Highlight-to-Translate
 - Select any text → floating tooltip with translate button
@@ -94,18 +108,13 @@ pnpm run deploy
 - AI confirms understanding before unlocking next lesson
 - Retry + Skip buttons if stuck
 
-### Course Editing
-- Edit course title, subtitle, description inline
-- Regenerate, delete, or add individual lessons
-- Delete entire course with confirmation
-
 ### Completion Certificate
 - Shows when all lessons are 100% complete
 - Printable certificate with course title, date, lesson count
 - DOWNLOAD button opens print dialog
 
 ### Knowledge Graph (`/learning/graph`)
-- Force-directed canvas visualization
+- Force-directed canvas visualization with pan/zoom
 - AI-detected course relationships
 - Knowledge Entropy — nodes fade based on Ebbinghaus forgetting curve
 
@@ -119,11 +128,12 @@ pnpm run deploy
 - Spaced repetition schedule
 
 ### AI Provider Architecture
-- **Primary:** OpenRouter (Gemini 2.5 Flash/Pro + free Gemma models)
-- **Fallback:** Claude Haiku (when all OpenRouter models are cooling down)
-- **Rate-limit rotation:** auto-rotates across 5 free models with KV cooldown tracking
+- **12 Models Available** — Gemini Pro/Flash, Claude Sonnet/Haiku, Qwen 3.5, Mistral Small, Gemini 3 Flash, Gemma 31B/26B, Nemotron 120B, Ling 2.6 Flash
+- **Smart Routing** — Gemini Flash for content, Pro for planning, free models for light tasks
+- **Auto-Fallback** — OpenRouter models → Claude Haiku if all cooling down
+- **Rate-Limit Rotation** — auto-rotates across models with KV cooldown tracking
 
-### 20 API Endpoints
+### 21 API Endpoints
 
 | Endpoint | Purpose |
 |----------|---------|
