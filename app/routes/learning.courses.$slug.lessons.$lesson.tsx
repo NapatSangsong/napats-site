@@ -2027,102 +2027,44 @@ hyper:hover {
 									const mermaidTheme = theme === "dark" ? "dark" : "default";
 									const bgColor = theme === "dark" ? "#141414" : "#F5F3EF";
 									const textColor = theme === "dark" ? "#e8e8e8" : "#1a1a18";
-									const borderColor = theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
 									const escapedCode = mermaidCode.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+									// Simple iframe — just renders the diagram, no pan/zoom inside
 									const html = `<!DOCTYPE html><html><head>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"><\/script>
-<style>
-*{box-sizing:border-box;}
-body{margin:0;padding:0;background:${bgColor};overflow:hidden;height:100vh;display:flex;flex-direction:column;}
-#viewport{flex:1;overflow:hidden;position:relative;cursor:grab;}
-#viewport.dragging{cursor:grabbing;}
-#container{transform-origin:0 0;position:absolute;padding:32px;}
-.mermaid svg{display:block;}
-#controls{display:flex;gap:4px;padding:8px 12px;border-top:1px solid ${borderColor};background:${bgColor};}
-#controls button{background:transparent;border:1px solid ${borderColor};color:${textColor};font-family:monospace;font-size:11px;padding:4px 10px;cursor:pointer;border-radius:0;}
-#controls button:hover{background:${theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"};}
-#controls span{font-family:monospace;font-size:9px;color:${textColor};opacity:0.5;padding:4px 8px;letter-spacing:0.1em;}
-</style></head><body>
-<div id="viewport">
-<div id="container">
-<pre class="mermaid">${escapedCode}</pre>
-</div>
-</div>
-<div id="controls">
-<button onclick="zoomIn()">+</button>
-<button onclick="zoomOut()">−</button>
-<button onclick="resetView()">FIT</button>
-<button onclick="window.parent.postMessage({type:'mermaid-fullscreen',code:document.querySelector('.mermaid')?.textContent||''},'*')">⛶ EXPAND</button>
-<span id="zoomLabel">100%</span>
-</div>
-<script>
-mermaid.initialize({startOnLoad:true,theme:'${mermaidTheme}',themeVariables:{fontSize:'14px',primaryColor:'${theme === "dark" ? "#444" : "#ddd"}',primaryTextColor:'${textColor}',lineColor:'${textColor}'}});
-
-let scale=1,tx=0,ty=0,dragging=false,startX=0,startY=0;
-const vp=document.getElementById('viewport');
-const ct=document.getElementById('container');
-const zl=document.getElementById('zoomLabel');
-
-function apply(){ct.style.transform='translate('+tx+'px,'+ty+'px) scale('+scale+')';zl.textContent=Math.round(scale*100)+'%';}
-function zoomIn(){scale=Math.min(scale*1.3,5);apply();}
-function zoomOut(){scale=Math.max(scale/1.3,0.2);apply();}
-function resetView(){
-  const svg=document.querySelector('.mermaid svg');
-  if(!svg)return;
-  const r=svg.getBoundingClientRect();
-  const vr=vp.getBoundingClientRect();
-  scale=Math.min(vr.width/(r.width/scale+64),vr.height/(r.height/scale+64),2);
-  tx=(vr.width-r.width/scale*scale)/2;ty=16;
-  apply();
-}
-
-vp.addEventListener('mousedown',e=>{dragging=true;startX=e.clientX-tx;startY=e.clientY-ty;vp.classList.add('dragging');});
-window.addEventListener('mousemove',e=>{if(!dragging)return;tx=e.clientX-startX;ty=e.clientY-startY;apply();});
-window.addEventListener('mouseup',()=>{dragging=false;vp.classList.remove('dragging');});
-vp.addEventListener('wheel',e=>{e.preventDefault();const f=e.deltaY>0?0.9:1.1;scale=Math.max(0.2,Math.min(5,scale*f));apply();},{passive:false});
-
-// Touch support
-let lastDist=0;
-vp.addEventListener('touchstart',e=>{if(e.touches.length===1){dragging=true;startX=e.touches[0].clientX-tx;startY=e.touches[0].clientY-ty;}if(e.touches.length===2){lastDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}});
-vp.addEventListener('touchmove',e=>{e.preventDefault();if(e.touches.length===1&&dragging){tx=e.touches[0].clientX-startX;ty=e.touches[0].clientY-startY;apply();}if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);scale=Math.max(0.2,Math.min(5,scale*(d/lastDist)));lastDist=d;apply();}},{passive:false});
-vp.addEventListener('touchend',()=>{dragging=false;});
-
-window.addEventListener('load',()=>{setTimeout(()=>{
-  resetView();
-  const svg=document.querySelector('.mermaid svg');
-  const h=svg?Math.min(svg.getBoundingClientRect().height/scale+100,600):400;
-  window.parent.postMessage({type:'mermaid-height',height:Math.max(h,350)},'*');
-},800)});
-<\/script></body></html>`;
+<style>body{margin:0;padding:24px;background:${bgColor};overflow:auto;display:flex;justify-content:center;}.mermaid svg{display:block;max-width:none;}</style>
+</head><body><pre class="mermaid">${escapedCode}</pre>
+<script>mermaid.initialize({startOnLoad:true,theme:'${mermaidTheme}',themeVariables:{fontSize:'14px',primaryColor:'${theme === "dark" ? "#444" : "#ddd"}',primaryTextColor:'${textColor}',lineColor:'${textColor}'}});
+window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelector('.mermaid svg');const h=s?s.getBoundingClientRect().height+48:300;window.parent.postMessage({type:'mermaid-height',height:h},'*')},800));<\/script>
+</body></html>`;
 									return (
-										<div style={{ margin: "28px 0", border: `1px solid ${t.divider}`, overflow: "hidden", position: "relative" }}>
+										<div style={{ margin: "28px 0", border: `1px solid ${t.divider}`, overflow: "hidden" }}>
 											<iframe
 												srcDoc={html}
 												sandbox="allow-scripts"
-												style={{
-													width: "100%",
-													minHeight: 350,
-													border: "none",
-													background: t.bgCard,
-												}}
+												style={{ width: "100%", minHeight: 250, border: "none", background: t.bgCard }}
 												onLoad={(e) => {
 													const iframe = e.currentTarget;
-													const handler = (ev: MessageEvent) => {
+													window.addEventListener("message", (ev) => {
 														if (ev.data?.type === "mermaid-height" && ev.data.height) {
-															iframe.style.height = `${Math.min(ev.data.height, 600)}px`;
+															iframe.style.height = `${Math.min(ev.data.height, 500)}px`;
 														}
-														if (ev.data?.type === "mermaid-fullscreen" && ev.data.code) {
-															setMermaidPopup(ev.data.code);
-														}
-													};
-													window.addEventListener("message", handler);
+													});
 												}}
 											/>
-											{b.caption && (
-												<div style={{ padding: "8px 12px", textAlign: "center", borderTop: `1px solid ${t.divider}` }}>
-													<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.3em", color: t.inkGhost }}>{b.caption}</span>
-												</div>
-											)}
+											{/* Controls — outside iframe, always visible */}
+											<div style={{ display: "flex", gap: 4, padding: "6px 12px", borderTop: `1px solid ${t.divider}`, background: t.bgCard, alignItems: "center" }}>
+												<button
+													onClick={() => setMermaidPopup(mermaidCode)}
+													style={{ background: "transparent", border: `1px solid ${t.divider}`, color: t.ink, fontFamily: "JetBrains Mono, monospace", fontSize: 10, padding: "4px 12px", cursor: "pointer", letterSpacing: "0.1em" }}
+												>
+													⛶ EXPAND
+												</button>
+												{b.caption && (
+													<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.2em", color: t.inkGhost, marginLeft: 8 }}>
+														{b.caption}
+													</span>
+												)}
+											</div>
 											{askBtn}
 										</div>
 									);
