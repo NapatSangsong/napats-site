@@ -361,16 +361,19 @@ hyper:hover {
 			});
 			if (!res.ok) {
 				setTranslating(false);
+				setActiveLang("original"); // Reset on failure
 				return;
 			}
 			const data = await res.json();
-			if (data.blocks) {
+			if (data.blocks && Array.isArray(data.blocks) && data.blocks.length > 0) {
 				const mapped = data.blocks.map((b: any) => ({ content: b }));
 				setTranslatedBlocks(mapped);
 				translateCacheRef.current[lang] = mapped;
+			} else {
+				setActiveLang("original"); // Reset if no blocks returned
 			}
 		} catch {
-			// error
+			setActiveLang("original"); // Reset on error
 		} finally {
 			setTranslating(false);
 		}

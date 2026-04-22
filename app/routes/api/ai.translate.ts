@@ -47,7 +47,7 @@ Rules:
 - Maintain any HTML tags like <hyper> in the text
 - Return ONLY the translated JSON array, no other text`;
 
-	const selection = selectModel("summarise"); // Haiku for speed
+	const selection = selectModel("translate");
 	const response = await completeUnified(
 		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 		[{ role: "user", content: JSON.stringify(blocks) }],
@@ -55,10 +55,14 @@ Rules:
 	);
 
 	try {
-		const jsonMatch = response.match(/\[[\s\S]*\]/);
-		const translated = JSON.parse(jsonMatch ? jsonMatch[0] : response);
-		return Response.json({ blocks: translated });
-	} catch {
-		return Response.json({ message: "failed to parse translation" }, { status: 500 });
+		let jsonStr = response.trim();
+		// Strip markdown fences
+		const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+		if (fenceMatch) jsonStr = fenceMatch[1].trim();
+		const jsonMatch = jsonStr.match(/\[[\s\S]*\]/);
+		const translated = JSON.parse(jsonMatch ? jsonMatch[0] : jsonStr);
+		return Response.json({ blocks: Array.isArray(translated) ? translated : [] });
+	} catch (err) {
+		return Response.json({ message: "failed to parse translation", preview: response.slice(0, 200) }, { status: 500 });
 	}
 }
