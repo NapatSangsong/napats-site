@@ -82,11 +82,14 @@ export async function action({ request, context }: Route.ActionArgs) {
 	// Build system prompt based on scope
 	let systemPrompt: string;
 
+	// Detect user language from message
+	const hasThai = /[\u0E00-\u0E7F]/.test(message);
+
 	if (scope === "recall") {
 		// Socratic Active Recall — load lesson details for the prompt
 		const { data: lesson } = await supabase
 			.from("lessons")
-			.select("title, outcomes, courses(title)")
+			.select("title, outcomes, courses(title, language)")
 			.eq("id", scopeId)
 			.single();
 
@@ -113,38 +116,47 @@ export async function action({ request, context }: Route.ActionArgs) {
 			return "";
 		}).filter(Boolean);
 
+		const courseLang = ((lesson as Record<string, unknown>)?.courses as { language?: string })?.language;
+		const lang = hasThai ? "th" : (courseLang || "en");
+
 		systemPrompt = socraticRecallPrompt({
 			lessonTitle,
 			outcomes,
 			blockSummaries,
+			language: lang,
 		});
 	} else {
 		// Regular lesson/course chat
 		let courseTitle: string | undefined;
 		let lessonTitle: string | undefined;
+		let courseLang: string | undefined;
 
 		if (scope === "lesson") {
 			const { data: lesson } = await supabase
 				.from("lessons")
-				.select("title, courses(title)")
+				.select("title, courses(title, language)")
 				.eq("id", scopeId)
 				.single();
 			if (lesson) {
 				lessonTitle = lesson.title;
-				courseTitle = (lesson as Record<string, unknown>).courses
-					? ((lesson as Record<string, unknown>).courses as { title: string }).title
-					: undefined;
+				const c = (lesson as Record<string, unknown>).courses as { title: string; language?: string } | null;
+				courseTitle = c?.title;
+				courseLang = c?.language;
 			}
 		} else if (scope === "course") {
 			const { data: course } = await supabase
 				.from("courses")
-				.select("title")
+				.select("title, language")
 				.eq("id", scopeId)
 				.single();
-			if (course) courseTitle = course.title;
+			if (course) {
+				courseTitle = course.title;
+				courseLang = course.language;
+			}
 		}
 
-		systemPrompt = chatPrompt({ courseTitle, lessonTitle });
+		const chatLang = hasThai ? "th" : (courseLang || "en");
+		systemPrompt = chatPrompt({ courseTitle, lessonTitle, language: chatLang });
 	}
 
 	const selection = selectModel("chat", message.length);

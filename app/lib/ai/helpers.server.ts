@@ -84,16 +84,23 @@ export function createSSEStream(
  * Generate a URL-safe slug from a title string.
  */
 export function slugify(title: string): string {
+	// ASCII-only slug — strip all non-ASCII to avoid URL encoding issues
 	let slug = title
 		.toLowerCase()
-		.replace(/[^\p{L}\p{N}\s-]/gu, "")  // Keep Unicode letters + numbers
+		.normalize("NFKD")
+		.replace(/[\u0300-\u036f]/g, "")    // Strip diacritics
+		.replace(/[^a-z0-9\s-]/g, "")       // ASCII only
 		.replace(/[\s_]+/g, "-")
 		.replace(/^-+|-+$/g, "")
 		.slice(0, 80);
 
-	// Fallback if slug is empty (e.g., all special chars)
+	// Fallback for non-ASCII titles (Thai, CJK, etc.)
 	if (!slug) {
-		slug = `course-${Date.now().toString(36)}`;
+		let hash = 0;
+		for (let i = 0; i < title.length; i++) {
+			hash = ((hash << 5) - hash + title.charCodeAt(i)) | 0;
+		}
+		slug = `course-${Math.abs(hash).toString(36)}-${Date.now().toString(36)}`;
 	}
 
 	return slug;

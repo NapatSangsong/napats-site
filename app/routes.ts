@@ -22,6 +22,7 @@ export default [
 	route("learning/api/ai/build-graph", "routes/api/ai.build-graph.ts"),
 	route("learning/api/ai/deep-dive", "routes/api/ai.deep-dive.ts"),
 	route("learning/api/ai/translate", "routes/api/ai.translate.ts"),
+	route("learning/api/ai/chat-history", "routes/api/ai.chat-history.ts"),
 	route("learning/api/progress/:lessonId", "routes/api/progress.$lessonId.ts"),
 	route("learning/api/review-schedule", "routes/api/review-schedule.ts"),
 	route("learning/api/graph", "routes/api/graph.ts"),

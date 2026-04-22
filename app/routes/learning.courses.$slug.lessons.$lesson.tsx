@@ -34,6 +34,23 @@ function md(text: string): string {
 		.replace(/^## (.+)$/gm, '<h2>$1</h2>')
 		.replace(/^- (.+)$/gm, '<li>$1</li>')
 		.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+		// Parse markdown tables
+		.replace(/((?:^\|.+\|$\n?)+)/gm, (tableBlock) => {
+			const rows = tableBlock.trim().split('\n').filter(r => r.trim());
+			if (rows.length < 2) return tableBlock;
+			const isSep = (r: string) => /^\|[\s\-:|]+\|$/.test(r.trim());
+			const parseRow = (r: string, tag: string) => {
+				const cells = r.split('|').filter((_, i, a) => i > 0 && i < a.length - 1).map(c => c.trim());
+				return '<tr>' + cells.map(c => `<${tag} style="border:1px solid rgba(0,0,0,0.12);padding:8px 12px;text-align:left">${c}</${tag}>`).join('') + '</tr>';
+			};
+			let html = '<table style="border-collapse:collapse;width:100%;margin:12px 0;font-size:14px">';
+			let headerDone = false;
+			for (const row of rows) {
+				if (isSep(row)) { headerDone = true; continue; }
+				html += parseRow(row, !headerDone ? 'th' : 'td');
+			}
+			return html + '</table>';
+		})
 		.replace(/\n\n/g, '</p><p>')
 		.replace(/\n/g, '<br/>');
 }
@@ -447,9 +464,17 @@ hyper:hover {
 					scopeId: lesson.id,
 				}),
 			});
-			if (!res.ok || !res.body) throw new Error();
+			if (!res.ok) {
+				const errBody = await res.json().catch(() => ({ message: "connection failed" }));
+				setRecallMessages([
+					{ role: "user", content: "I just finished this lesson. I'm ready for the recall checkpoint." },
+					{ role: "assistant", content: errBody.message || "connection failed — click retry" },
+				]);
+				setRecallStreaming(false);
+				return;
+			}
 
-			const reader = res.body.getReader();
+			const reader = res.body!.getReader();
 			const decoder = new TextDecoder();
 			let fullText = "";
 			let buffer = "";
@@ -478,7 +503,18 @@ hyper:hover {
 						else if (line.startsWith("data: ")) dataLines.push(line.slice(6));
 					}
 					const data = dataLines.join("\n");
-					if (eventType === "end" || eventType === "error") continue;
+					if (eventType === "end") continue;
+					if (eventType === "error") {
+						let errMsg = "something went wrong — try again";
+						try { errMsg = JSON.parse(data).message || errMsg; } catch {}
+						setRecallMessages((m) => {
+							const next = [...m];
+							next[next.length - 1] = { role: "assistant", content: errMsg };
+							return next;
+						});
+						setRecallStreaming(false);
+						return;
+					}
 					if (eventType === "meta") {
 						try {
 							const parsed = JSON.parse(data);
@@ -543,9 +579,18 @@ hyper:hover {
 					threadId: recallThreadId,
 				}),
 			});
-			if (!res.ok || !res.body) throw new Error();
+			if (!res.ok) {
+				const errBody = await res.json().catch(() => ({ message: "connection failed" }));
+				setRecallMessages((m) => {
+					const next = [...m];
+					next[next.length - 1] = { role: "assistant", content: errBody.message || "connection failed — click retry" };
+					return next;
+				});
+				setRecallStreaming(false);
+				return;
+			}
 
-			const reader = res.body.getReader();
+			const reader = res.body!.getReader();
 			const decoder = new TextDecoder();
 			let fullText = "";
 			let buffer = "";
@@ -567,7 +612,18 @@ hyper:hover {
 						else if (line.startsWith("data: ")) dataLines.push(line.slice(6));
 					}
 					const data = dataLines.join("\n");
-					if (eventType === "end" || eventType === "error") continue;
+					if (eventType === "end") continue;
+					if (eventType === "error") {
+						let errMsg = "something went wrong — try again";
+						try { errMsg = JSON.parse(data).message || errMsg; } catch {}
+						setRecallMessages((m) => {
+							const next = [...m];
+							next[next.length - 1] = { role: "assistant", content: errMsg };
+							return next;
+						});
+						setRecallStreaming(false);
+						return;
+					}
 					if (eventType === "meta") {
 						try {
 							const parsed = JSON.parse(data);
@@ -1168,11 +1224,35 @@ hyper:hover {
 											/>
 										</div>
 									)}
-									{(b.kind === "katex" || b.type === "katex") && (
-										<div style={{ margin: "12px 0", textAlign: b.display ? "center" : "left" }}>
-											<code style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 13, color: t.ink }}>{b.expression || b.latex || b.content || ""}</code>
+									{(b.kind === "katex" || b.type === "katex") && (() => {
+									const expr = (b.expression || b.latex || b.content || "").trim();
+									const isDisplay = b.display !== false;
+									const bgColor = theme === "dark" ? "#141414" : "#F5F3EF";
+									const textColor = theme === "dark" ? "#e8e8e8" : "#1a1a18";
+									const html = `<!DOCTYPE html><html><head>
+									  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+									  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"><\/script>
+									  <style>body{margin:0;padding:16px;background:${bgColor};color:${textColor};display:flex;justify-content:center;align-items:center;min-height:40px;}</style>
+									</head><body><div id="m"></div><script>
+									  try{katex.render(${JSON.stringify(expr)},document.getElementById('m'),{displayMode:${isDisplay},throwOnError:false})}catch(e){document.getElementById('m').textContent=${JSON.stringify(expr)}}
+									  setTimeout(()=>window.parent.postMessage({type:'katex-h',h:document.body.scrollHeight},'*'),300)
+									<\/script></body></html>`;
+									return (
+										<div style={{ margin: "12px 0", textAlign: isDisplay ? "center" : "left" }}>
+											<iframe
+												srcDoc={html}
+												sandbox="allow-scripts"
+												style={{ width: "100%", minHeight: 60, border: "none", background: "transparent" }}
+												onLoad={(e) => {
+													const iframe = e.currentTarget;
+													window.addEventListener("message", (ev) => {
+														if (ev.data?.type === "katex-h") iframe.style.height = `${ev.data.h + 8}px`;
+													});
+												}}
+											/>
 										</div>
-									)}
+									);
+								})()}
 									{(b.kind === "quote" || b.type === "quote") && (
 										<blockquote style={{ borderLeft: `2px solid ${t.accent}`, paddingLeft: 18, margin: "12px 0", fontFamily: "Playfair Display, serif", fontSize: 18, fontStyle: "italic", color: t.ink, lineHeight: 1.4 }}>
 											{b.markdown || b.text || b.content || ""}
@@ -1863,13 +1943,36 @@ hyper:hover {
 										</div>
 									);
 								})()}
-								{b.kind === "katex" && (
-									<div style={{ margin: "28px 0", textAlign: b.display ? "center" : "left" }}>
-										<code style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 14, color: t.ink }}>{b.expression || b.latex || ""}</code>
-										{b.caption && <div style={{ fontSize: 12, color: t.inkGhost, marginTop: 6, fontStyle: "italic" }}>{b.caption}</div>}
-										{askBtn}
+								{b.kind === "katex" && (() => {
+								const expr = (b.expression || b.latex || b.content || "").trim();
+								const isDisplay = b.display !== false;
+								const bgColor = theme === "dark" ? "#141414" : "#F5F3EF";
+								const textColor = theme === "dark" ? "#e8e8e8" : "#1a1a18";
+								const html = `<!DOCTYPE html><html><head>
+								  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+								  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"><\/script>
+								  <style>body{margin:0;padding:16px;background:${bgColor};color:${textColor};display:flex;justify-content:center;align-items:center;min-height:40px;}</style>
+								</head><body><div id="m"></div><script>
+								  try{katex.render(${JSON.stringify(expr)},document.getElementById('m'),{displayMode:${isDisplay},throwOnError:false})}catch(e){document.getElementById('m').textContent=${JSON.stringify(expr)}}
+								  setTimeout(()=>window.parent.postMessage({type:'katex-h',h:document.body.scrollHeight},'*'),300)
+								<\/script></body></html>`;
+								return (
+									<div style={{ margin: "28px 0", textAlign: isDisplay ? "center" : "left" }}>
+										<iframe
+											srcDoc={html}
+											sandbox="allow-scripts"
+											style={{ width: "100%", minHeight: 60, border: "none", background: "transparent" }}
+											onLoad={(e) => {
+												const iframe = e.currentTarget;
+												window.addEventListener("message", (ev) => {
+													if (ev.data?.type === "katex-h") iframe.style.height = `${ev.data.h + 8}px`;
+												});
+											}}
+										/>
+										{b.caption && <div style={{ fontSize: 12, color: t.inkGhost, marginTop: 6, fontStyle: "italic", textAlign: "center" }}>{b.caption}</div>}
 									</div>
-								)}
+								);
+							})()}
 								{b.kind === "image" && (
 									<div style={{ margin: "28px 0" }}>
 										<img src={b.src || b.url} alt={b.alt || ""} style={{ maxWidth: "100%", filter: b.bw ? "grayscale(100%)" : undefined }} />
@@ -1879,20 +1982,29 @@ hyper:hover {
 										{askBtn}
 									</div>
 								)}
-								{b.kind === "interactive" && (
+								{b.kind === "interactive" && (() => {
+								const rawCode = (b.code || "").trim();
+								if (!rawCode) {
+									return (
+										<div style={{ margin: "28px 0", padding: 24, border: `1px solid ${t.divider}`, background: t.bgCard, textAlign: "center" }}>
+											<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: t.inkGhost }}>interactive component unavailable</span>
+										</div>
+									);
+								}
+								const isFullHtml = /<html|<!doctype/i.test(rawCode);
+								const wrapped = isFullHtml ? rawCode : `<!DOCTYPE html><html><head><style>body{margin:0;padding:16px;font-family:system-ui,sans-serif}</style></head><body>${rawCode}</body></html>`;
+								return (
 									<div style={{ margin: "28px 0", border: `1px solid ${t.divider}`, overflow: "hidden" }}>
 										<div style={{ padding: "10px 16px", borderBottom: `1px solid ${t.divider}` }}>
-											<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost }}>INTERACTIVE · {b.framework?.toUpperCase()}</span>
+											<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost }}>
+												INTERACTIVE{b.framework ? ` · ${b.framework.toUpperCase()}` : ""}
+											</span>
 										</div>
-										<iframe
-											srcDoc={b.code}
-											sandbox="allow-scripts"
-											style={{ width: "100%", height: b.height || 300, border: "none", background: "#fff" }}
-											title={b.description || "Interactive component"}
-										/>
-										{askBtn}
+										<iframe srcDoc={wrapped} sandbox="allow-scripts" style={{ width: "100%", height: b.height || 300, border: "none", background: "#fff" }} />
+										{b.description && <div style={{ padding: "8px 16px", borderTop: `1px solid ${t.divider}`, fontSize: 12, color: t.inkGhost, fontStyle: "italic" }}>{b.description}</div>}
 									</div>
-								)}
+								);
+							})()}
 							</div>
 						);
 					})}
