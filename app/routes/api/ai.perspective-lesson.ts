@@ -4,7 +4,7 @@
  * Streams raw text via SSE, client parses the final JSON.
  */
 import type { Route } from "./+types/ai.perspective-lesson";
-import { streamChat } from "~/lib/ai/client";
+import { streamUnified } from "~/lib/ai/unified-client";
 import { selectModel } from "~/lib/ai/router";
 import { perspectiveLessonPrompt } from "~/lib/ai/prompts/perspectiveLesson";
 import type { Perspective } from "~/lib/ai/prompts/perspectiveLesson";
@@ -60,7 +60,11 @@ export async function action({ request, context }: Route.ActionArgs) {
 		language: string;
 	} | null;
 
-	const model = requestedModel ?? selectModel("perspectiveLesson");
+	const selection = selectModel("perspectiveLesson");
+	const model = requestedModel ?? selection.model;
+	const provider = requestedModel
+		? requestedModel.startsWith("gemini") ? "gemini" as const : "anthropic" as const
+		: selection.provider;
 	const systemPrompt = perspectiveLessonPrompt({
 		courseTitle: course?.title ?? "Untitled Course",
 		lessonTitle: lesson.title,
@@ -71,10 +75,10 @@ export async function action({ request, context }: Route.ActionArgs) {
 	});
 
 	const stream = createSSEStream(async ({ send }) => {
-		const textStream = await streamChat(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+		const textStream = await streamUnified(
+			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
 			[{ role: "user", content: `Rewrite the full lesson "${lesson.title}" through the ${perspective} perspective. Return ONLY the JSON array of blocks.` }],
-			{ model, system: systemPrompt, maxTokens: 16384 },
+			{ model, provider, system: systemPrompt, maxTokens: 16384 },
 		);
 
 		const reader = textStream.getReader();

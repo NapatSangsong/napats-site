@@ -4,7 +4,7 @@
  */
 import type { Route } from "./+types/ai.grade";
 import { GradeBody } from "~/lib/ai/schemas";
-import { completeChat } from "~/lib/ai/client";
+import { completeUnified } from "~/lib/ai/unified-client";
 import { selectModel } from "~/lib/ai/router";
 import { gradeShortAnswerPrompt } from "~/lib/ai/prompts/gradeShortAnswer";
 import { createServiceClient } from "~/lib/supabase.server";
@@ -68,7 +68,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 		);
 	}
 
-	const model = selectModel("gradeShortAnswer");
+	const selection = selectModel("gradeShortAnswer");
 	const systemPrompt = gradeShortAnswerPrompt({
 		question: question.question,
 		rubric: question.rubric ?? "",
@@ -77,10 +77,10 @@ export async function action({ request, context }: Route.ActionArgs) {
 	});
 
 	try {
-		const raw = await completeChat(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+		const raw = await completeUnified(
+			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
 			[{ role: "user", content: `Grade this answer: "${answer}"` }],
-			{ model, system: systemPrompt, maxTokens: 1024, temperature: 0.2 },
+			{ model: selection.model, provider: selection.provider, system: systemPrompt, maxTokens: 1024, temperature: 0.2 },
 		);
 
 		const result = JSON.parse(raw) as { score: number; feedback: string };

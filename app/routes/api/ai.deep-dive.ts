@@ -5,7 +5,7 @@
  */
 import type { Route } from "./+types/ai.deep-dive";
 import { BlockSchema, DeepDiveBody } from "~/lib/ai/schemas";
-import { streamChat } from "~/lib/ai/client";
+import { streamUnified } from "~/lib/ai/unified-client";
 import { selectModel } from "~/lib/ai/router";
 import { deepDivePrompt } from "~/lib/ai/prompts/deepDive";
 import { requireAuth, sseResponse, createSSEStream } from "~/lib/ai/helpers.server";
@@ -36,7 +36,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const { term, context: termContext, lessonTitle, courseTitle, depth } = body.data;
 
-	const model = selectModel("deepDive");
+	const selection = selectModel("deepDive");
+	const model = selection.model;
+	const provider = selection.provider;
 	const systemPrompt = deepDivePrompt({
 		term,
 		context: termContext,
@@ -46,10 +48,10 @@ export async function action({ request, context }: Route.ActionArgs) {
 	});
 
 	const stream = createSSEStream(async ({ send }) => {
-		const textStream = await streamChat(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+		const textStream = await streamUnified(
+			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
 			[{ role: "user", content: `Explain "${term}" in depth. Generate the deep-dive sub-lesson.` }],
-			{ model, system: systemPrompt, maxTokens: 4096 },
+			{ model, provider, system: systemPrompt, maxTokens: 4096 },
 		);
 
 		let fullText = "";

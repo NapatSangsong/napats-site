@@ -3,7 +3,7 @@
  * Generate related course suggestions after completing a course.
  */
 import type { Route } from "./+types/ai.related-courses";
-import { completeChat } from "~/lib/ai/client";
+import { completeUnified } from "~/lib/ai/unified-client";
 import { selectModel } from "~/lib/ai/router";
 import { relatedCoursesPrompt } from "~/lib/ai/prompts/relatedCourses";
 import { requireAuth } from "~/lib/ai/helpers.server";
@@ -49,11 +49,11 @@ export async function action({ request, context }: Route.ActionArgs) {
 		existingCourses: library || [],
 	});
 
-	const model = selectModel("summarise");
-	const response = await completeChat(
-		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+	const selection = selectModel("summarise");
+	const response = await completeUnified(
+		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
 		[{ role: "user", content: "What should I learn next?" }],
-		{ model, system, maxTokens: 2048 },
+		{ model: selection.model, provider: selection.provider, system, maxTokens: 2048 },
 	);
 
 	try {

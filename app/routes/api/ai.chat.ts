@@ -5,7 +5,8 @@
  */
 import type { Route } from "./+types/ai.chat";
 import { ChatBody } from "~/lib/ai/schemas";
-import { streamChat, type ChatMessage } from "~/lib/ai/client";
+import { streamUnified } from "~/lib/ai/unified-client";
+import type { ChatMessage } from "~/lib/ai/client";
 import { selectModel } from "~/lib/ai/router";
 import { chatPrompt } from "~/lib/ai/prompts/chat";
 import { socraticRecallPrompt } from "~/lib/ai/prompts/socraticRecall";
@@ -146,16 +147,20 @@ export async function action({ request, context }: Route.ActionArgs) {
 		systemPrompt = chatPrompt({ courseTitle, lessonTitle });
 	}
 
-	const model = requestedModel ?? selectModel("chat", message.length);
+	const selection = selectModel("chat", message.length);
+	const model = requestedModel ?? selection.model;
+	const provider = requestedModel
+		? requestedModel.startsWith("gemini") ? "gemini" as const : "anthropic" as const
+		: selection.provider;
 
 	const stream = createSSEStream(async ({ send }) => {
 		// Send threadId so client knows the ID if it was newly created
 		send("meta", JSON.stringify({ threadId }));
 
-		const textStream = await streamChat(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+		const textStream = await streamUnified(
+			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
 			messages,
-			{ model, system: systemPrompt, maxTokens: 4096 },
+			{ model, provider, system: systemPrompt, maxTokens: 4096 },
 		);
 
 		let fullResponse = "";

@@ -3,7 +3,7 @@
  * Generate personalized course suggestions based on user's library and progress.
  */
 import type { Route } from "./+types/ai.suggest-courses";
-import { completeChat } from "~/lib/ai/client";
+import { completeUnified } from "~/lib/ai/unified-client";
 import { selectModel } from "~/lib/ai/router";
 import { suggestCoursesPrompt } from "~/lib/ai/prompts/suggestCourses";
 import { requireAuth } from "~/lib/ai/helpers.server";
@@ -52,11 +52,11 @@ export async function action({ request, context }: Route.ActionArgs) {
 		learningStyle: styleSetting?.value as any,
 	});
 
-	const model = selectModel("summarise"); // Use Haiku for speed
-	const response = await completeChat(
-		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+	const selection = selectModel("summarise"); // Use Haiku for speed
+	const response = await completeUnified(
+		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
 		[{ role: "user", content: "Generate course suggestions for me." }],
-		{ model, system, maxTokens: 2048 },
+		{ model: selection.model, provider: selection.provider, system, maxTokens: 2048 },
 	);
 
 	try {

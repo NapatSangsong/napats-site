@@ -4,7 +4,7 @@
  * Caches results in course_relationships table.
  */
 import type { Route } from "./+types/ai.build-graph";
-import { completeChat } from "~/lib/ai/client";
+import { completeUnified } from "~/lib/ai/unified-client";
 import { selectModel } from "~/lib/ai/router";
 import { buildGraphPrompt } from "~/lib/ai/prompts/buildGraph";
 import { requireAuth } from "~/lib/ai/helpers.server";
@@ -33,11 +33,11 @@ export async function action({ request, context }: Route.ActionArgs) {
 	}
 
 	const system = buildGraphPrompt({ courses });
-	const model = selectModel("summarise");
-	const response = await completeChat(
-		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+	const selection = selectModel("summarise");
+	const response = await completeUnified(
+		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
 		[{ role: "user", content: "Analyze the relationships between these courses." }],
-		{ model, system, maxTokens: 4096 },
+		{ model: selection.model, provider: selection.provider, system, maxTokens: 4096 },
 	);
 
 	let edges: any[] = [];
@@ -57,7 +57,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 					to_course_id: edge.to,
 					relationship: edge.relationship || "relates",
 					strength: edge.strength ?? 0.5,
-					generated_by_model: model,
+					generated_by_model: selection.model,
 				},
 				{ onConflict: "from_course_id,to_course_id" },
 			);

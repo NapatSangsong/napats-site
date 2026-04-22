@@ -7,7 +7,7 @@
  */
 import type { Route } from "./+types/ai.plan-course";
 import { PlanCourseBody } from "~/lib/ai/schemas";
-import { streamChat } from "~/lib/ai/client";
+import { streamUnified } from "~/lib/ai/unified-client";
 import { selectModel } from "~/lib/ai/router";
 import { planCoursePrompt } from "~/lib/ai/prompts/planCourse";
 import { requireAuth, sseResponse, createSSEStream } from "~/lib/ai/helpers.server";
@@ -37,7 +37,11 @@ export async function action({ request, context }: Route.ActionArgs) {
 	}
 
 	const { prompt, model: requestedModel, messages: history } = body.data;
-	const model = requestedModel ?? selectModel("planCourse");
+	const selection = selectModel("planCourse");
+	const model = requestedModel ?? selection.model;
+	const provider = requestedModel
+		? requestedModel.startsWith("gemini") ? "gemini" as const : "anthropic" as const
+		: selection.provider;
 
 	// Load context from database
 	const supabase = createServiceClient(env);
@@ -83,10 +87,10 @@ export async function action({ request, context }: Route.ActionArgs) {
 		: [{ role: "user" as const, content: prompt }];
 
 	const stream = createSSEStream(async ({ send }) => {
-		const textStream = await streamChat(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+		const textStream = await streamUnified(
+			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
 			messages,
-			{ model, system: systemPrompt, maxTokens: 8192 },
+			{ model, provider, system: systemPrompt, maxTokens: 8192 },
 		);
 
 		const reader = textStream.getReader();

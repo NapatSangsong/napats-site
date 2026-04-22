@@ -4,7 +4,7 @@
  */
 import type { Route } from "./+types/ai.refine-block";
 import { RefineBlockBody } from "~/lib/ai/schemas";
-import { streamChat } from "~/lib/ai/client";
+import { streamUnified } from "~/lib/ai/unified-client";
 import { selectModel } from "~/lib/ai/router";
 import { refineBlockSystem } from "~/lib/ai/prompts/refineBlock";
 import { createServiceClient } from "~/lib/supabase.server";
@@ -47,7 +47,11 @@ export async function action({ request, context }: Route.ActionArgs) {
 		return Response.json({ message: "block not found" }, { status: 404 });
 	}
 
-	const model = requestedModel ?? selectModel("generateLesson");
+	const selection = selectModel("generateLesson");
+	const model = requestedModel ?? selection.model;
+	const provider = requestedModel
+		? requestedModel.startsWith("gemini") ? "gemini" as const : "anthropic" as const
+		: selection.provider;
 	const systemPrompt = refineBlockSystem({
 		blockType: block.kind,
 		blockContent: JSON.stringify(block.content),
@@ -55,10 +59,10 @@ export async function action({ request, context }: Route.ActionArgs) {
 	});
 
 	const stream = createSSEStream(async ({ send }) => {
-		const textStream = await streamChat(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+		const textStream = await streamUnified(
+			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
 			[{ role: "user", content: instruction }],
-			{ model, system: systemPrompt, maxTokens: 4096 },
+			{ model, provider, system: systemPrompt, maxTokens: 4096 },
 		);
 
 		let fullText = "";

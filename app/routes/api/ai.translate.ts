@@ -4,7 +4,7 @@
  * Returns translated blocks as JSON (non-streaming for speed).
  */
 import type { Route } from "./+types/ai.translate";
-import { completeChat } from "~/lib/ai/client";
+import { completeUnified } from "~/lib/ai/unified-client";
 import { selectModel } from "~/lib/ai/router";
 import { requireAuth } from "~/lib/ai/helpers.server";
 import { z } from "zod";
@@ -47,11 +47,11 @@ Rules:
 - Maintain any HTML tags like <hyper> in the text
 - Return ONLY the translated JSON array, no other text`;
 
-	const model = selectModel("summarise"); // Haiku for speed
-	const response = await completeChat(
-		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+	const selection = selectModel("summarise"); // Haiku for speed
+	const response = await completeUnified(
+		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
 		[{ role: "user", content: JSON.stringify(blocks) }],
-		{ model, system, maxTokens: 16384 },
+		{ model: selection.model, provider: selection.provider, system, maxTokens: 16384 },
 	);
 
 	try {

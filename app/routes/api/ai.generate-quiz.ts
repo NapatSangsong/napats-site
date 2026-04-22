@@ -4,7 +4,7 @@
  */
 import type { Route } from "./+types/ai.generate-quiz";
 import { GenerateQuizBody } from "~/lib/ai/schemas";
-import { completeChat } from "~/lib/ai/client";
+import { completeUnified } from "~/lib/ai/unified-client";
 import { selectModel } from "~/lib/ai/router";
 import { generateQuizSystem } from "~/lib/ai/prompts/generateQuiz";
 import { createServiceClient } from "~/lib/supabase.server";
@@ -64,7 +64,11 @@ export async function action({ request, context }: Route.ActionArgs) {
 		);
 	}
 
-	const model = requestedModel ?? selectModel("generateQuiz");
+	const selection = selectModel("generateQuiz");
+	const model = requestedModel ?? selection.model;
+	const provider = requestedModel
+		? requestedModel.startsWith("gemini") ? "gemini" as const : "anthropic" as const
+		: selection.provider;
 	const systemPrompt = generateQuizSystem({
 		lessonTitle: lesson.title,
 		lessonContent,
@@ -72,10 +76,10 @@ export async function action({ request, context }: Route.ActionArgs) {
 	});
 
 	try {
-		const raw = await completeChat(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+		const raw = await completeUnified(
+			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
 			[{ role: "user", content: `Generate ${count} quiz questions for the lesson "${lesson.title}".` }],
-			{ model, system: systemPrompt, maxTokens: 8192, temperature: 0.3 },
+			{ model, provider, system: systemPrompt, maxTokens: 8192, temperature: 0.3 },
 		);
 
 		const quiz = JSON.parse(raw);

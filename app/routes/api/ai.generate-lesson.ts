@@ -5,7 +5,7 @@
  */
 import type { Route } from "./+types/ai.generate-lesson";
 import { GenerateLessonBody } from "~/lib/ai/schemas";
-import { streamChat } from "~/lib/ai/client";
+import { streamUnified } from "~/lib/ai/unified-client";
 import { selectModel } from "~/lib/ai/router";
 import { generateLessonPrompt } from "~/lib/ai/prompts/generateLesson";
 import { createServiceClient } from "~/lib/supabase.server";
@@ -61,7 +61,11 @@ export async function action({ request, context }: Route.ActionArgs) {
 		.lt("order_index", lesson.order_index)
 		.order("order_index", { ascending: true });
 
-	const model = requestedModel ?? selectModel("generateLesson");
+	const selection = selectModel("generateLesson");
+	const model = requestedModel ?? selection.model;
+	const provider = requestedModel
+		? requestedModel.startsWith("gemini") ? "gemini" as const : "anthropic" as const
+		: selection.provider;
 	const systemPrompt = generateLessonPrompt({
 		courseTitle: course?.title ?? "Untitled Course",
 		lessonTitle: lesson.title,
@@ -72,10 +76,10 @@ export async function action({ request, context }: Route.ActionArgs) {
 	});
 
 	const stream = createSSEStream(async ({ send }) => {
-		const textStream = await streamChat(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+		const textStream = await streamUnified(
+			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY },
 			[{ role: "user", content: `Generate the full lesson content for "${lesson.title}".` }],
-			{ model, system: systemPrompt, maxTokens: 16384 },
+			{ model, provider, system: systemPrompt, maxTokens: 16384 },
 		);
 
 		// Accumulate full text
