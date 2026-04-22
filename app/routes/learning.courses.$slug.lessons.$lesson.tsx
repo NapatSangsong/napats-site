@@ -1634,8 +1634,10 @@ hyper:hover {
 						<span style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkMuted, fontStyle: "italic" }}>
 							{genStage || "composing your lesson…"}
 						</span>
-						<span className="learning-breathe" style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: "#cc0000", marginLeft: 12 }} />
-						{genProgress > 0 && (
+						{!genStage?.includes("error") && !genStage?.includes("failed") && (
+							<span className="learning-breathe" style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: "#cc0000", marginLeft: 12 }} />
+						)}
+						{genProgress > 0 && !genStage?.includes("error") && (
 							<div style={{ marginTop: 16 }}>
 								<div style={{ height: 2, background: t.divider, borderRadius: 1, overflow: "hidden", maxWidth: 320 }}>
 									<div style={{
@@ -1648,6 +1650,22 @@ hyper:hover {
 								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: t.inkGhost, marginTop: 6, display: "block", letterSpacing: "0.15em" }}>
 									{Math.round(genProgress / 1000)}K TOKENS GENERATED
 								</span>
+							</div>
+						)}
+						{/* Retry button on error */}
+						{(genStage?.includes("error") || genStage?.includes("failed") || genStage?.includes("lost")) && !generating && (
+							<div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+								<button
+									onClick={() => generateLesson()}
+									style={{
+										fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase",
+										letterSpacing: "0.15em", padding: "8px 16px",
+										border: `1px solid ${t.dividerStrong}`, background: "transparent",
+										color: t.ink, cursor: "pointer",
+									}}
+								>
+									RETRY GENERATION
+								</button>
 							</div>
 						)}
 					</div>
