@@ -1634,21 +1634,30 @@ hyper:hover {
 						<span style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkMuted, fontStyle: "italic" }}>
 							{genStage || "composing your lesson…"}
 						</span>
-						{!genStage?.includes("error") && !genStage?.includes("failed") && (
+						{!genStage?.includes("error") && !genStage?.includes("failed") && !genStage?.includes("lost") && (
 							<span className="learning-breathe" style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: "#cc0000", marginLeft: 12 }} />
 						)}
-						{genProgress > 0 && !genStage?.includes("error") && (
+						{!genStage?.includes("error") && !genStage?.includes("failed") && generating && (
 							<div style={{ marginTop: 16 }}>
-								<div style={{ height: 2, background: t.divider, borderRadius: 1, overflow: "hidden", maxWidth: 320 }}>
-									<div style={{
-										height: "100%",
-										background: t.accent,
-										width: `${Math.min(95, Math.round((genProgress / 10000) * 100))}%`,
-										transition: "width 0.5s ease",
-									}} />
+								<div style={{ height: 2, background: t.divider, borderRadius: 1, overflow: "hidden", maxWidth: 320, position: "relative" }}>
+									{genProgress > 0 ? (
+										<div style={{
+											height: "100%",
+											background: t.accent,
+											width: `${Math.min(95, Math.round((genProgress / 10000) * 100))}%`,
+											transition: "width 0.5s ease",
+										}} />
+									) : (
+										<div className="learning-indeterminate" style={{
+											height: "100%",
+											background: t.accent,
+											width: "30%",
+											position: "absolute",
+										}} />
+									)}
 								</div>
 								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: t.inkGhost, marginTop: 6, display: "block", letterSpacing: "0.15em" }}>
-									{Math.round(genProgress / 1000)}K TOKENS GENERATED
+									{genProgress > 0 ? `${Math.round(genProgress / 1000)}K CHARS GENERATED` : "WAITING FOR AI RESPONSE…"}
 								</span>
 							</div>
 						)}

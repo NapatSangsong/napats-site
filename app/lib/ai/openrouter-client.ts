@@ -102,14 +102,11 @@ export async function streamOpenRouter(
     } catch (err) {
       const msg = (err as Error).message;
       if (msg.includes("429") || msg.includes("rate")) {
-        // Extract retry-after if available
-        const retryMatch = msg.match(/retry.after.*?(\d+)/i);
-        const retryAfterS = retryMatch ? parseInt(retryMatch[1]) : DEFAULT_COOLDOWN_S;
-        await setCooldown(env.RATE_LIMIT_KV, modelId, retryAfterS, "rate_limited");
-        continue; // try next model
+        await setCooldown(env.RATE_LIMIT_KV, modelId, DEFAULT_COOLDOWN_S, "rate_limited");
+        continue;
       }
-      // Non-rate-limit error — still try next model
-      await setCooldown(env.RATE_LIMIT_KV, modelId, 30, "error");
+      // Non-rate-limit error — short cooldown, don't block for long
+      // Use in-memory skip only (no KV) to avoid the 60s minimum TTL issue
       continue;
     }
   }
@@ -143,7 +140,7 @@ export async function completeOpenRouter(
         await setCooldown(env.RATE_LIMIT_KV, modelId, DEFAULT_COOLDOWN_S, "rate_limited");
         continue;
       }
-      await setCooldown(env.RATE_LIMIT_KV, modelId, 30, "error");
+      // Non-rate-limit error — skip without KV cooldown
       continue;
     }
   }

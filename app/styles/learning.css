@@ -84,6 +84,15 @@
 	animation: learning-fade-in 0.2s ease-out both;
 }
 
+/* Indeterminate progress bar animation */
+@keyframes learning-indeterminate {
+	0% { left: -30%; }
+	100% { left: 100%; }
+}
+.learning-indeterminate {
+	animation: learning-indeterminate 1.5s ease-in-out infinite;
+}
+
 /* Tab bar — always visible, with z-index above content */
 .learning-tab-bar-wrap {
 	display: block;
