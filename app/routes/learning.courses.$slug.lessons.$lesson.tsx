@@ -187,6 +187,25 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 
 	const [activeSeconds, setActiveSeconds] = useState(0);
 
+	// Journal state
+	const [journalText, setJournalText] = useState("");
+	const [journalEntries, setJournalEntries] = useState<{ id: string; content: string; kind: string; created_at: string }[]>([]);
+	const [journalSaving, setJournalSaving] = useState(false);
+
+	// Teach It Back state
+	const [teachOpen, setTeachOpen] = useState(false);
+	const [teachAudience, setTeachAudience] = useState<string | null>(null);
+	const [teachText, setTeachText] = useState("");
+	const [teachFeedback, setTeachFeedback] = useState<{ understood: string; parroted: string; gaps: string; inaccuracies: string } | null>(null);
+	const [teachLoading, setTeachLoading] = useState(false);
+
+	// I'm Stuck state
+	const [stuckMode, setStuckMode] = useState(false);
+	const [stuckStep, setStuckStep] = useState<1 | 2>(1);
+	const [stuckBlock, setStuckBlock] = useState<string | null>(null);
+	const [stuckReason, setStuckReason] = useState<string | null>(null);
+	const [stuckLoading, setStuckLoading] = useState(false);
+
 	useEffect(() => {
 		let seconds = 0;
 		let lastActivity = Date.now();
@@ -260,6 +279,14 @@ hyper:hover {
 		fetch(`/learning/api/notes?lessonId=${lesson.id}`)
 			.then(r => r.json())
 			.then(data => { if (data.notes) setNotes(data.notes); })
+			.catch(() => {});
+	}, [lesson.id]);
+
+	// Load journal entries on mount
+	useEffect(() => {
+		fetch(`/learning/api/journal?lessonId=${lesson.id}`)
+			.then(r => r.json())
+			.then(data => { if (data.entries) setJournalEntries(data.entries); })
 			.catch(() => {});
 	}, [lesson.id]);
 
@@ -738,6 +765,26 @@ hyper:hover {
 			method: "PUT",
 			headers: { "Content-Type": "application/json", Origin: window.location.origin },
 			body: JSON.stringify({ status: "completed", recall_status: "confirmed" }),
+		}).catch(() => {});
+	};
+
+	// B1: Submit self-assessment
+	const submitAssessment = async (value: number) => {
+		setShowAssessment(false);
+		fetch(`/learning/api/progress/${lesson.id}`, {
+			method: "PUT",
+			headers: { "Content-Type": "application/json", Origin: window.location.origin },
+			body: JSON.stringify({ self_assessment: value }),
+		}).catch(() => {});
+	};
+
+	// B2: Save confidence after recall
+	const saveConfidence = async (value: string) => {
+		setConfidenceSet(true);
+		fetch("/learning/api/review-schedule", {
+			method: "PUT",
+			headers: { "Content-Type": "application/json", Origin: window.location.origin },
+			body: JSON.stringify({ lessonId: lesson.id, confidence: value }),
 		}).catch(() => {});
 	};
 
@@ -2255,6 +2302,84 @@ window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelecto
 				</Tracked>
 			</div>
 
+			{/* B1: Pre-Lesson Self-Assessment Modal */}
+			{showAssessment && (
+				<div style={{
+					position: "fixed", inset: 0, zIndex: 200,
+					background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center",
+				}}>
+					<div style={{
+						background: t.bg, border: `1px solid ${t.divider}`, padding: "32px 36px",
+						maxWidth: 440, width: "90%",
+					}}>
+						<span style={{
+							fontFamily: "JetBrains Mono, monospace", fontSize: 10,
+							textTransform: "uppercase", letterSpacing: "0.3em", color: t.inkGhost,
+							display: "block", marginBottom: 20,
+						}}>
+							SELF-ASSESSMENT
+						</span>
+						<p style={{ fontSize: 15, lineHeight: 1.6, color: t.ink, margin: "0 0 20px" }}>
+							How well do you already know this topic?
+						</p>
+						<input
+							type="range" min={0} max={100} value={assessmentValue}
+							onChange={(e) => setAssessmentValue(Number(e.target.value))}
+							style={{ width: "100%", accentColor: t.accent }}
+						/>
+						<div style={{
+							display: "flex", justifyContent: "space-between", marginTop: 8,
+							fontFamily: "JetBrains Mono, monospace", fontSize: 9,
+							textTransform: "uppercase", letterSpacing: "0.15em", color: t.inkGhost,
+						}}>
+							<span>NEW TO ME</span>
+							<span>SOME IDEA</span>
+							<span>FAMILIAR</span>
+							<span>EXPERT</span>
+						</div>
+						<div style={{ textAlign: "center", margin: "16px 0 20px" }}>
+							<span style={{
+								fontFamily: "Playfair Display, serif", fontSize: 32, color: t.inkStrong,
+							}}>
+								{assessmentValue}%
+							</span>
+						</div>
+						<div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+							<button
+								onClick={() => setShowAssessment(false)}
+								style={{
+									fontFamily: "JetBrains Mono, monospace", fontSize: 9,
+									textTransform: "uppercase", letterSpacing: "0.15em",
+									padding: "8px 16px", border: `1px solid ${t.divider}`,
+									background: "transparent", color: t.inkMuted, cursor: "pointer",
+								}}
+							>
+								SKIP
+							</button>
+							<button
+								onClick={() => submitAssessment(assessmentValue)}
+								style={{
+									fontFamily: "JetBrains Mono, monospace", fontSize: 9,
+									textTransform: "uppercase", letterSpacing: "0.15em",
+									padding: "8px 16px", border: `1px solid ${t.accent}`,
+									background: "transparent", color: t.ink, cursor: "pointer",
+								}}
+							>
+								{assessmentValue >= 91 ? "JUMP TO QUIZ" : "BEGIN LESSON"}
+							</button>
+						</div>
+						{assessmentValue >= 91 && (
+							<p style={{
+								fontSize: 12, color: t.accent, marginTop: 12, textAlign: "center",
+								fontFamily: "JetBrains Mono, monospace", letterSpacing: "0.1em",
+							}}>
+								You rated yourself highly — consider jumping straight to the quiz!
+							</p>
+						)}
+					</div>
+				</div>
+			)}
+
 			{/* Socratic Recall Checkpoint */}
 				{blocks.length > 0 && (recallActive || recallConfirmed) && (
 					<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: isMobile ? 32 : 48 }}>
@@ -2393,6 +2518,31 @@ window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelecto
 									<p style={{ fontSize: 13, lineHeight: 1.5, color: t.inkMuted, margin: "10px 0 0" }}>
 										You've demonstrated a solid grasp of this material. Navigation to the next lesson is now unlocked.
 									</p>
+									{/* B2: Confidence Tracking */}
+									{!confidenceSet && (
+										<div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+											{[
+												{ value: "sure", label: "\uD83D\uDFE2 SURE", desc: "I'd teach this" },
+												{ value: "maybe", label: "\uD83D\uDFE1 MAYBE", desc: "Had to think" },
+												{ value: "guessed", label: "\uD83D\uDD34 GUESSED", desc: "Not really sure" },
+											].map(c => (
+												<button key={c.value} onClick={() => saveConfidence(c.value)} style={{
+													flex: 1, padding: "10px 8px", background: "transparent",
+													border: `1px solid ${t.divider}`, cursor: "pointer",
+													fontFamily: "JetBrains Mono, monospace", fontSize: 10,
+													textTransform: "uppercase", letterSpacing: "0.1em",
+													color: t.ink, textAlign: "center", lineHeight: 1.6,
+												}}>
+													{c.label}<br/><span style={{ fontSize: 9, color: t.inkGhost }}>{c.desc}</span>
+												</button>
+											))}
+										</div>
+									)}
+									{confidenceSet && (
+										<p style={{ fontSize: 11, color: t.inkGhost, marginTop: 12, fontFamily: "JetBrains Mono, monospace", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+											CONFIDENCE RECORDED
+										</p>
+									)}
 								</div>
 							)}
 
@@ -2465,6 +2615,278 @@ window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelecto
 							BEGIN RECALL CHECKPOINT
 							<span style={{ width: 5, height: 5, borderRadius: "50%", background: "#cc0000", opacity: 0.6 }} />
 						</button>
+					</div>
+				)}
+
+				{/* Journal + Teach It Back — shown when lesson is completed */}
+				{blocks.length > 0 && recallConfirmed && (
+					<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: 40 }}>
+						{/* Divider */}
+						<div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
+							<div style={{ flex: 1, height: 1, background: t.divider }} />
+							<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.35em", color: t.inkGhost }}>
+								REFLECT
+							</span>
+							<div style={{ flex: 1, height: 1, background: t.divider }} />
+						</div>
+
+						{/* Journal textarea */}
+						<div style={{ marginBottom: 32 }}>
+							<label style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: t.inkMuted, display: "block", marginBottom: 10 }}>
+								What did you take from this lesson?
+							</label>
+							<textarea
+								value={journalText}
+								onChange={(e) => setJournalText(e.target.value)}
+								placeholder="Write your reflection here..."
+								rows={4}
+								style={{
+									width: "100%", boxSizing: "border-box",
+									border: `1px solid ${t.divider}`, background: t.bgCard,
+									color: t.ink, fontFamily: "Inter, sans-serif", fontSize: 14,
+									lineHeight: 1.6, padding: "12px 16px", resize: "vertical",
+									outline: "none",
+								}}
+							/>
+							<button
+								onClick={async () => {
+									if (!journalText.trim() || journalSaving) return;
+									setJournalSaving(true);
+									try {
+										const res = await fetch("/learning/api/journal", {
+											method: "POST",
+											headers: { "Content-Type": "application/json" },
+											body: JSON.stringify({ lessonId: lesson.id, content: journalText.trim(), kind: "reflection" }),
+										});
+										const data = await res.json();
+										if (data.entry) {
+											setJournalEntries((prev) => [data.entry, ...prev]);
+											setJournalText("");
+										}
+									} catch { /* ignore */ } finally { setJournalSaving(false); }
+								}}
+								disabled={!journalText.trim() || journalSaving}
+								style={{
+									marginTop: 8, fontFamily: "JetBrains Mono, monospace", fontSize: 10,
+									textTransform: "uppercase", letterSpacing: "0.2em",
+									background: "transparent", border: `1px solid ${t.divider}`,
+									color: journalText.trim() ? t.ink : t.inkGhost,
+									cursor: journalText.trim() ? "pointer" : "not-allowed",
+									padding: "8px 18px",
+								}}
+							>
+								{journalSaving ? "SAVING..." : "SAVE"}
+							</button>
+						</div>
+
+						{/* Saved journal entries */}
+						{journalEntries.length > 0 && (
+							<div style={{ marginBottom: 32 }}>
+								{journalEntries.map((entry) => (
+									<div key={entry.id} style={{
+										padding: "12px 16px", marginBottom: 8,
+										borderLeft: `2px solid ${t.accent}`, background: t.bgCard,
+									}}>
+										<div style={{ fontSize: 14, lineHeight: 1.6, color: t.ink }}>{entry.content}</div>
+										<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+											<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: t.inkGhost }}>
+												{new Date(entry.created_at).toLocaleDateString()}
+											</span>
+											<button
+												onClick={async () => {
+													await fetch("/learning/api/journal", {
+														method: "DELETE",
+														headers: { "Content-Type": "application/json" },
+														body: JSON.stringify({ entryId: entry.id }),
+													});
+													setJournalEntries((prev) => prev.filter((e) => e.id !== entry.id));
+												}}
+												style={{ background: "transparent", border: "none", cursor: "pointer", color: t.inkGhost, fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.15em" }}
+											>
+												DELETE
+											</button>
+										</div>
+									</div>
+								))}
+							</div>
+						)}
+
+						{/* Teach It Back */}
+						{!teachOpen ? (
+							<button
+								onClick={() => setTeachOpen(true)}
+								style={{
+									fontFamily: "JetBrains Mono, monospace", fontSize: 11,
+									textTransform: "uppercase", letterSpacing: "0.25em",
+									background: "transparent", border: `1px solid ${t.divider}`,
+									color: t.inkMuted, cursor: "pointer", padding: "14px 28px",
+									display: "inline-flex", alignItems: "center", gap: 10,
+								}}
+							>
+								TEACH IT BACK
+								<span style={{ width: 5, height: 5, borderRadius: "50%", background: t.accent, opacity: 0.6 }} />
+							</button>
+						) : (
+							<div style={{ border: `1px solid ${t.divider}`, borderLeft: `2px solid ${t.accent}`, padding: isMobile ? "16px" : "24px 28px", background: t.bgCard }}>
+								<div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkMuted, marginBottom: 16 }}>
+									TEACH IT BACK
+								</div>
+
+								{/* Step 1: Audience picker */}
+								{!teachAudience && !teachFeedback && (
+									<div>
+										<div style={{ fontSize: 14, color: t.ink, marginBottom: 14 }}>Who are you teaching to?</div>
+										<div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+											{["Junior dev", "Curious kid", "Your cat", "General"].map((aud) => (
+												<button
+													key={aud}
+													onClick={() => setTeachAudience(aud)}
+													style={{
+														fontFamily: "JetBrains Mono, monospace", fontSize: 10,
+														textTransform: "uppercase", letterSpacing: "0.15em",
+														background: "transparent", border: `1px solid ${t.divider}`,
+														color: t.ink, cursor: "pointer", padding: "8px 16px",
+													}}
+												>
+													{aud}
+												</button>
+											))}
+										</div>
+									</div>
+								)}
+
+								{/* Step 2: Explanation textarea */}
+								{teachAudience && !teachFeedback && (
+									<div>
+										<div style={{ fontSize: 14, color: t.ink, marginBottom: 10 }}>
+											Explain this lesson to: <strong>{teachAudience}</strong>
+										</div>
+										<textarea
+											value={teachText}
+											onChange={(e) => setTeachText(e.target.value)}
+											placeholder="Use your own words, analogies, examples..."
+											rows={6}
+											style={{
+												width: "100%", boxSizing: "border-box",
+												border: `1px solid ${t.divider}`, background: t.bg,
+												color: t.ink, fontFamily: "Inter, sans-serif", fontSize: 14,
+												lineHeight: 1.6, padding: "12px 16px", resize: "vertical",
+												outline: "none",
+											}}
+										/>
+										<div style={{ display: "flex", gap: 10, marginTop: 10, alignItems: "center" }}>
+											<button
+												onClick={async () => {
+													if (teachText.length < 50 || teachLoading) return;
+													setTeachLoading(true);
+													try {
+														const res = await fetch("/learning/api/ai/chat", {
+															method: "POST",
+															headers: { "Content-Type": "application/json" },
+															body: JSON.stringify({
+																message: teachText,
+																scope: "teach_back",
+																scopeId: lesson.id,
+																context: `Audience: ${teachAudience}`,
+															}),
+														});
+														if (!res.ok || !res.body) throw new Error();
+														const reader = res.body.getReader();
+														const decoder = new TextDecoder();
+														let fullText = "";
+														let buffer = "";
+														while (true) {
+															const { done, value } = await reader.read();
+															if (done) break;
+															buffer += decoder.decode(value, { stream: true });
+															const sseMessages = buffer.split("\n\n");
+															buffer = sseMessages.pop() || "";
+															for (const msg of sseMessages) {
+																const lines = msg.split("\n");
+																let eventType = "";
+																const dataLines: string[] = [];
+																for (const line of lines) {
+																	if (line.startsWith("event: ")) eventType = line.slice(7);
+																	else if (line.startsWith("data: ")) dataLines.push(line.slice(6));
+																}
+																const data = dataLines.join("\n");
+																if (eventType === "end" || eventType === "error") continue;
+																if (eventType === "meta") continue;
+																if (data) fullText += data;
+															}
+														}
+														try {
+															const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+															if (jsonMatch) {
+																const parsed = JSON.parse(jsonMatch[0]);
+																setTeachFeedback(parsed);
+															} else {
+																setTeachFeedback({ understood: fullText, parroted: "", gaps: "", inaccuracies: "" });
+															}
+														} catch {
+															setTeachFeedback({ understood: fullText, parroted: "", gaps: "", inaccuracies: "" });
+														}
+													} catch {
+														setTeachFeedback({ understood: "Could not get feedback. Try again.", parroted: "", gaps: "", inaccuracies: "" });
+													} finally { setTeachLoading(false); }
+												}}
+												disabled={teachText.length < 50 || teachLoading}
+												style={{
+													fontFamily: "JetBrains Mono, monospace", fontSize: 10,
+													textTransform: "uppercase", letterSpacing: "0.2em",
+													background: "transparent", border: `1px solid ${teachText.length >= 50 ? t.accent : t.divider}`,
+													color: teachText.length >= 50 ? t.ink : t.inkGhost,
+													cursor: teachText.length >= 50 ? "pointer" : "not-allowed",
+													padding: "8px 18px",
+												}}
+											>
+												{teachLoading ? "ANALYSING..." : "SUBMIT"}
+											</button>
+											{teachText.length < 50 && (
+												<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: t.inkGhost }}>
+													{50 - teachText.length} more chars needed
+												</span>
+											)}
+										</div>
+									</div>
+								)}
+
+								{/* Step 3: Feedback display */}
+								{teachFeedback && (
+									<div>
+										{[
+											{ key: "understood" as const, label: "UNDERSTOOD DEEPLY", color: "#22c55e" },
+											{ key: "parroted" as const, label: "ACCURATE BUT PARROTED", color: "#eab308" },
+											{ key: "gaps" as const, label: "GAPS", color: "#f97316" },
+											{ key: "inaccuracies" as const, label: "INACCURACIES", color: "#ef4444" },
+										].filter(s => teachFeedback[s.key]).map((section) => (
+											<div key={section.key} style={{
+												padding: "12px 16px", marginBottom: 10,
+												borderLeft: `3px solid ${section.color}`, background: t.bgCard,
+											}}>
+												<div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.2em", color: section.color, marginBottom: 8 }}>
+													{section.label}
+												</div>
+												<div style={{ fontSize: 14, lineHeight: 1.6, color: t.ink }}>
+													{teachFeedback[section.key]}
+												</div>
+											</div>
+										))}
+										<button
+											onClick={() => { setTeachOpen(false); setTeachAudience(null); setTeachText(""); setTeachFeedback(null); }}
+											style={{
+												marginTop: 10, fontFamily: "JetBrains Mono, monospace", fontSize: 10,
+												textTransform: "uppercase", letterSpacing: "0.2em",
+												background: "transparent", border: `1px solid ${t.divider}`,
+												color: t.inkMuted, cursor: "pointer", padding: "8px 18px",
+											}}
+										>
+											CLOSE
+										</button>
+									</div>
+								)}
+							</div>
+						)}
 					</div>
 				)}
 
@@ -2578,6 +3000,159 @@ window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelecto
 					</div>
 				)}
 			</main>
+
+			{/* I'm Stuck floating button */}
+			{blocks.length > 0 && !stuckMode && (
+				<button
+					onClick={() => { setStuckMode(true); setStuckStep(1); setStuckBlock(null); setStuckReason(null); }}
+					style={{
+						position: "fixed", bottom: isMobile ? 80 : 24, right: 24, zIndex: 40,
+						background: t.bgElevated, border: `1px solid ${t.dividerStrong}`,
+						padding: "10px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+						fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: t.inkMuted,
+						textTransform: "uppercase", letterSpacing: "0.15em",
+						boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+					}}
+				>
+					I'M STUCK
+				</button>
+			)}
+
+			{/* I'm Stuck modal */}
+			{stuckMode && (
+				<div
+					style={{
+						position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+						background: "rgba(0,0,0,0.6)", zIndex: 9998,
+						display: "flex", alignItems: "center", justifyContent: "center",
+					}}
+					onClick={() => { if (!stuckLoading) { setStuckMode(false); } }}
+				>
+					<div
+						onClick={(e) => e.stopPropagation()}
+						style={{
+							background: t.bg, border: `1px solid ${t.divider}`,
+							padding: isMobile ? "20px" : "28px 32px",
+							maxWidth: 480, width: "90%", maxHeight: "80vh", overflowY: "auto",
+						}}
+					>
+						<div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkMuted, marginBottom: 20 }}>
+							I'M STUCK — {stuckStep === 1 ? "WHERE?" : "WHY?"}
+						</div>
+
+						{/* Step 1: Where are you stuck? */}
+						{stuckStep === 1 && (
+							<div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+								<button
+									onClick={() => { setStuckBlock("whole_lesson"); setStuckStep(2); }}
+									style={{
+										textAlign: "left", padding: "10px 14px",
+										background: t.bgCard, border: `1px solid ${t.divider}`,
+										color: t.ink, cursor: "pointer",
+										fontFamily: "Inter, sans-serif", fontSize: 13,
+									}}
+								>
+									The whole lesson
+								</button>
+								{(blocks as { id: string; kind: string; content?: string }[]).slice(0, 15).map((blk, i) => (
+									<button
+										key={blk.id || i}
+										onClick={() => { setStuckBlock(blk.id); setStuckStep(2); }}
+										style={{
+											textAlign: "left", padding: "10px 14px",
+											background: t.bgCard, border: `1px solid ${t.divider}`,
+											color: t.ink, cursor: "pointer",
+											fontFamily: "Inter, sans-serif", fontSize: 13,
+											whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+										}}
+									>
+										Block {i + 1}: {blk.kind} — {(blk.content || "").slice(0, 60)}...
+									</button>
+								))}
+							</div>
+						)}
+
+						{/* Step 2: Why are you stuck? */}
+						{stuckStep === 2 && (
+							<div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+								{["Too fast", "New concept", "Bad analogy", "Missing prerequisite", "Other"].map((reason) => (
+									<button
+										key={reason}
+										disabled={stuckLoading}
+										onClick={async () => {
+											setStuckReason(reason);
+											setStuckLoading(true);
+											try {
+												const blockId = stuckBlock === "whole_lesson" ? (blocks as { id: string }[])[0]?.id : stuckBlock;
+												if (!blockId) return;
+												const res = await fetch("/learning/api/ai/refine-block", {
+													method: "POST",
+													headers: { "Content-Type": "application/json" },
+													body: JSON.stringify({
+														blockId,
+														instruction: `The student is stuck. Reason: "${reason}". ${stuckBlock === "whole_lesson" ? "Rewrite this lesson section" : "Rewrite this block"} to address the issue. If "Too fast" — slow down, add more steps. If "New concept" — add foundational context. If "Bad analogy" — use a different analogy. If "Missing prerequisite" — explain prerequisites first.`,
+													}),
+												});
+												if (!res.ok || !res.body) throw new Error();
+												const reader = res.body.getReader();
+												const decoder = new TextDecoder();
+												let buffer = "";
+												while (true) {
+													const { done, value } = await reader.read();
+													if (done) break;
+													buffer += decoder.decode(value, { stream: true });
+													const sseMessages = buffer.split("\n\n");
+													buffer = sseMessages.pop() || "";
+													for (const msg of sseMessages) {
+														const lines = msg.split("\n");
+														let eventType = "";
+														const dataLines: string[] = [];
+														for (const line of lines) {
+															if (line.startsWith("event: ")) eventType = line.slice(7);
+															else if (line.startsWith("data: ")) dataLines.push(line.slice(6));
+														}
+														if (eventType === "block") {
+															try {
+																const parsed = JSON.parse(dataLines.join("\n"));
+																setBlocks((prev) => prev.map((b: any) => b.id === parsed.id ? { ...b, ...parsed } : b));
+															} catch { /* ignore */ }
+														}
+													}
+												}
+												setStuckMode(false);
+											} catch { /* ignore */ } finally { setStuckLoading(false); }
+										}}
+										style={{
+											textAlign: "left", padding: "10px 14px",
+											background: stuckReason === reason ? t.accent : t.bgCard,
+											border: `1px solid ${t.divider}`,
+											color: stuckReason === reason ? "#fff" : t.ink,
+											cursor: stuckLoading ? "wait" : "pointer",
+											fontFamily: "Inter, sans-serif", fontSize: 13,
+										}}
+									>
+										{stuckLoading && stuckReason === reason ? "Rewriting..." : reason}
+									</button>
+								))}
+							</div>
+						)}
+
+						{!stuckLoading && (
+							<button
+								onClick={() => setStuckMode(false)}
+								style={{
+									marginTop: 16, fontFamily: "JetBrains Mono, monospace", fontSize: 10,
+									textTransform: "uppercase", letterSpacing: "0.15em",
+									background: "transparent", border: "none",
+									color: t.inkGhost, cursor: "pointer",
+								}}
+							>
+								CANCEL
+							</button>
+						)}
+					</div>
+				</div>
+			)}
 
 			{/* Mobile floating "Ask AI" button */}
 			{isMobile && !mobileChatOpen && !mobileMenuOpen && (
