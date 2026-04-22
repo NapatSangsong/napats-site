@@ -16,7 +16,7 @@ interface OpenRouterEnv {
 // ── Cooldown tracking via KV ────────────────────────────────
 
 const COOLDOWN_PREFIX = "ai:cooldown:";
-const DEFAULT_COOLDOWN_S = 60;
+const DEFAULT_COOLDOWN_S = 15; // Short cooldown — free tier resets quickly
 
 interface CooldownEntry {
   until: number;
@@ -190,7 +190,9 @@ async function callOpenRouter(
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`OpenRouter ${res.status}: ${text}`);
+    // Include status code explicitly for rate-limit detection
+    const status = res.status;
+    throw new Error(`OpenRouter ${status}${status === 429 ? ' rate_limited' : ''}: ${text}`);
   }
 
   if (stream) {
