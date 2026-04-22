@@ -87,21 +87,21 @@ export type Block = z.infer<typeof BlockSchema>;
 
 export const LessonOutlineSchema = z.object({
   title: z.string(),
-  summary: z.string().optional(),
-  outcomes: z.array(z.string()),
-});
+  summary: z.string().optional().nullable(),
+  outcomes: z.array(z.string()).optional().default([]),
+}).passthrough();
 
 export const CourseDraftSchema = z.object({
   title: z.string(),
-  subtitle: z.string().optional(),
-  description: z.string().optional(),
-  language: z.string(),
-  difficulty: z.enum(["beginner", "intermediate", "advanced"]),
-  estimated_minutes: z.number().optional(),
-  tags: z.array(z.string()),
-  cover_monogram: z.string().optional(),
-  lessons: z.array(LessonOutlineSchema),
-});
+  subtitle: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  language: z.string().optional().default("en"),
+  difficulty: z.string().optional().default("beginner"),
+  estimated_minutes: z.number().optional().nullable(),
+  tags: z.array(z.string()).optional().default([]),
+  cover_monogram: z.string().optional().nullable(),
+  lessons: z.array(LessonOutlineSchema).min(1),
+}).passthrough();
 
 export type CourseDraft = z.infer<typeof CourseDraftSchema>;
 export type LessonOutline = z.infer<typeof LessonOutlineSchema>;

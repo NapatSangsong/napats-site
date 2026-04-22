@@ -67,6 +67,11 @@ export async function action({ request, context }: Route.ActionArgs) {
 	}
 
 	const draft = body.data;
+	// Normalize difficulty to valid enum value
+	const validDifficulties = ["beginner", "intermediate", "advanced"];
+	const difficulty = validDifficulties.includes(draft.difficulty ?? "")
+		? draft.difficulty
+		: "beginner";
 	const supabase = createServiceClient(env as unknown as { SUPABASE_URL: string; SUPABASE_SERVICE_ROLE_KEY: string });
 
 	// Generate unique slug
@@ -90,8 +95,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 			subtitle: draft.subtitle ?? null,
 			description: draft.description ?? null,
 			source: "ai",
-			language: draft.language,
-			difficulty: draft.difficulty,
+			language: draft.language || "en",
+			difficulty,
 			estimated_minutes: draft.estimated_minutes ?? null,
 			tags: draft.tags,
 			cover_monogram: draft.cover_monogram ?? null,
