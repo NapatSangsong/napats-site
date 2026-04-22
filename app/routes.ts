@@ -35,6 +35,7 @@ export default [
 		route("learning/library", "routes/learning.library.tsx"),
 		route("learning/progress", "routes/learning.progress.tsx"),
 		route("learning/settings", "routes/learning.settings.tsx"),
+		route("learning/guide", "routes/learning.guide.tsx"),
 		route("learning/graph", "routes/learning.graph.tsx"),
 		route("learning/courses/:slug", "routes/learning.courses.$slug.tsx"),
 		route("learning/courses/:slug/lessons/:lesson", "routes/learning.courses.$slug.lessons.$lesson.tsx"),

@@ -1,0 +1,457 @@
+/**
+ * Guide page — user manual for the learning platform with TH/EN and Simple/Advanced toggles.
+ */
+import { useState } from "react";
+import type { Route } from "./+types/learning.guide";
+import { useTheme } from "./learning";
+import { TopBar } from "~/components/learning/TopBar";
+import { Tracked, FilmDot, Rule, TrackedButton, Chip } from "~/components/learning/primitives";
+
+// ── Types ──────────────────────────────────────────────────
+
+type Language = "en" | "th";
+type Mode = "simple" | "advanced";
+
+interface Section {
+	title: string;
+	body: string;
+	tip: string;
+}
+
+// ── Content ────────────────────────────────────────────────
+
+const SIMPLE_EN: Section[] = [
+	{
+		title: "Getting Started",
+		body: "Create your first course by typing a topic on the home screen and pressing Enter. The AI will generate a structured course with multiple lessons tailored to your level.",
+		tip: "Start with something you are curious about — the best courses come from genuine interest.",
+	},
+	{
+		title: "Learning a Lesson",
+		body: "Each lesson is a scrollable page of rich content blocks — text, diagrams, concept maps, and code snippets. Read at your own pace and let the progress tracker save your position automatically.",
+		tip: "Scroll slowly through concept maps to let them render fully before moving on.",
+	},
+	{
+		title: "Changing Languages",
+		body: "Toggle between Thai and English using the language switch in Settings. All AI-generated content will adapt to your chosen language on the next generation.",
+		tip: "You can also highlight any text in a lesson and choose Translate to see it in the other language instantly.",
+	},
+	{
+		title: "Using the Library",
+		body: "The Library page lists every course you have created. Use the search bar to filter by title, or sort by date or progress to find what you need.",
+		tip: "Courses with a red dot have unfinished lessons waiting for you.",
+	},
+	{
+		title: "Checking Progress",
+		body: "Visit the Progress page to see your overall stats — lessons completed, streaks, and an upcoming review schedule based on spaced repetition.",
+		tip: "Consistency matters more than speed. Even one lesson a day builds lasting knowledge.",
+	},
+];
+
+const SIMPLE_TH: Section[] = [
+	{
+		title: "\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19",
+		body: "\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e04\u0e2d\u0e23\u0e4c\u0e2a\u0e41\u0e23\u0e01\u0e42\u0e14\u0e22\u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e2b\u0e31\u0e27\u0e02\u0e49\u0e2d\u0e17\u0e35\u0e48\u0e2b\u0e19\u0e49\u0e32\u0e08\u0e2d\u0e2b\u0e25\u0e31\u0e01\u0e41\u0e25\u0e49\u0e27\u0e01\u0e14 Enter AI \u0e08\u0e30\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e04\u0e2d\u0e23\u0e4c\u0e2a\u0e17\u0e35\u0e48\u0e21\u0e35\u0e42\u0e04\u0e23\u0e07\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e41\u0e25\u0e30\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e2b\u0e25\u0e32\u0e22\u0e1a\u0e17\u0e40\u0e2b\u0e21\u0e32\u0e30\u0e01\u0e31\u0e1a\u0e23\u0e30\u0e14\u0e31\u0e1a\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13",
+		tip: "\u0e40\u0e23\u0e34\u0e48\u0e21\u0e08\u0e32\u0e01\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e2a\u0e19\u0e43\u0e08\u0e08\u0e23\u0e34\u0e07\u0e46 \u0e04\u0e2d\u0e23\u0e4c\u0e2a\u0e17\u0e35\u0e48\u0e14\u0e35\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14\u0e21\u0e32\u0e08\u0e32\u0e01\u0e04\u0e27\u0e32\u0e21\u0e2d\u0e22\u0e32\u0e01\u0e23\u0e39\u0e49\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e40\u0e2d\u0e07",
+	},
+	{
+		title: "\u0e40\u0e23\u0e35\u0e22\u0e19\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19",
+		body: "\u0e41\u0e15\u0e48\u0e25\u0e30\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e04\u0e37\u0e2d\u0e2b\u0e19\u0e49\u0e32\u0e40\u0e19\u0e37\u0e49\u0e2d\u0e2b\u0e32\u0e17\u0e35\u0e48\u0e40\u0e25\u0e37\u0e48\u0e2d\u0e19\u0e14\u0e39\u0e44\u0e14\u0e49 \u0e21\u0e35\u0e17\u0e31\u0e49\u0e07\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21 \u0e41\u0e1c\u0e19\u0e20\u0e32\u0e1e \u0e41\u0e1c\u0e19\u0e17\u0e35\u0e48\u0e04\u0e27\u0e32\u0e21\u0e04\u0e34\u0e14 \u0e41\u0e25\u0e30\u0e42\u0e04\u0e49\u0e14 \u0e2d\u0e48\u0e32\u0e19\u0e15\u0e32\u0e21\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e41\u0e25\u0e30\u0e23\u0e30\u0e1a\u0e1a\u0e08\u0e30\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e15\u0e33\u0e41\u0e2b\u0e19\u0e48\u0e07\u0e43\u0e2b\u0e49\u0e2d\u0e31\u0e15\u0e42\u0e19\u0e21\u0e31\u0e15\u0e34",
+		tip: "\u0e40\u0e25\u0e37\u0e48\u0e2d\u0e19\u0e0a\u0e49\u0e32\u0e46 \u0e1c\u0e48\u0e32\u0e19\u0e41\u0e1c\u0e19\u0e17\u0e35\u0e48\u0e04\u0e27\u0e32\u0e21\u0e04\u0e34\u0e14\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e43\u0e2b\u0e49\u0e41\u0e2a\u0e14\u0e07\u0e1c\u0e25\u0e04\u0e23\u0e1a\u0e01\u0e48\u0e2d\u0e19\u0e40\u0e25\u0e37\u0e48\u0e2d\u0e19\u0e15\u0e48\u0e2d",
+	},
+	{
+		title: "\u0e40\u0e1b\u0e25\u0e35\u0e48\u0e22\u0e19\u0e20\u0e32\u0e29\u0e32",
+		body: "\u0e2a\u0e25\u0e31\u0e1a\u0e23\u0e30\u0e2b\u0e27\u0e48\u0e32\u0e07\u0e44\u0e17\u0e22\u0e41\u0e25\u0e30\u0e2d\u0e31\u0e07\u0e01\u0e24\u0e29\u0e42\u0e14\u0e22\u0e43\u0e0a\u0e49\u0e2a\u0e27\u0e34\u0e15\u0e0a\u0e4c\u0e20\u0e32\u0e29\u0e32\u0e43\u0e19\u0e2b\u0e19\u0e49\u0e32\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32 \u0e40\u0e19\u0e37\u0e49\u0e2d\u0e2b\u0e32\u0e17\u0e35\u0e48\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e42\u0e14\u0e22 AI \u0e08\u0e30\u0e1b\u0e23\u0e31\u0e1a\u0e15\u0e32\u0e21\u0e20\u0e32\u0e29\u0e32\u0e17\u0e35\u0e48\u0e40\u0e25\u0e37\u0e2d\u0e01",
+		tip: "\u0e04\u0e38\u0e13\u0e22\u0e31\u0e07\u0e2a\u0e32\u0e21\u0e32\u0e23\u0e16\u0e44\u0e2e\u0e44\u0e25\u0e17\u0e4c\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e43\u0e19\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e41\u0e25\u0e49\u0e27\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e41\u0e1b\u0e25\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e14\u0e39\u0e04\u0e33\u0e41\u0e1b\u0e25\u0e17\u0e31\u0e19\u0e17\u0e35",
+	},
+	{
+		title: "\u0e43\u0e0a\u0e49\u0e2b\u0e49\u0e2d\u0e07\u0e2a\u0e21\u0e38\u0e14",
+		body: "\u0e2b\u0e19\u0e49\u0e32\u0e2b\u0e49\u0e2d\u0e07\u0e2a\u0e21\u0e38\u0e14\u0e41\u0e2a\u0e14\u0e07\u0e04\u0e2d\u0e23\u0e4c\u0e2a\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14\u0e17\u0e35\u0e48\u0e04\u0e38\u0e13\u0e2a\u0e23\u0e49\u0e32\u0e07 \u0e43\u0e0a\u0e49\u0e0a\u0e48\u0e2d\u0e07\u0e04\u0e49\u0e19\u0e2b\u0e32\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e01\u0e23\u0e2d\u0e07\u0e15\u0e32\u0e21\u0e0a\u0e37\u0e48\u0e2d \u0e2b\u0e23\u0e37\u0e2d\u0e40\u0e23\u0e35\u0e22\u0e07\u0e15\u0e32\u0e21\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48\u0e2b\u0e23\u0e37\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e04\u0e37\u0e1a\u0e2b\u0e19\u0e49\u0e32",
+		tip: "\u0e04\u0e2d\u0e23\u0e4c\u0e2a\u0e17\u0e35\u0e48\u0e21\u0e35\u0e08\u0e38\u0e14\u0e41\u0e14\u0e07\u0e04\u0e37\u0e2d\u0e04\u0e2d\u0e23\u0e4c\u0e2a\u0e17\u0e35\u0e48\u0e21\u0e35\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e23\u0e2d\u0e04\u0e38\u0e13\u0e2d\u0e22\u0e39\u0e48",
+	},
+	{
+		title: "\u0e14\u0e39\u0e04\u0e27\u0e32\u0e21\u0e04\u0e37\u0e1a\u0e2b\u0e19\u0e49\u0e32",
+		body: "\u0e2b\u0e19\u0e49\u0e32\u0e04\u0e27\u0e32\u0e21\u0e04\u0e37\u0e1a\u0e2b\u0e19\u0e49\u0e32\u0e41\u0e2a\u0e14\u0e07\u0e2a\u0e16\u0e34\u0e15\u0e34\u0e23\u0e27\u0e21 \u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e17\u0e35\u0e48\u0e40\u0e2a\u0e23\u0e47\u0e08 \u0e2a\u0e15\u0e23\u0e35\u0e04 \u0e41\u0e25\u0e30\u0e15\u0e32\u0e23\u0e32\u0e07\u0e17\u0e1a\u0e17\u0e27\u0e19\u0e15\u0e32\u0e21\u0e2b\u0e25\u0e31\u0e01 Spaced Repetition",
+		tip: "\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e21\u0e48\u0e33\u0e40\u0e2a\u0e21\u0e2d\u0e2a\u0e33\u0e04\u0e31\u0e0d\u0e01\u0e27\u0e48\u0e32\u0e04\u0e27\u0e32\u0e21\u0e40\u0e23\u0e47\u0e27 \u0e41\u0e04\u0e48\u0e27\u0e31\u0e19\u0e25\u0e30\u0e1a\u0e17\u0e01\u0e47\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e04\u0e27\u0e32\u0e21\u0e23\u0e39\u0e49\u0e17\u0e35\u0e48\u0e22\u0e31\u0e48\u0e07\u0e22\u0e37\u0e19",
+	},
+];
+
+const ADVANCED_EN: Section[] = [
+	{
+		title: "Perspective Switching",
+		body: "Each lesson offers five analytical lenses: Historian, Scientist, Philosopher, Engineer, and Artist. Switch perspectives to see the same topic through different frameworks and deepen your understanding.",
+		tip: "Try reading a lesson in at least two perspectives to discover connections you would miss otherwise.",
+	},
+	{
+		title: "Hyper-Nodes",
+		body: "Click any highlighted term in a lesson to open a recursive deep-dive panel. Each hyper-node expands into its own mini-lesson, letting you go as deep as you want without losing your place.",
+		tip: "Right-click a hyper-node to open it in a new tab if you want to explore without leaving the current lesson.",
+	},
+	{
+		title: "Socratic Recall",
+		body: "At key checkpoints the system asks you to explain a concept in your own words, Feynman-style. This active recall dramatically improves retention compared to passive reading.",
+		tip: "Do not skip these prompts — even a rough two-sentence answer is far better than clicking 'skip'.",
+	},
+	{
+		title: "Personal Notes",
+		body: "Add colored sticky notes to any content block in a lesson. Notes are saved per-block and persist across sessions so you can annotate freely as you learn.",
+		tip: "Use different colors to categorize: yellow for questions, green for key insights, red for things to revisit.",
+	},
+	{
+		title: "Highlight to Translate",
+		body: "Select any text in a lesson and a translate button appears. The AI translates the selection between Thai and English while preserving technical terms.",
+		tip: "This works on code comments too — useful for Thai-language codebases.",
+	},
+	{
+		title: "Course Editing",
+		body: "Open a course and click the edit icon to change the title, regenerate individual lessons with a different prompt, or choose a different AI model for generation.",
+		tip: "Regenerating a single lesson does not affect your progress on other lessons in the same course.",
+	},
+	{
+		title: "Export / Import",
+		body: "Back up any course as a JSON file using the export button. Import it on another device or share it with a friend. All progress and notes are included in the export.",
+		tip: "Export regularly if you are creating courses you want to keep long-term.",
+	},
+	{
+		title: "Knowledge Graph",
+		body: "Visit the Graph page to see a visual network of all your courses and how their concepts connect. Nodes are sized by how much you have studied them.",
+		tip: "Look for isolated clusters — they often reveal opportunities to create bridging courses.",
+	},
+	{
+		title: "Keyboard Shortcuts",
+		body: "Press ? anywhere in the platform to see all available keyboard shortcuts. Navigation, theme toggling, search, and lesson controls all have single-key bindings.",
+		tip: "The most useful shortcut is J/K for scrolling between content blocks in a lesson.",
+	},
+	{
+		title: "Spaced Repetition",
+		body: "The review schedule on the Progress page uses a spaced-repetition algorithm. Lessons you struggle with appear sooner; ones you ace are pushed further out.",
+		tip: "Trust the algorithm — reviewing on the suggested day maximizes retention with minimum effort.",
+	},
+	{
+		title: "I'm Stuck",
+		body: "If a concept is confusing, use the chat panel to ask the AI for clarification. It has full context of the current lesson and can rephrase, give examples, or break things down further.",
+		tip: "Try asking 'explain this like I am five' for a simpler breakdown of complex topics.",
+	},
+	{
+		title: "Learning Journal",
+		body: "After completing a lesson, the journal prompt invites you to reflect on what you learned, what surprised you, and what questions remain. Entries are timestamped and searchable.",
+		tip: "Writing even one sentence per lesson compounds into a valuable personal knowledge log over time.",
+	},
+	{
+		title: "Teach It Back",
+		body: "The Teach It Back mode asks you to explain a topic as if teaching someone else. The AI evaluates your explanation and highlights gaps or misconceptions.",
+		tip: "If you can teach it clearly, you truly understand it. If not, you know exactly where to focus.",
+	},
+	{
+		title: "AI Models",
+		body: "Different AI models are available for different tasks — fast models for chat, powerful models for course generation, and specialized models for translation. Choose the best fit in Settings.",
+		tip: "Larger models produce richer content but take longer. Use fast models for quick questions.",
+	},
+	{
+		title: "Certificate",
+		body: "Complete all lessons and quizzes in a course to unlock a downloadable completion certificate. The certificate includes the course title, completion date, and a verification code.",
+		tip: "Certificates are generated as PDF files you can share or print.",
+	},
+];
+
+const ADVANCED_TH: Section[] = [
+	{
+		title: "\u0e2a\u0e25\u0e31\u0e1a\u0e21\u0e38\u0e21\u0e21\u0e2d\u0e07",
+		body: "\u0e41\u0e15\u0e48\u0e25\u0e30\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e21\u0e35\u0e2b\u0e49\u0e32\u0e21\u0e38\u0e21\u0e21\u0e2d\u0e07\u0e27\u0e34\u0e40\u0e04\u0e23\u0e32\u0e30\u0e2b\u0e4c: \u0e19\u0e31\u0e01\u0e1b\u0e23\u0e30\u0e27\u0e31\u0e15\u0e34\u0e28\u0e32\u0e2a\u0e15\u0e23\u0e4c \u0e19\u0e31\u0e01\u0e27\u0e34\u0e17\u0e22\u0e32\u0e28\u0e32\u0e2a\u0e15\u0e23\u0e4c \u0e19\u0e31\u0e01\u0e1b\u0e23\u0e31\u0e0a\u0e0d\u0e32 \u0e27\u0e34\u0e28\u0e27\u0e01\u0e23 \u0e41\u0e25\u0e30\u0e28\u0e34\u0e25\u0e1b\u0e34\u0e19 \u0e2a\u0e25\u0e31\u0e1a\u0e21\u0e38\u0e21\u0e21\u0e2d\u0e07\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e40\u0e2b\u0e47\u0e19\u0e2b\u0e31\u0e27\u0e02\u0e49\u0e2d\u0e40\u0e14\u0e35\u0e22\u0e27\u0e01\u0e31\u0e19\u0e1c\u0e48\u0e32\u0e19\u0e01\u0e23\u0e2d\u0e1a\u0e04\u0e34\u0e14\u0e17\u0e35\u0e48\u0e15\u0e48\u0e32\u0e07\u0e01\u0e31\u0e19",
+		tip: "\u0e25\u0e2d\u0e07\u0e2d\u0e48\u0e32\u0e19\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e19\u0e49\u0e2d\u0e22\u0e2a\u0e2d\u0e07\u0e21\u0e38\u0e21\u0e21\u0e2d\u0e07\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e04\u0e49\u0e19\u0e1e\u0e1a\u0e04\u0e27\u0e32\u0e21\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e42\u0e22\u0e07\u0e17\u0e35\u0e48\u0e2d\u0e32\u0e08\u0e1e\u0e25\u0e32\u0e14",
+	},
+	{
+		title: "\u0e44\u0e2e\u0e40\u0e1b\u0e2d\u0e23\u0e4c\u0e42\u0e19\u0e14",
+		body: "\u0e04\u0e25\u0e34\u0e01\u0e04\u0e33\u0e17\u0e35\u0e48\u0e44\u0e2e\u0e44\u0e25\u0e17\u0e4c\u0e43\u0e19\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e40\u0e1b\u0e34\u0e14\u0e41\u0e1c\u0e07\u0e40\u0e08\u0e32\u0e30\u0e25\u0e36\u0e01\u0e41\u0e1a\u0e1a\u0e0b\u0e49\u0e2d\u0e19 \u0e41\u0e15\u0e48\u0e25\u0e30\u0e42\u0e19\u0e14\u0e02\u0e22\u0e32\u0e22\u0e40\u0e1b\u0e47\u0e19\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e22\u0e48\u0e2d\u0e22 \u0e43\u0e2b\u0e49\u0e04\u0e38\u0e13\u0e14\u0e33\u0e14\u0e34\u0e48\u0e07\u0e25\u0e36\u0e01\u0e44\u0e14\u0e49\u0e15\u0e32\u0e21\u0e15\u0e49\u0e2d\u0e07\u0e01\u0e32\u0e23\u0e42\u0e14\u0e22\u0e44\u0e21\u0e48\u0e2b\u0e25\u0e07\u0e17\u0e32\u0e07",
+		tip: "\u0e04\u0e25\u0e34\u0e01\u0e02\u0e27\u0e32\u0e17\u0e35\u0e48\u0e44\u0e2e\u0e40\u0e1b\u0e2d\u0e23\u0e4c\u0e42\u0e19\u0e14\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e40\u0e1b\u0e34\u0e14\u0e43\u0e19\u0e41\u0e17\u0e47\u0e1a\u0e43\u0e2b\u0e21\u0e48\u0e2b\u0e32\u0e01\u0e15\u0e49\u0e2d\u0e07\u0e01\u0e32\u0e23\u0e2a\u0e33\u0e23\u0e27\u0e08\u0e42\u0e14\u0e22\u0e44\u0e21\u0e48\u0e2d\u0e2d\u0e01\u0e08\u0e32\u0e01\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e1b\u0e31\u0e08\u0e08\u0e38\u0e1a\u0e31\u0e19",
+	},
+	{
+		title: "\u0e01\u0e32\u0e23\u0e17\u0e1a\u0e17\u0e27\u0e19\u0e41\u0e1a\u0e1a\u0e42\u0e2a\u0e40\u0e04\u0e23\u0e15\u0e34\u0e2a",
+		body: "\u0e17\u0e35\u0e48\u0e08\u0e38\u0e14\u0e15\u0e23\u0e27\u0e08\u0e2a\u0e33\u0e04\u0e31\u0e0d \u0e23\u0e30\u0e1a\u0e1a\u0e08\u0e30\u0e02\u0e2d\u0e43\u0e2b\u0e49\u0e04\u0e38\u0e13\u0e2d\u0e18\u0e34\u0e1a\u0e32\u0e22\u0e41\u0e19\u0e27\u0e04\u0e34\u0e14\u0e14\u0e49\u0e27\u0e22\u0e04\u0e33\u0e1e\u0e39\u0e14\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e40\u0e2d\u0e07\u0e41\u0e1a\u0e1a Feynman \u0e01\u0e32\u0e23\u0e17\u0e1a\u0e17\u0e27\u0e19\u0e41\u0e1a\u0e1a\u0e19\u0e35\u0e49\u0e0a\u0e48\u0e27\u0e22\u0e08\u0e33\u0e44\u0e14\u0e49\u0e14\u0e35\u0e01\u0e27\u0e48\u0e32\u0e01\u0e32\u0e23\u0e2d\u0e48\u0e32\u0e19\u0e40\u0e09\u0e22\u0e46 \u0e21\u0e32\u0e01",
+		tip: "\u0e2d\u0e22\u0e48\u0e32\u0e02\u0e49\u0e32\u0e21 \u0e41\u0e21\u0e49\u0e04\u0e33\u0e15\u0e2d\u0e1a\u0e2a\u0e31\u0e49\u0e19\u0e46 \u0e2a\u0e2d\u0e07\u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04\u0e01\u0e47\u0e14\u0e35\u0e01\u0e27\u0e48\u0e32\u0e01\u0e32\u0e23\u0e01\u0e14 '\u0e02\u0e49\u0e32\u0e21' \u0e21\u0e32\u0e01",
+	},
+	{
+		title: "\u0e42\u0e19\u0e49\u0e15\u0e2a\u0e48\u0e27\u0e19\u0e15\u0e31\u0e27",
+		body: "\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e42\u0e19\u0e49\u0e15\u0e2a\u0e35\u0e15\u0e48\u0e32\u0e07\u0e46 \u0e43\u0e19\u0e1a\u0e25\u0e47\u0e2d\u0e01\u0e40\u0e19\u0e37\u0e49\u0e2d\u0e2b\u0e32\u0e43\u0e14\u0e01\u0e47\u0e44\u0e14\u0e49 \u0e42\u0e19\u0e49\u0e15\u0e08\u0e30\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e15\u0e32\u0e21\u0e1a\u0e25\u0e47\u0e2d\u0e01\u0e41\u0e25\u0e30\u0e04\u0e07\u0e2d\u0e22\u0e39\u0e48\u0e15\u0e25\u0e2d\u0e14\u0e40\u0e0b\u0e2a\u0e0a\u0e31\u0e19",
+		tip: "\u0e43\u0e0a\u0e49\u0e2a\u0e35\u0e15\u0e48\u0e32\u0e07\u0e46 \u0e08\u0e31\u0e14\u0e2b\u0e21\u0e27\u0e14\u0e2b\u0e21\u0e39\u0e48: \u0e40\u0e2b\u0e25\u0e37\u0e2d\u0e07\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21 \u0e40\u0e02\u0e35\u0e22\u0e27\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e1b\u0e23\u0e30\u0e40\u0e14\u0e47\u0e19\u0e2a\u0e33\u0e04\u0e31\u0e0d \u0e41\u0e14\u0e07\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e01\u0e25\u0e31\u0e1a\u0e21\u0e32\u0e14\u0e39",
+	},
+	{
+		title: "\u0e44\u0e2e\u0e44\u0e25\u0e17\u0e4c\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e41\u0e1b\u0e25",
+		body: "\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e43\u0e14\u0e01\u0e47\u0e44\u0e14\u0e49\u0e43\u0e19\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e41\u0e25\u0e49\u0e27\u0e1b\u0e38\u0e48\u0e21\u0e41\u0e1b\u0e25\u0e08\u0e30\u0e1b\u0e23\u0e32\u0e01\u0e0f\u0e02\u0e36\u0e49\u0e19 AI \u0e08\u0e30\u0e41\u0e1b\u0e25\u0e23\u0e30\u0e2b\u0e27\u0e48\u0e32\u0e07\u0e44\u0e17\u0e22\u0e41\u0e25\u0e30\u0e2d\u0e31\u0e07\u0e01\u0e24\u0e29\u0e42\u0e14\u0e22\u0e23\u0e31\u0e01\u0e29\u0e32\u0e04\u0e33\u0e28\u0e31\u0e1e\u0e17\u0e4c\u0e40\u0e17\u0e04\u0e19\u0e34\u0e04",
+		tip: "\u0e43\u0e0a\u0e49\u0e44\u0e14\u0e49\u0e01\u0e31\u0e1a\u0e04\u0e2d\u0e21\u0e40\u0e21\u0e19\u0e15\u0e4c\u0e43\u0e19\u0e42\u0e04\u0e49\u0e14\u0e14\u0e49\u0e27\u0e22 \u0e40\u0e2b\u0e21\u0e32\u0e30\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e42\u0e04\u0e49\u0e14\u0e40\u0e1a\u0e2a\u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22",
+	},
+	{
+		title: "\u0e41\u0e01\u0e49\u0e44\u0e02\u0e04\u0e2d\u0e23\u0e4c\u0e2a",
+		body: "\u0e40\u0e1b\u0e34\u0e14\u0e04\u0e2d\u0e23\u0e4c\u0e2a\u0e41\u0e25\u0e49\u0e27\u0e04\u0e25\u0e34\u0e01\u0e44\u0e2d\u0e04\u0e2d\u0e19\u0e41\u0e01\u0e49\u0e44\u0e02\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e40\u0e1b\u0e25\u0e35\u0e48\u0e22\u0e19\u0e0a\u0e37\u0e48\u0e2d \u0e2a\u0e23\u0e49\u0e32\u0e07\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e43\u0e2b\u0e21\u0e48\u0e14\u0e49\u0e27\u0e22 prompt \u0e15\u0e48\u0e32\u0e07\u0e01\u0e31\u0e19 \u0e2b\u0e23\u0e37\u0e2d\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e42\u0e21\u0e40\u0e14\u0e25 AI \u0e17\u0e35\u0e48\u0e15\u0e48\u0e32\u0e07\u0e01\u0e31\u0e19",
+		tip: "\u0e01\u0e32\u0e23\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e43\u0e2b\u0e21\u0e48\u0e44\u0e21\u0e48\u0e01\u0e23\u0e30\u0e17\u0e1a\u0e04\u0e27\u0e32\u0e21\u0e04\u0e37\u0e1a\u0e2b\u0e19\u0e49\u0e32\u0e02\u0e2d\u0e07\u0e1a\u0e17\u0e2d\u0e37\u0e48\u0e19",
+	},
+	{
+		title: "\u0e2a\u0e48\u0e07\u0e2d\u0e2d\u0e01 / \u0e19\u0e33\u0e40\u0e02\u0e49\u0e32",
+		body: "\u0e2a\u0e33\u0e23\u0e2d\u0e07\u0e04\u0e2d\u0e23\u0e4c\u0e2a\u0e40\u0e1b\u0e47\u0e19\u0e44\u0e1f\u0e25\u0e4c JSON \u0e14\u0e49\u0e27\u0e22\u0e1b\u0e38\u0e48\u0e21\u0e2a\u0e48\u0e07\u0e2d\u0e2d\u0e01 \u0e19\u0e33\u0e40\u0e02\u0e49\u0e32\u0e43\u0e19\u0e2d\u0e38\u0e1b\u0e01\u0e23\u0e13\u0e4c\u0e2d\u0e37\u0e48\u0e19\u0e2b\u0e23\u0e37\u0e2d\u0e41\u0e0a\u0e23\u0e4c\u0e01\u0e31\u0e1a\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19 \u0e23\u0e27\u0e21\u0e04\u0e27\u0e32\u0e21\u0e04\u0e37\u0e1a\u0e2b\u0e19\u0e49\u0e32\u0e41\u0e25\u0e30\u0e42\u0e19\u0e49\u0e15\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14",
+		tip: "\u0e2a\u0e48\u0e07\u0e2d\u0e2d\u0e01\u0e40\u0e1b\u0e47\u0e19\u0e1b\u0e23\u0e30\u0e08\u0e33\u0e2b\u0e32\u0e01\u0e04\u0e38\u0e13\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e04\u0e2d\u0e23\u0e4c\u0e2a\u0e17\u0e35\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e01\u0e32\u0e23\u0e40\u0e01\u0e47\u0e1a\u0e44\u0e27\u0e49\u0e23\u0e30\u0e22\u0e30\u0e22\u0e32\u0e27",
+	},
+	{
+		title: "\u0e01\u0e23\u0e32\u0e1f\u0e04\u0e27\u0e32\u0e21\u0e23\u0e39\u0e49",
+		body: "\u0e2b\u0e19\u0e49\u0e32\u0e01\u0e23\u0e32\u0e1f\u0e41\u0e2a\u0e14\u0e07\u0e40\u0e04\u0e23\u0e37\u0e2d\u0e02\u0e48\u0e32\u0e22\u0e04\u0e2d\u0e23\u0e4c\u0e2a\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14\u0e41\u0e25\u0e30\u0e04\u0e27\u0e32\u0e21\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e42\u0e22\u0e07\u0e02\u0e2d\u0e07\u0e41\u0e19\u0e27\u0e04\u0e34\u0e14 \u0e42\u0e19\u0e14\u0e17\u0e35\u0e48\u0e43\u0e2b\u0e0d\u0e48\u0e04\u0e37\u0e2d\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e04\u0e38\u0e13\u0e40\u0e23\u0e35\u0e22\u0e19\u0e21\u0e32\u0e01",
+		tip: "\u0e21\u0e2d\u0e07\u0e2b\u0e32\u0e01\u0e25\u0e38\u0e48\u0e21\u0e42\u0e14\u0e14\u0e40\u0e14\u0e35\u0e48\u0e22\u0e27 \u0e21\u0e31\u0e01\u0e1a\u0e2d\u0e01\u0e42\u0e2d\u0e01\u0e32\u0e2a\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e04\u0e2d\u0e23\u0e4c\u0e2a\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21",
+	},
+	{
+		title: "\u0e04\u0e35\u0e22\u0e4c\u0e25\u0e31\u0e14",
+		body: "\u0e01\u0e14 ? \u0e17\u0e35\u0e48\u0e44\u0e2b\u0e19\u0e01\u0e47\u0e44\u0e14\u0e49\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e14\u0e39\u0e04\u0e35\u0e22\u0e4c\u0e25\u0e31\u0e14\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14 \u0e21\u0e35\u0e04\u0e35\u0e22\u0e4c\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e19\u0e33\u0e17\u0e32\u0e07 \u0e2a\u0e25\u0e31\u0e1a\u0e18\u0e35\u0e21 \u0e04\u0e49\u0e19\u0e2b\u0e32 \u0e41\u0e25\u0e30\u0e04\u0e27\u0e1a\u0e04\u0e38\u0e21\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19",
+		tip: "\u0e04\u0e35\u0e22\u0e4c\u0e17\u0e35\u0e48\u0e43\u0e0a\u0e49\u0e1a\u0e48\u0e2d\u0e22\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14\u0e04\u0e37\u0e2d J/K \u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e40\u0e25\u0e37\u0e48\u0e2d\u0e19\u0e23\u0e30\u0e2b\u0e27\u0e48\u0e32\u0e07\u0e1a\u0e25\u0e47\u0e2d\u0e01\u0e40\u0e19\u0e37\u0e49\u0e2d\u0e2b\u0e32\u0e43\u0e19\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19",
+	},
+	{
+		title: "\u0e01\u0e32\u0e23\u0e17\u0e1a\u0e17\u0e27\u0e19\u0e41\u0e1a\u0e1a\u0e40\u0e27\u0e49\u0e19\u0e23\u0e30\u0e22\u0e30",
+		body: "\u0e15\u0e32\u0e23\u0e32\u0e07\u0e17\u0e1a\u0e17\u0e27\u0e19\u0e43\u0e19\u0e2b\u0e19\u0e49\u0e32\u0e04\u0e27\u0e32\u0e21\u0e04\u0e37\u0e1a\u0e2b\u0e19\u0e49\u0e32\u0e43\u0e0a\u0e49 Spaced Repetition \u0e1a\u0e17\u0e17\u0e35\u0e48\u0e22\u0e32\u0e01\u0e08\u0e30\u0e01\u0e25\u0e31\u0e1a\u0e21\u0e32\u0e40\u0e23\u0e47\u0e27\u0e02\u0e36\u0e49\u0e19 \u0e1a\u0e17\u0e17\u0e35\u0e48\u0e40\u0e02\u0e49\u0e32\u0e43\u0e08\u0e41\u0e25\u0e49\u0e27\u0e08\u0e30\u0e40\u0e27\u0e49\u0e19\u0e2d\u0e2d\u0e01\u0e44\u0e1b",
+		tip: "\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e43\u0e08\u0e2d\u0e31\u0e25\u0e01\u0e2d\u0e23\u0e34\u0e17\u0e36\u0e21 \u0e17\u0e1a\u0e17\u0e27\u0e19\u0e15\u0e32\u0e21\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48\u0e41\u0e19\u0e30\u0e19\u0e33\u0e08\u0e30\u0e08\u0e33\u0e44\u0e14\u0e49\u0e14\u0e35\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14",
+	},
+	{
+		title: "\u0e15\u0e34\u0e14\u0e02\u0e31\u0e14",
+		body: "\u0e2b\u0e32\u0e01\u0e2a\u0e31\u0e1a\u0e2a\u0e19 \u0e43\u0e0a\u0e49\u0e41\u0e0a\u0e17\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e16\u0e32\u0e21 AI AI \u0e21\u0e35\u0e1a\u0e23\u0e34\u0e1a\u0e17\u0e02\u0e2d\u0e07\u0e1a\u0e17\u0e40\u0e23\u0e35\u0e22\u0e19\u0e41\u0e25\u0e30\u0e2a\u0e32\u0e21\u0e32\u0e23\u0e16\u0e2d\u0e18\u0e34\u0e1a\u0e32\u0e22\u0e43\u0e2b\u0e21\u0e48 \u0e22\u0e01\u0e15\u0e31\u0e27\u0e2d\u0e22\u0e48\u0e32\u0e07 \u0e2b\u0e23\u0e37\u0e2d\u0e41\u0e22\u0e01\u0e22\u0e48\u0e2d\u0e22\u0e44\u0e14\u0e49",
+		tip: "\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e27\u0e48\u0e32 '\u0e2d\u0e18\u0e34\u0e1a\u0e32\u0e22\u0e41\u0e1a\u0e1a\u0e40\u0e14\u0e47\u0e01\u0e2b\u0e49\u0e32\u0e02\u0e27\u0e1a' \u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e04\u0e33\u0e2d\u0e18\u0e34\u0e1a\u0e32\u0e22\u0e17\u0e35\u0e48\u0e07\u0e48\u0e32\u0e22\u0e02\u0e36\u0e49\u0e19",
+	},
+	{
+		title: "\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e01\u0e32\u0e23\u0e40\u0e23\u0e35\u0e22\u0e19\u0e23\u0e39\u0e49",
+		body: "\u0e2b\u0e25\u0e31\u0e07\u0e40\u0e23\u0e35\u0e22\u0e19\u0e08\u0e1a\u0e41\u0e15\u0e48\u0e25\u0e30\u0e1a\u0e17 \u0e23\u0e30\u0e1a\u0e1a\u0e08\u0e30\u0e0a\u0e27\u0e19\u0e43\u0e2b\u0e49\u0e40\u0e02\u0e35\u0e22\u0e19\u0e2a\u0e30\u0e17\u0e49\u0e2d\u0e19\u0e27\u0e48\u0e32\u0e40\u0e23\u0e35\u0e22\u0e19\u0e2d\u0e30\u0e44\u0e23 \u0e2d\u0e30\u0e44\u0e23\u0e19\u0e48\u0e32\u0e1b\u0e23\u0e30\u0e17\u0e31\u0e1a\u0e43\u0e08 \u0e41\u0e25\u0e30\u0e22\u0e31\u0e07\u0e21\u0e35\u0e04\u0e33\u0e16\u0e32\u0e21\u0e2d\u0e30\u0e44\u0e23\u0e40\u0e2b\u0e25\u0e37\u0e2d \u0e04\u0e49\u0e19\u0e2b\u0e32\u0e44\u0e14\u0e49\u0e15\u0e32\u0e21\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48",
+		tip: "\u0e41\u0e04\u0e48\u0e40\u0e02\u0e35\u0e22\u0e19\u0e2b\u0e19\u0e36\u0e48\u0e07\u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04\u0e15\u0e48\u0e2d\u0e1a\u0e17\u0e01\u0e47\u0e2a\u0e30\u0e2a\u0e21\u0e40\u0e1b\u0e47\u0e19\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e04\u0e27\u0e32\u0e21\u0e23\u0e39\u0e49\u0e2a\u0e48\u0e27\u0e19\u0e15\u0e31\u0e27\u0e17\u0e35\u0e48\u0e21\u0e35\u0e04\u0e48\u0e32",
+	},
+	{
+		title: "\u0e2a\u0e2d\u0e19\u0e01\u0e25\u0e31\u0e1a",
+		body: "\u0e42\u0e2b\u0e21\u0e14 Teach It Back \u0e02\u0e2d\u0e43\u0e2b\u0e49\u0e04\u0e38\u0e13\u0e2d\u0e18\u0e34\u0e1a\u0e32\u0e22\u0e2b\u0e31\u0e27\u0e02\u0e49\u0e2d\u0e40\u0e2b\u0e21\u0e37\u0e2d\u0e19\u0e2a\u0e2d\u0e19\u0e04\u0e19\u0e2d\u0e37\u0e48\u0e19 AI \u0e08\u0e30\u0e1b\u0e23\u0e30\u0e40\u0e21\u0e34\u0e19\u0e04\u0e33\u0e2d\u0e18\u0e34\u0e1a\u0e32\u0e22\u0e41\u0e25\u0e30\u0e0a\u0e35\u0e49\u0e08\u0e38\u0e14\u0e17\u0e35\u0e48\u0e02\u0e32\u0e14",
+		tip: "\u0e2b\u0e32\u0e01\u0e2a\u0e2d\u0e19\u0e44\u0e14\u0e49\u0e0a\u0e31\u0e14\u0e40\u0e08\u0e19 \u0e41\u0e2a\u0e14\u0e07\u0e27\u0e48\u0e32\u0e04\u0e38\u0e13\u0e40\u0e02\u0e49\u0e32\u0e43\u0e08\u0e08\u0e23\u0e34\u0e07 \u0e2b\u0e32\u0e01\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49 \u0e04\u0e38\u0e13\u0e08\u0e30\u0e23\u0e39\u0e49\u0e27\u0e48\u0e32\u0e15\u0e49\u0e2d\u0e07\u0e42\u0e1f\u0e01\u0e31\u0e2a\u0e15\u0e23\u0e07\u0e44\u0e2b\u0e19",
+	},
+	{
+		title: "\u0e42\u0e21\u0e40\u0e14\u0e25 AI",
+		body: "\u0e21\u0e35\u0e42\u0e21\u0e40\u0e14\u0e25 AI \u0e2b\u0e25\u0e32\u0e22\u0e15\u0e31\u0e27\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e07\u0e32\u0e19\u0e15\u0e48\u0e32\u0e07\u0e46 \u0e42\u0e21\u0e40\u0e14\u0e25\u0e40\u0e23\u0e47\u0e27\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e41\u0e0a\u0e17 \u0e42\u0e21\u0e40\u0e14\u0e25\u0e17\u0e23\u0e07\u0e1e\u0e25\u0e31\u0e07\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e04\u0e2d\u0e23\u0e4c\u0e2a \u0e40\u0e25\u0e37\u0e2d\u0e01\u0e43\u0e19\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32",
+		tip: "\u0e42\u0e21\u0e40\u0e14\u0e25\u0e43\u0e2b\u0e0d\u0e48\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e40\u0e19\u0e37\u0e49\u0e2d\u0e2b\u0e32\u0e14\u0e35\u0e01\u0e27\u0e48\u0e32\u0e41\u0e15\u0e48\u0e43\u0e0a\u0e49\u0e40\u0e27\u0e25\u0e32\u0e19\u0e32\u0e19\u0e01\u0e27\u0e48\u0e32 \u0e43\u0e0a\u0e49\u0e42\u0e21\u0e40\u0e14\u0e25\u0e40\u0e23\u0e47\u0e27\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21\u0e2a\u0e31\u0e49\u0e19\u0e46",
+	},
+	{
+		title: "\u0e43\u0e1a\u0e23\u0e31\u0e1a\u0e23\u0e2d\u0e07",
+		body: "\u0e40\u0e23\u0e35\u0e22\u0e19\u0e04\u0e23\u0e1a\u0e17\u0e38\u0e01\u0e1a\u0e17\u0e41\u0e25\u0e30\u0e04\u0e27\u0e34\u0e0b\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e1b\u0e25\u0e14\u0e25\u0e47\u0e2d\u0e04\u0e43\u0e1a\u0e23\u0e31\u0e1a\u0e23\u0e2d\u0e07 \u0e21\u0e35\u0e0a\u0e37\u0e48\u0e2d\u0e04\u0e2d\u0e23\u0e4c\u0e2a \u0e27\u0e31\u0e19\u0e17\u0e35\u0e48\u0e40\u0e2a\u0e23\u0e47\u0e08 \u0e41\u0e25\u0e30\u0e23\u0e2b\u0e31\u0e2a\u0e22\u0e37\u0e19\u0e22\u0e31\u0e19 \u0e14\u0e32\u0e27\u0e19\u0e4c\u0e42\u0e2b\u0e25\u0e14\u0e40\u0e1b\u0e47\u0e19 PDF",
+		tip: "\u0e43\u0e1a\u0e23\u0e31\u0e1a\u0e23\u0e2d\u0e07\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e40\u0e1b\u0e47\u0e19 PDF \u0e2a\u0e32\u0e21\u0e32\u0e23\u0e16\u0e41\u0e0a\u0e23\u0e4c\u0e2b\u0e23\u0e37\u0e2d\u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e44\u0e14\u0e49",
+	},
+];
+
+// ── Meta ───────────────────────────────────────────────────
+
+export function meta() {
+	return [{ title: "Napat \u00b7 Learning \u00b7 Guide" }];
+}
+
+// ── Component ──────────────────────────────────────────────
+
+export default function GuidePage(_props: Route.ComponentProps) {
+	const { theme, t, toggleTheme } = useTheme();
+	const [lang, setLang] = useState<Language>("en");
+	const [mode, setMode] = useState<Mode>("simple");
+
+	const simpleSections = lang === "en" ? SIMPLE_EN : SIMPLE_TH;
+	const advancedSections = lang === "en" ? ADVANCED_EN : ADVANCED_TH;
+	const allSections =
+		mode === "advanced"
+			? [...simpleSections, ...advancedSections]
+			: simpleSections;
+
+	return (
+		<div style={{ padding: "0 20px 120px" }}>
+			<TopBar t={t} theme={theme} onToggleTheme={toggleTheme} />
+
+			<div style={{ maxWidth: 920, margin: "0 auto", paddingTop: "14vh" }}>
+				{/* ── Page header ─────────────────────────── */}
+				<Tracked
+					size={10}
+					tracking={0.3}
+					style={{ color: t.inkGhost, display: "block", marginBottom: 24 }}
+				>
+					GUIDE
+				</Tracked>
+
+				<h1
+					style={{
+						fontFamily: "Playfair Display, serif",
+						fontSize: "clamp(32px, 7vw, 56px)",
+						fontWeight: 500,
+						color: t.inkStrong,
+						letterSpacing: "-0.02em",
+						margin: 0,
+					}}
+				>
+					{lang === "en" ? "User Guide" : "\u0e04\u0e39\u0e48\u0e21\u0e37\u0e2d\u0e01\u0e32\u0e23\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19"}
+					<span style={{ color: t.accent }}>.</span>
+				</h1>
+
+				<p
+					style={{
+						fontFamily: "Playfair Display, serif",
+						fontSize: 22,
+						color: t.inkGhost,
+						fontStyle: "italic",
+						marginTop: 12,
+						marginBottom: 48,
+					}}
+				>
+					{lang === "en"
+						? "everything you need to know."
+						: "\u0e17\u0e38\u0e01\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e04\u0e38\u0e13\u0e15\u0e49\u0e2d\u0e07\u0e23\u0e39\u0e49"}
+				</p>
+
+				{/* ── Toggles ────────────────────────────── */}
+				<div
+					style={{
+						display: "flex",
+						gap: 12,
+						flexWrap: "wrap",
+						alignItems: "center",
+						marginBottom: 48,
+					}}
+				>
+					<Tracked size={10} tracking={0.25} style={{ color: t.inkGhost }}>
+						{lang === "en" ? "LANGUAGE" : "\u0e20\u0e32\u0e29\u0e32"}
+					</Tracked>
+					<Rule width={24} color={t.divider} />
+					<Chip t={t} active={lang === "en"} onClick={() => setLang("en")}>
+						{lang === "en" ? "\u25cf " : "\u25cb "}EN
+					</Chip>
+					<Chip t={t} active={lang === "th"} onClick={() => setLang("th")}>
+						{lang === "th" ? "\u25cf " : "\u25cb "}TH
+					</Chip>
+
+					<span style={{ width: 24 }} />
+
+					<Tracked size={10} tracking={0.25} style={{ color: t.inkGhost }}>
+						{lang === "en" ? "MODE" : "\u0e42\u0e2b\u0e21\u0e14"}
+					</Tracked>
+					<Rule width={24} color={t.divider} />
+					<Chip
+						t={t}
+						active={mode === "simple"}
+						onClick={() => setMode("simple")}
+					>
+						{mode === "simple" ? "\u25cf " : "\u25cb "}
+						{lang === "en" ? "Simple" : "\u0e1e\u0e37\u0e49\u0e19\u0e10\u0e32\u0e19"}
+					</Chip>
+					<Chip
+						t={t}
+						active={mode === "advanced"}
+						onClick={() => setMode("advanced")}
+					>
+						{mode === "advanced" ? "\u25cf " : "\u25cb "}
+						{lang === "en" ? "Advanced" : "\u0e02\u0e31\u0e49\u0e19\u0e2a\u0e39\u0e07"}
+					</Chip>
+				</div>
+
+				{/* ── Sections ───────────────────────────── */}
+				{allSections.map((section, i) => (
+					<div
+						key={`${lang}-${mode}-${i}`}
+						style={{
+							borderTop: `1px solid ${t.divider}`,
+							padding: "32px 0",
+						}}
+					>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: 12,
+								marginBottom: 16,
+							}}
+						>
+							<FilmDot size={6} style={{ opacity: 0.5 }} />
+							<Tracked
+								size={10}
+								tracking={0.3}
+								style={{ color: t.inkGhost }}
+							>
+								{String(i + 1).padStart(2, "0")}
+							</Tracked>
+							<Rule width={24} color={t.divider} />
+						</div>
+
+						<h2
+							style={{
+								fontFamily: "Playfair Display, serif",
+								fontSize: "clamp(20px, 4vw, 28px)",
+								fontWeight: 500,
+								color: t.inkStrong,
+								letterSpacing: "-0.01em",
+								margin: "0 0 12px",
+							}}
+						>
+							{section.title}
+						</h2>
+
+						<p
+							style={{
+								fontFamily: "Inter, sans-serif",
+								fontSize: 15,
+								lineHeight: 1.7,
+								color: t.ink,
+								margin: "0 0 16px",
+								maxWidth: 680,
+							}}
+						>
+							{section.body}
+						</p>
+
+						<div
+							style={{
+								display: "flex",
+								alignItems: "flex-start",
+								gap: 8,
+								padding: "10px 14px",
+								background: theme === "dark"
+									? "rgba(255,255,255,0.03)"
+									: "rgba(0,0,0,0.02)",
+								borderLeft: `2px solid ${t.accent}`,
+							}}
+						>
+							<Tracked
+								size={9}
+								tracking={0.2}
+								style={{
+									color: t.accent,
+									flexShrink: 0,
+									marginTop: 2,
+								}}
+							>
+								TIP
+							</Tracked>
+							<p
+								style={{
+									fontFamily: "JetBrains Mono, monospace",
+									fontSize: 11,
+									color: t.inkMuted,
+									letterSpacing: "0.02em",
+									lineHeight: 1.6,
+									margin: 0,
+								}}
+							>
+								{section.tip}
+							</p>
+						</div>
+					</div>
+				))}
+
+				{/* ── Footer ─────────────────────────────── */}
+				<div
+					style={{
+						borderTop: `1px solid ${t.divider}`,
+						padding: "32px 0",
+						textAlign: "center",
+					}}
+				>
+					<TrackedButton
+						t={t}
+						primary
+						onClick={() => {
+							window.location.href = "/learning";
+						}}
+					>
+						{lang === "en" ? "START LEARNING" : "\u0e40\u0e23\u0e34\u0e48\u0e21\u0e40\u0e23\u0e35\u0e22\u0e19"}
+					</TrackedButton>
+				</div>
+			</div>
+		</div>
+	);
+}
