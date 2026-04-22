@@ -24,41 +24,38 @@ export interface ModelSelection {
   provider: Provider;
 }
 
-// Gemini models
+// Claude models (default)
+const CLAUDE_OPUS = "claude-opus-4-7";
+const CLAUDE_SONNET = "claude-sonnet-4-6";
+const CLAUDE_HAIKU = "claude-haiku-4-5-20251001";
+
+// Gemini models (available when GEMINI_API_KEY is set)
 const GEMINI_PRO = "gemini-2.5-pro-preview-06-05";
 const GEMINI_FLASH = "gemini-2.5-flash-preview-05-20";
 
-// Claude models (fallback)
-const CLAUDE_OPUS = "claude-opus-4-7";
-const CLAUDE_SONNET = "claude-sonnet-4-6";
-
 export function selectModel(action: AIAction, inputLength?: number): ModelSelection {
   switch (action) {
-    // High-quality tasks → Gemini Pro (was Claude Opus)
     case "planCourse":
-      return { model: GEMINI_PRO, provider: "gemini" };
+      return { model: CLAUDE_SONNET, provider: "anthropic" };
 
-    // Medium tasks → Gemini Flash (was Claude Sonnet)
     case "generateLesson":
     case "generateQuiz":
     case "gradeShortAnswer":
     case "socraticRecall":
     case "deepDive":
     case "perspectiveLesson":
-      return { model: GEMINI_FLASH, provider: "gemini" };
+      return { model: CLAUDE_SONNET, provider: "anthropic" };
 
-    // Chat — flash for short, pro for long
     case "chat":
       return inputLength !== undefined && inputLength < 200
-        ? { model: GEMINI_FLASH, provider: "gemini" }
-        : { model: GEMINI_FLASH, provider: "gemini" };
+        ? { model: CLAUDE_HAIKU, provider: "anthropic" }
+        : { model: CLAUDE_SONNET, provider: "anthropic" };
 
-    // Light tasks → Gemini Flash (was Claude Haiku)
     case "suggestTitle":
     case "summarise":
     case "buildGraph":
     case "translate":
-      return { model: GEMINI_FLASH, provider: "gemini" };
+      return { model: CLAUDE_HAIKU, provider: "anthropic" };
   }
 }
 
