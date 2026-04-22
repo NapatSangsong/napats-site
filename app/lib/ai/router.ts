@@ -1,10 +1,10 @@
 /**
- * Automatic model selection — routes tasks to the best free model.
- * Default: OpenRouter free tier ($0/month).
- * Fallback: Claude (when user explicitly selects it).
+ * Automatic model selection — smart routing across OpenRouter models.
+ * Uses paid models for quality tasks, free models for light tasks.
+ * $10 budget — optimize for quality + cost efficiency.
  */
 
-import { FREE_MODELS, type ModelRoute } from "./openrouter-client";
+import type { ModelRoute } from "./openrouter-client";
 
 export type AIAction =
   | "planCourse"
@@ -25,65 +25,78 @@ export type Provider = "openrouter" | "gemini" | "anthropic";
 export interface ModelSelection {
   model: string;
   provider: Provider;
-  route?: ModelRoute; // OpenRouter: ordered list of models to try
+  route?: ModelRoute;
 }
+
+// ── Model roster ────────────────────────────────────────────
+// Paid (best quality/cost ratio on OpenRouter)
+const GEMINI_FLASH = "google/gemini-2.5-flash-preview-05-20";  // ~$0.15/M — fast, great quality
+const GEMINI_PRO = "google/gemini-2.5-pro-preview-06-05";      // ~$1.25/M — highest quality
+const CLAUDE_HAIKU = "anthropic/claude-haiku-4-5-20251001";     // ~$0.80/M — fast Claude
+
+// Free fallbacks
+const GEMMA_26B = "google/gemma-4-26b-a4b-it:free";
+const GEMMA_31B = "google/gemma-4-31b-it:free";
+const NEMOTRON = "nvidia/nemotron-3-super-120b-a12b:free";
 
 // Task → model routing with fallback chain
 const TASK_ROUTES: Record<AIAction, ModelRoute> = {
-  // Complex tasks → Gemma 31B primary (dense, higher quality)
+  // High quality → Gemini Pro (best reasoning)
   planCourse: {
-    primary: FREE_MODELS.GEMMA_31B,
-    fallbacks: [FREE_MODELS.NEMOTRON, FREE_MODELS.GEMMA_26B],
-  },
-  generateQuiz: {
-    primary: FREE_MODELS.GEMMA_31B,
-    fallbacks: [FREE_MODELS.GEMMA_26B, FREE_MODELS.NEMOTRON],
-  },
-  gradeShortAnswer: {
-    primary: FREE_MODELS.GEMMA_31B,
-    fallbacks: [FREE_MODELS.NEMOTRON, FREE_MODELS.GEMMA_26B],
+    primary: GEMINI_PRO,
+    fallbacks: [GEMINI_FLASH, GEMMA_31B],
   },
 
-  // Content generation → Gemma 26B primary (fast, good at teaching)
+  // Content generation → Gemini Flash (fast + good quality, cheap)
   generateLesson: {
-    primary: FREE_MODELS.GEMMA_26B,
-    fallbacks: [FREE_MODELS.GEMMA_31B, FREE_MODELS.NEMOTRON],
+    primary: GEMINI_FLASH,
+    fallbacks: [GEMMA_26B, GEMMA_31B],
   },
   perspectiveLesson: {
-    primary: FREE_MODELS.GEMMA_26B,
-    fallbacks: [FREE_MODELS.GEMMA_31B, FREE_MODELS.NEMOTRON],
+    primary: GEMINI_FLASH,
+    fallbacks: [GEMMA_26B, GEMMA_31B],
   },
   deepDive: {
-    primary: FREE_MODELS.GEMMA_26B,
-    fallbacks: [FREE_MODELS.GEMMA_31B, FREE_MODELS.INCLUSION],
+    primary: GEMINI_FLASH,
+    fallbacks: [GEMMA_26B, GEMMA_31B],
   },
   socraticRecall: {
-    primary: FREE_MODELS.GEMMA_26B,
-    fallbacks: [FREE_MODELS.GEMMA_31B, FREE_MODELS.NEMOTRON],
+    primary: GEMINI_FLASH,
+    fallbacks: [GEMMA_26B, GEMMA_31B],
   },
 
-  // Chat → Gemma 26B (fast, good at Thai)
+  // Quizzes & grading → Gemini Flash
+  generateQuiz: {
+    primary: GEMINI_FLASH,
+    fallbacks: [GEMMA_31B, GEMMA_26B],
+  },
+  gradeShortAnswer: {
+    primary: GEMINI_FLASH,
+    fallbacks: [GEMMA_31B, NEMOTRON],
+  },
+
+  // Chat → Gemini Flash (fast, conversational)
   chat: {
-    primary: FREE_MODELS.GEMMA_26B,
-    fallbacks: [FREE_MODELS.GEMMA_31B, FREE_MODELS.MINIMAX],
+    primary: GEMINI_FLASH,
+    fallbacks: [GEMMA_26B, GEMMA_31B],
   },
 
-  // Light tasks → Gemma 26B (fast)
+  // Light tasks → free models (save budget)
   suggestTitle: {
-    primary: FREE_MODELS.GEMMA_26B,
-    fallbacks: [FREE_MODELS.MINIMAX, FREE_MODELS.INCLUSION],
+    primary: GEMMA_26B,
+    fallbacks: [GEMMA_31B, GEMINI_FLASH],
   },
   summarise: {
-    primary: FREE_MODELS.GEMMA_26B,
-    fallbacks: [FREE_MODELS.MINIMAX, FREE_MODELS.INCLUSION],
+    primary: GEMMA_26B,
+    fallbacks: [GEMMA_31B, GEMINI_FLASH],
   },
   buildGraph: {
-    primary: FREE_MODELS.GEMMA_26B,
-    fallbacks: [FREE_MODELS.GEMMA_31B, FREE_MODELS.MINIMAX],
+    primary: GEMMA_26B,
+    fallbacks: [GEMMA_31B, GEMINI_FLASH],
   },
   translate: {
-    primary: FREE_MODELS.GEMMA_26B,
-    fallbacks: [FREE_MODELS.GEMMA_31B, FREE_MODELS.MINIMAX],
+    primary: GEMINI_FLASH,
+    fallbacks: [GEMMA_26B, GEMMA_31B],
   },
 };
 

@@ -105,7 +105,9 @@ export default function LearningLayout({ loaderData }: Route.ComponentProps) {
 				className="font-sans"
 			>
 				<Outlet />
-				<MobileTabBar t={t} />
+				<div className="learning-mobile-only">
+					<MobileTabBar t={t} />
+				</div>
 			</div>
 		</ThemeContext.Provider>
 	);

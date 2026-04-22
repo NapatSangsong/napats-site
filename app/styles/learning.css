@@ -83,3 +83,13 @@
 .learning-fade-in {
 	animation: learning-fade-in 0.2s ease-out both;
 }
+
+/* Mobile tab bar — hide on desktop */
+.learning-mobile-only {
+	display: block;
+}
+@media (min-width: 768px) {
+	.learning-mobile-only {
+		display: none;
+	}
+}

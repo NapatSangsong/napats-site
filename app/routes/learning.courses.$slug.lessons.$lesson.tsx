@@ -1415,7 +1415,7 @@ hyper:hover {
 						<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
 							<span style={{ width: 5, height: 5, borderRadius: "50%", background: "#cc0000", display: "inline-block" }} />
 							<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.3em", color: t.ink }}>MINSU</span>
-							<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost, marginLeft: 8 }}>SONNET</span>
+							<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost, marginLeft: 8 }}>FREE</span>
 						</div>
 						<button onClick={() => setMobileChatOpen(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: t.inkMuted, fontSize: 22, lineHeight: 1 }}>×</button>
 					</div>
@@ -1919,12 +1919,28 @@ hyper:hover {
 							</div>
 
 							{!recallConfirmed && recallMessages.length === 0 && (
-								<p style={{
-									fontSize: 14, lineHeight: 1.6, color: t.inkMuted,
-									fontStyle: "italic", margin: "0 0 16px",
-								}}>
-									preparing your recall checkpoint…
-								</p>
+								<div>
+									<p style={{
+										fontSize: 14, lineHeight: 1.6, color: t.inkMuted,
+										fontStyle: "italic", margin: "0 0 16px",
+									}}>
+										preparing your recall checkpoint…
+									</p>
+									<div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+										<button
+											onClick={() => startRecall()}
+											style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.15em", padding: "6px 12px", border: `1px solid ${t.divider}`, background: "transparent", color: t.inkMuted, cursor: "pointer" }}
+										>
+											RETRY
+										</button>
+										<button
+											onClick={() => { setRecallConfirmed(true); handleRecallConfirmed(); }}
+											style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.15em", padding: "6px 12px", border: `1px solid ${t.divider}`, background: "transparent", color: t.inkGhost, cursor: "pointer" }}
+										>
+											SKIP CHECKPOINT
+										</button>
+									</div>
+								</div>
 							)}
 
 							{/* Conversation */}
@@ -2169,7 +2185,7 @@ hyper:hover {
 							<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
 								<span style={{ width: 5, height: 5, borderRadius: "50%", background: "#cc0000", display: "inline-block" }} />
 								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.3em", color: t.ink }}>MINSU</span>
-								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost, marginLeft: 8 }}>SONNET</span>
+								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost, marginLeft: 8 }}>FREE</span>
 							</div>
 							<button onClick={() => setChatOpen(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: t.inkMuted, fontSize: 16 }}>×</button>
 						</div>
