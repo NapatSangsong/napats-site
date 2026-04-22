@@ -182,6 +182,7 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	// Model selection for lesson generation
 	const [lessonModel, setLessonModel] = useState(lesson.generated_by_model || "auto");
 	const [lessonModelPickerOpen, setLessonModelPickerOpen] = useState(false);
+	const [mermaidPopup, setMermaidPopup] = useState<string | null>(null); // mermaid code for popup
 	const LESSON_MODELS = [
 		{ id: "auto", label: "AUTO", desc: "ระบบเลือกให้", badge: "RECOMMENDED" },
 		{ id: "google/gemini-2.5-pro-preview-06-05", label: "GEMINI PRO", desc: "เก่งสุด · ไทยดี", badge: "BEST" },
@@ -2051,7 +2052,7 @@ body{margin:0;padding:0;background:${bgColor};overflow:hidden;height:100vh;displ
 <button onclick="zoomIn()">+</button>
 <button onclick="zoomOut()">−</button>
 <button onclick="resetView()">FIT</button>
-<button onclick="window.parent.postMessage({type:'mermaid-fullscreen'},'*')">⛶ EXPAND</button>
+<button onclick="window.parent.postMessage({type:'mermaid-fullscreen',code:document.querySelector('.mermaid')?.textContent||''},'*')">⛶ EXPAND</button>
 <span id="zoomLabel">100%</span>
 </div>
 <script>
@@ -2110,14 +2111,8 @@ window.addEventListener('load',()=>{setTimeout(()=>{
 														if (ev.data?.type === "mermaid-height" && ev.data.height) {
 															iframe.style.height = `${Math.min(ev.data.height, 600)}px`;
 														}
-														if (ev.data?.type === "mermaid-fullscreen") {
-															// Toggle fullscreen
-															if (!document.fullscreenElement) {
-																iframe.parentElement?.requestFullscreen?.();
-																iframe.style.height = "100vh";
-															} else {
-																document.exitFullscreen?.();
-															}
+														if (ev.data?.type === "mermaid-fullscreen" && ev.data.code) {
+															setMermaidPopup(ev.data.code);
 														}
 													};
 													window.addEventListener("message", handler);
@@ -2716,5 +2711,51 @@ window.addEventListener('load',()=>{setTimeout(()=>{
 				)
 			)}
 		</div>
+
+			{/* Mermaid popup modal */}
+			{mermaidPopup && (() => {
+				const popupTheme = theme === "dark" ? "dark" : "default";
+				const popupBg = theme === "dark" ? "#0a0a0a" : "#F5F3EF";
+				const popupText = theme === "dark" ? "#e8e8e8" : "#1a1a18";
+				const popupCode = mermaidPopup.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+				const popupHtml = `<!DOCTYPE html><html><head>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"><\/script>
+<style>
+body{margin:0;padding:40px;background:${popupBg};display:flex;justify-content:center;align-items:flex-start;min-height:100vh;overflow:auto;}
+.mermaid svg{display:block;}
+</style></head><body>
+<pre class="mermaid">${popupCode}</pre>
+<script>mermaid.initialize({startOnLoad:true,theme:'${popupTheme}',themeVariables:{fontSize:'16px',primaryColor:'${theme === "dark" ? "#444" : "#ddd"}',primaryTextColor:'${popupText}',lineColor:'${popupText}'}});<\/script>
+</body></html>`;
+				return (
+					<div
+						style={{
+							position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+							background: "rgba(0,0,0,0.85)", zIndex: 9999,
+							display: "flex", flexDirection: "column",
+						}}
+						onClick={() => setMermaidPopup(null)}
+					>
+						<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 20px" }}>
+							<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.2em" }}>
+								DIAGRAM · CLICK ANYWHERE TO CLOSE
+							</span>
+							<button
+								onClick={() => setMermaidPopup(null)}
+								style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", cursor: "pointer", padding: "6px 14px", fontFamily: "JetBrains Mono, monospace", fontSize: 10, letterSpacing: "0.15em" }}
+							>
+								CLOSE ×
+							</button>
+						</div>
+						<div style={{ flex: 1, overflow: "auto" }} onClick={(e) => e.stopPropagation()}>
+							<iframe
+								srcDoc={popupHtml}
+								sandbox="allow-scripts"
+								style={{ width: "100%", height: "100%", border: "none" }}
+							/>
+						</div>
+					</div>
+				);
+			})()}
 	);
 }
