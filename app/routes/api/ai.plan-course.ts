@@ -76,8 +76,25 @@ export async function action({ request, context }: Route.ActionArgs) {
 		// DB not available
 	}
 
+	// Detect language from user's prompt — Thai characters → Thai content
+	let language = "en";
+	try {
+		const { data: langSetting } = await supabase
+			.from("settings")
+			.select("value")
+			.eq("key", "preferred_language")
+			.single();
+		if (langSetting?.value) {
+			language = String(langSetting.value).replace(/"/g, "") || "en";
+		}
+	} catch {}
+	// Override: if user types in Thai, generate Thai content
+	const allText = history?.map((m) => m.content).join(" ") ?? prompt;
+	if (/[\u0E00-\u0E7F]/.test(allText)) language = "th";
+
 	const systemPrompt = planCoursePrompt({
 		topic: prompt,
+		language,
 		learningStyle,
 		existingCourses,
 	});
