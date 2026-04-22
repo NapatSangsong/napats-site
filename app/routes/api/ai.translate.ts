@@ -25,17 +25,22 @@ export async function action({ request, context }: Route.ActionArgs) {
 	const denied = await requireAuth(request, env);
 	if (denied) return denied;
 
-	let body: ReturnType<typeof TranslateBody.safeParse>;
+	let rawBody: any;
 	try {
-		body = TranslateBody.safeParse(await request.json());
+		rawBody = await request.json();
 	} catch {
 		return Response.json({ message: "invalid json" }, { status: 400 });
 	}
-	if (!body.success) {
-		return Response.json({ message: "invalid request" }, { status: 400 });
-	}
 
-	const { blocks, targetLang } = body.data;
+	const blocks = rawBody.blocks;
+	const targetLang = rawBody.targetLang;
+
+	if (!Array.isArray(blocks) || blocks.length === 0) {
+		return Response.json({ message: "no blocks to translate" }, { status: 400 });
+	}
+	if (targetLang !== "en" && targetLang !== "th") {
+		return Response.json({ message: "invalid target language" }, { status: 400 });
+	}
 	const langName = targetLang === "th" ? "Thai" : "English";
 
 	const system = `You are a precise translator. Translate the following JSON array of lesson content blocks to ${langName}.
