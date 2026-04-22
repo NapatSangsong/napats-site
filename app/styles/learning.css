@@ -84,12 +84,9 @@
 	animation: learning-fade-in 0.2s ease-out both;
 }
 
-/* Mobile tab bar — hide on desktop */
-.learning-mobile-only {
+/* Tab bar — always visible, with z-index above content */
+.learning-tab-bar-wrap {
 	display: block;
-}
-@media (min-width: 768px) {
-	.learning-mobile-only {
-		display: none;
-	}
+	position: relative;
+	z-index: 50;
 }

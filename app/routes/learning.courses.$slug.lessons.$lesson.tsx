@@ -338,8 +338,10 @@ hyper:hover {
 	}, [fetchPerspective]);
 
 	// Translate blocks
+	const [translateError, setTranslateError] = useState("");
 	const handleTranslate = useCallback(async (lang: "en" | "th" | "original") => {
 		setActiveLang(lang);
+		setTranslateError("");
 		if (lang === "original") {
 			setTranslatedBlocks([]);
 			return;
@@ -351,29 +353,34 @@ hyper:hover {
 		}
 		setTranslating(true);
 		try {
-			// Get current visible blocks (raw content)
-			const currentBlocks = (activePerspective === "default" ? blocks : perspectiveBlocks)
-				.map((b: any) => b.content || b);
+			// Get current visible blocks — only send translatable ones (prose, heading, callout, quote)
+			const sourceBlocks = activePerspective === "default" ? blocks : perspectiveBlocks;
+			const currentBlocks = sourceBlocks.map((b: any) => b.content || b);
+
 			const res = await fetch("/learning/api/ai/translate", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ blocks: currentBlocks, targetLang: lang }),
 			});
+
+			const data = await res.json();
+
 			if (!res.ok) {
+				setTranslateError(data.message || "translation failed");
+				// Don't reset — keep TH selected so user sees error
 				setTranslating(false);
-				setActiveLang("original"); // Reset on failure
 				return;
 			}
-			const data = await res.json();
+
 			if (data.blocks && Array.isArray(data.blocks) && data.blocks.length > 0) {
 				const mapped = data.blocks.map((b: any) => ({ content: b }));
 				setTranslatedBlocks(mapped);
 				translateCacheRef.current[lang] = mapped;
 			} else {
-				setActiveLang("original"); // Reset if no blocks returned
+				setTranslateError("no translated content returned");
 			}
-		} catch {
-			setActiveLang("original"); // Reset on error
+		} catch (err) {
+			setTranslateError((err as Error).message || "connection error");
 		} finally {
 			setTranslating(false);
 		}
@@ -1556,6 +1563,11 @@ hyper:hover {
 								))}
 								{translating && <span className="learning-breathe" style={{ display: "inline-block", width: 4, height: 4, borderRadius: "50%", background: t.accent, marginLeft: 4 }} />}
 							</div>
+							{translateError && (
+								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: t.accent, marginLeft: 8 }}>
+									{translateError}
+								</span>
+							)}
 						</div>
 						<div style={{ display: "flex", gap: 6, flexWrap: isMobile ? "nowrap" : "wrap", overflowX: isMobile ? "auto" : undefined, WebkitOverflowScrolling: isMobile ? "touch" as any : undefined, paddingBottom: isMobile ? 4 : 0 }}>
 							{([
