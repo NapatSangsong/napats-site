@@ -18,6 +18,12 @@ export function meta() {
 	return [{ title: "Napat · Learning · Library" }];
 }
 
+interface LessonProgressRow {
+	lesson_id: string;
+	status: string;
+	scroll_percent: number;
+}
+
 interface CourseData {
 	id: string;
 	slug: string;
@@ -27,6 +33,7 @@ interface CourseData {
 	cover_monogram: string | null;
 	estimated_minutes: number | null;
 	lessons: { id: string; status: string }[];
+	lesson_progress: LessonProgressRow[];
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -37,7 +44,8 @@ export async function loader({ context }: Route.LoaderArgs) {
 		const supabase = createServiceClient(env);
 		const { data } = await supabase
 			.from("courses")
-			.select("id, slug, title, subtitle, source, cover_monogram, estimated_minutes, lessons(id, status)")
+			.select(`id, slug, title, subtitle, source, cover_monogram, estimated_minutes, lessons(id, status),
+				lesson_progress:lessons(lesson_progress(lesson_id, status, scroll_percent))`)
 			.eq("archived", false)
 			.order("updated_at", { ascending: false });
 
@@ -53,15 +61,18 @@ type FilterKey = "ALL" | "IN PROGRESS" | "COMPLETED" | "HAND-CRAFTED";
 
 function getCourseStatus(c: CourseData): string {
 	if (!c.lessons || c.lessons.length === 0) return "NOT STARTED";
-	const readyCount = c.lessons.filter((l) => l.status === "ready" || l.status === "edited").length;
-	if (readyCount === c.lessons.length) return "COMPLETED";
-	if (readyCount > 0) return "IN PROGRESS";
+	const progress = c.lesson_progress ?? [];
+	const completedCount = progress.filter((p) => p.status === "completed").length;
+	const inProgressCount = progress.filter((p) => p.status === "in_progress").length;
+	if (completedCount === c.lessons.length && completedCount > 0) return "COMPLETED";
+	if (completedCount > 0 || inProgressCount > 0) return "IN PROGRESS";
 	return "NOT STARTED";
 }
 
 function getCourseProgress(c: CourseData): number {
 	if (!c.lessons || c.lessons.length === 0) return 0;
-	const done = c.lessons.filter((l) => l.status === "ready" || l.status === "edited").length;
+	const progress = c.lesson_progress ?? [];
+	const done = progress.filter((p) => p.status === "completed").length;
 	return Math.round((done / c.lessons.length) * 100);
 }
 

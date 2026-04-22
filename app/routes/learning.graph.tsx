@@ -265,6 +265,19 @@ export default function KnowledgeGraph({ loaderData }: Route.ComponentProps) {
 	// Rebuild button
 	const [rebuilding, setRebuilding] = useState(false);
 
+	// Non-passive wheel listener (React onWheel is passive by default)
+	useEffect(() => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+		const onWheel = (e: WheelEvent) => {
+			e.preventDefault();
+			const factor = e.deltaY > 0 ? 0.92 : 1.08;
+			cameraRef.current.zoom = Math.max(0.2, Math.min(4, cameraRef.current.zoom * factor));
+		};
+		canvas.addEventListener("wheel", onWheel, { passive: false });
+		return () => canvas.removeEventListener("wheel", onWheel);
+	}, []);
+
 	// ── Initialize nodes ────────────────────────────────────
 	useEffect(() => {
 		const angle = (2 * Math.PI) / Math.max(courses.length, 1);

@@ -24,6 +24,20 @@ interface DeepDiveEntry {
 
 const MAX_DEEP_DIVE_DEPTH = 3;
 
+/** Lightweight markdown-to-HTML converter for prose blocks */
+function md(text: string): string {
+	return text
+		.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+		.replace(/\*(.+?)\*/g, '<em>$1</em>')
+		.replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.06);padding:2px 5px;border-radius:2px;font-family:JetBrains Mono,monospace;font-size:0.9em">$1</code>')
+		.replace(/^### (.+)$/gm, '<h3>$1</h3>')
+		.replace(/^## (.+)$/gm, '<h2>$1</h2>')
+		.replace(/^- (.+)$/gm, '<li>$1</li>')
+		.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+		.replace(/\n\n/g, '</p><p>')
+		.replace(/\n/g, '<br/>');
+}
+
 /** Border colors per depth level — progressively lighter accent */
 const DEPTH_BORDER_COLORS = [
 	"#cc0000",       // depth 1
@@ -1110,7 +1124,7 @@ hyper:hover {
 												}
 											}}
 											style={{ fontSize: 15, lineHeight: 1.75, color: t.ink, margin: "8px 0", fontWeight: 300 }}
-											dangerouslySetInnerHTML={{ __html: b.markdown || b.content || "" }}
+											dangerouslySetInnerHTML={{ __html: md(b.markdown || b.content || "") }}
 										/>
 									)}
 									{(b.kind === "code" || b.type === "code") && (
@@ -1139,7 +1153,7 @@ hyper:hover {
 													}
 												}}
 												style={{ fontSize: 13, lineHeight: 1.6, color: t.ink }}
-												dangerouslySetInnerHTML={{ __html: b.markdown || b.content || "" }}
+												dangerouslySetInnerHTML={{ __html: md(b.markdown || b.content || "") }}
 											/>
 										</div>
 									)}
@@ -1423,7 +1437,7 @@ hyper:hover {
 						))}
 					</div>
 					{/* Input */}
-					<div style={{ borderTop: `1px solid ${t.divider}`, padding: "14px 20px 28px" }}>
+					<div style={{ borderTop: `1px solid ${t.divider}`, padding: "14px 20px 60px" }}>
 						{refineBlock && (
 							<div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "8px 10px", marginBottom: 10, borderLeft: `2px solid ${t.accent}`, background: t.bgCard }}>
 								<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost }}>
@@ -1650,10 +1664,10 @@ hyper:hover {
 				)}
 
 				{/* Blocks */}
-				<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: 32 }}>
+				<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: 32, opacity: perspectiveLoading && perspectiveBlocks.length === 0 ? 0.3 : 1, transition: "opacity 0.3s", pointerEvents: perspectiveLoading ? "none" : "auto" }}>
 					{(activeLang !== "original" && translatedBlocks.length > 0
 					? translatedBlocks
-					: activePerspective === "default" ? blocks : perspectiveBlocks
+					: activePerspective === "default" ? blocks : (perspectiveBlocks.length > 0 ? perspectiveBlocks : blocks)
 				).map((block: any, idx: number) => {
 						const raw = block.content || block;
 						// Normalize: AI outputs "type", DB stores "kind" — handle both
@@ -1710,7 +1724,7 @@ hyper:hover {
 												}
 											}}
 											style={{ fontSize: 16, lineHeight: 1.75, color: t.ink, margin: "12px 0", fontWeight: 300 }}
-											dangerouslySetInnerHTML={{ __html: b.markdown || "" }}
+											dangerouslySetInnerHTML={{ __html: md(b.markdown || "") }}
 										/>
 										{askBtn}
 									</>
@@ -1758,7 +1772,7 @@ hyper:hover {
 												}
 											}}
 											style={{ fontSize: 14, lineHeight: 1.6, color: t.ink, margin: 0 }}
-											dangerouslySetInnerHTML={{ __html: b.markdown || "" }}
+											dangerouslySetInnerHTML={{ __html: md(b.markdown || "") }}
 										/>
 										{askBtn}
 									</div>
@@ -2179,7 +2193,7 @@ hyper:hover {
 						</div>
 
 						{/* Input */}
-						<div style={{ borderTop: `1px solid ${t.divider}`, padding: "14px 20px 16px" }}>
+						<div style={{ borderTop: `1px solid ${t.divider}`, padding: "14px 20px 60px" }}>
 							{refineBlock && (
 								<div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "8px 10px", marginBottom: 10, borderLeft: `2px solid ${t.accent}`, background: t.bgCard }}>
 									<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.25em", color: t.inkGhost }}>

@@ -99,10 +99,16 @@ function computeCourseStats(courses: CourseRow[]) {
 		const completed = c.lesson_progress?.filter(
 			(p) => p.status === "completed",
 		).length ?? 0;
+		const inProgress = c.lesson_progress?.filter(
+			(p) => p.status === "in_progress",
+		).length ?? 0;
 		completedLessons += completed;
-		if (c.estimated_minutes) {
-			const prog = lessons > 0 ? completed / lessons : 0;
-			totalMinutes += Math.round(c.estimated_minutes * prog);
+		const touchedLessons = completed + inProgress;
+		if (touchedLessons > 0) {
+			const avgMinutes = (c.estimated_minutes && lessons > 0)
+				? c.estimated_minutes / lessons
+				: 15;
+			totalMinutes += Math.round(completed * avgMinutes + inProgress * avgMinutes * 0.5);
 		}
 	}
 

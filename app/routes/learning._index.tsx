@@ -543,6 +543,10 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 		{ label: "Weekend deep dive", desc: "4-6 hours · 8-10 lessons", prompt: "Design a comprehensive weekend course on " },
 		{ label: "30-day challenge", desc: "Daily micro-lessons · 15 min each", prompt: "Build a 30-day learning challenge for " },
 		{ label: "Project-based", desc: "Learn by building something real", prompt: "Create a project-based course where I build something real with " },
+		{ label: "Explain like I'm 5", desc: "Simple · Fun analogies", prompt: "Explain like I'm 5 years old: " },
+		{ label: "Interview prep", desc: "Q&A format · Key concepts", prompt: "Prepare me for a technical interview on " },
+		{ label: "Cheat sheet", desc: "Quick reference · Key points only", prompt: "Create a comprehensive cheat sheet for " },
+		{ label: "Compare & contrast", desc: "Side-by-side analysis", prompt: "Compare and contrast these topics: " },
 	];
 
 	const starters = [

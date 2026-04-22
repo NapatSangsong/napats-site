@@ -199,7 +199,7 @@ export default function SettingsPage(_props: Route.ComponentProps) {
 							active={language === "th"}
 							onClick={() => pickLanguage("th")}
 						>
-							{language === "th" ? "\u25CF " : "\u25CB "}\u0E44\u0E17\u0E22
+							{language === "th" ? "\u25CF " : "\u25CB "}ไทย
 						</Chip>
 					</div>
 				</div>
