@@ -53,11 +53,12 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 	const env = context.cloudflare.env;
 	const supabase = createServiceClient(env);
 
-	// Get course
+	// Get course — decode URI for Thai slugs
+	const slug = decodeURIComponent(params.slug || "");
 	const { data: course } = await supabase
 		.from("courses")
 		.select("id, slug, title, subtitle, cover_monogram, lessons(id, order_index, title, status)")
-		.eq("slug", params.slug)
+		.eq("slug", slug)
 		.single();
 
 	if (!course) throw new Response("course not found.", { status: 404 });
