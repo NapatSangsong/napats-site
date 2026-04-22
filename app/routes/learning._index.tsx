@@ -396,6 +396,8 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 	const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 	const [streamingContent, setStreamingContent] = useState("");
 	const [streaming, setStreaming] = useState(false);
+	const [streamProgress, setStreamProgress] = useState(0);
+	const [streamStage, setStreamStage] = useState("");
 	const [chatInput, setChatInput] = useState("");
 	const [composeError, setComposeError] = useState("");
 	const [approving, setApproving] = useState(false);
@@ -431,6 +433,8 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 		if (streaming) return;
 		setStreaming(true);
 		setStreamingContent("");
+		setStreamProgress(0);
+		setStreamStage("connecting…");
 		setComposeError("");
 
 		const newMessages: ChatMessage[] = [...history, { role: "user", content: userMessage }];
@@ -440,13 +444,23 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 		abortRef.current = controller;
 
 		try {
+			let charCount = 0;
 			const fullResponse = await streamPlanCourse(
 				{
 					prompt: newMessages[0].content,
 					model: MODEL_MAP[selectedModel],
 					messages: newMessages,
 				},
-				(delta) => setStreamingContent((prev) => prev + delta),
+				(delta) => {
+					charCount += delta.length;
+					setStreamProgress(charCount);
+					if (charCount < 100) setStreamStage("thinking…");
+					else if (charCount < 500) setStreamStage("designing course structure…");
+					else if (charCount < 1500) setStreamStage("writing outline…");
+					else if (charCount < 3000) setStreamStage("adding details…");
+					else setStreamStage("finalizing…");
+					setStreamingContent((prev) => prev + delta);
+				},
 				controller.signal,
 			);
 
@@ -458,6 +472,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 			}
 		} finally {
 			setStreaming(false);
+			setStreamStage("");
 			abortRef.current = null;
 		}
 	}, [selectedModel, streaming]);
@@ -853,13 +868,30 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 								</div>
 							)}
 
-							{/* Thinking indicator */}
+							{/* Progress indicator */}
 							{streaming && !streamingContent && (
-								<div style={{ padding: "20px 0", display: "flex", alignItems: "center", gap: 10 }}>
-									<FilmDot size={5} breathe />
-									<Tracked size={9} tracking={0.25} style={{ color: t.inkGhost }}>
-										THINKING…
-									</Tracked>
+								<div style={{ padding: "20px 0" }}>
+									<div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+										<FilmDot size={5} breathe />
+										<span style={{ fontFamily: "Playfair Display, serif", fontSize: 18, color: t.inkMuted, fontStyle: "italic" }}>
+											{streamStage || "thinking…"}
+										</span>
+									</div>
+									{streamProgress > 0 && (
+										<div>
+											<div style={{ height: 2, background: t.divider, borderRadius: 1, overflow: "hidden", maxWidth: 320 }}>
+												<div style={{
+													height: "100%",
+													background: t.accent,
+													width: `${Math.min(95, Math.round((streamProgress / 5000) * 100))}%`,
+													transition: "width 0.5s ease",
+												}} />
+											</div>
+											<Tracked size={9} tracking={0.15} style={{ color: t.inkGhost, marginTop: 6, display: "block" }}>
+												{Math.round(streamProgress / 1000)}K CHARS
+											</Tracked>
+										</div>
+									)}
 								</div>
 							)}
 

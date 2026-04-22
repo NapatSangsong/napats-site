@@ -1628,8 +1628,8 @@ hyper:hover {
 					</div>
 				)}
 
-				{/* Generating indicator */}
-				{generating && blocks.length === 0 && (
+				{/* Generating indicator — show when generating OR when lesson is pending with no blocks */}
+				{(generating || (isPending && blocks.length === 0)) && (
 					<div style={{ marginTop: 48 }}>
 						<span style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkMuted, fontStyle: "italic" }}>
 							{genStage || "composing your lesson…"}
