@@ -3275,8 +3275,6 @@ window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelecto
 					</aside>
 				)
 			)}
-		</div>
-
 			{/* Mermaid popup modal */}
 			{mermaidPopup && (() => {
 				const popupTheme = theme === "dark" ? "dark" : "default";
@@ -3322,5 +3320,6 @@ body{margin:0;padding:40px;background:${popupBg};display:flex;justify-content:ce
 					</div>
 				);
 			})()}
+		</div>
 	);
 }
