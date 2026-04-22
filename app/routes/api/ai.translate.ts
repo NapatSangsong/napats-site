@@ -53,21 +53,26 @@ Rules:
 - Return ONLY the translated JSON array, no other text`;
 
 	const selection = selectModel("translate");
-	const response = await completeUnified(
-		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
-		[{ role: "user", content: JSON.stringify(blocks) }],
-		{ model: selection.model, provider: selection.provider, route: selection.route, system, maxTokens: 16384 },
-	);
+
+	let response: string;
+	try {
+		response = await completeUnified(
+			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
+			[{ role: "user", content: JSON.stringify(blocks) }],
+			{ model: selection.model, provider: selection.provider, route: selection.route, system, maxTokens: 16384 },
+		);
+	} catch (err) {
+		return Response.json({ message: `AI error: ${(err as Error).message?.slice(0, 100)}` }, { status: 502 });
+	}
 
 	try {
 		let jsonStr = response.trim();
-		// Strip markdown fences
 		const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
 		if (fenceMatch) jsonStr = fenceMatch[1].trim();
 		const jsonMatch = jsonStr.match(/\[[\s\S]*\]/);
 		const translated = JSON.parse(jsonMatch ? jsonMatch[0] : jsonStr);
 		return Response.json({ blocks: Array.isArray(translated) ? translated : [] });
-	} catch (err) {
-		return Response.json({ message: "failed to parse translation", preview: response.slice(0, 200) }, { status: 500 });
+	} catch {
+		return Response.json({ message: "translation returned invalid format", preview: response.slice(0, 200) }, { status: 500 });
 	}
 }
