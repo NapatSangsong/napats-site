@@ -96,11 +96,28 @@ interface CourseDraft {
 }
 
 // ── Helpers ─────────────────────────────────────────────────
-const MODEL_MAP: Record<string, string | undefined> = {
-	AUTO: undefined, // Uses free OpenRouter models
-	OPUS: "claude-opus-4-7",
-	SONNET: "claude-sonnet-4-6",
-};
+export const AI_MODELS = [
+	{ id: "auto", label: "AUTO", desc: "ระบบเลือกให้อัตโนมัติ", badge: "RECOMMENDED", cost: "" },
+	// Premium
+	{ id: "google/gemini-2.5-pro-preview-06-05", label: "GEMINI 2.5 PRO", desc: "เก่งสุด · วิเคราะห์ลึก · ไทยดีมาก", badge: "BEST", cost: "$" },
+	{ id: "anthropic/claude-sonnet-4-6", label: "CLAUDE SONNET 4.6", desc: "เก่งภาษา · เนื้อหาดี · โค้ดเก่ง", badge: "PREMIUM", cost: "$$" },
+	{ id: "anthropic/claude-haiku-4-5-20251001", label: "CLAUDE HAIKU 4.5", desc: "เร็วมาก · ตอบสั้นกระชับ", badge: "FAST", cost: "$" },
+	{ id: "google/gemini-2.5-flash-preview-05-20", label: "GEMINI 2.5 FLASH", desc: "เร็ว · คุณภาพดี · ประหยัด", badge: "FAST", cost: "$" },
+	// Mid-tier
+	{ id: "qwen/qwen3.5-122b-a10b", label: "QWEN 3.5 122B", desc: "วิเคราะห์เชิงลึก · Multimodal · MoE", badge: "SMART", cost: "$" },
+	{ id: "mistralai/mistral-small-2603", label: "MISTRAL SMALL 4", desc: "เก่งหลายภาษา · 262K context", badge: "MULTILINGUAL", cost: "$" },
+	{ id: "google/gemini-3-flash-preview", label: "GEMINI 3 FLASH", desc: "ใหม่สุด · เร็ว · Agent-ready", badge: "NEW", cost: "$" },
+	// Free
+	{ id: "google/gemma-4-31b-it:free", label: "GEMMA 4 31B", desc: "ฟรี · วิเคราะห์ได้ · ไทยพอใช้", badge: "FREE", cost: "" },
+	{ id: "google/gemma-4-26b-a4b-it:free", label: "GEMMA 4 26B", desc: "ฟรี · เร็ว · MoE", badge: "FREE", cost: "" },
+	{ id: "nvidia/nemotron-3-super-120b-a12b:free", label: "NEMOTRON 120B", desc: "ฟรี · 120B params · Hybrid MoE", badge: "FREE", cost: "" },
+	{ id: "inclusionai/ling-2.6-flash:free", label: "LING 2.6 FLASH", desc: "ฟรี · 104B · เร็ว", badge: "FREE", cost: "" },
+] as const;
+
+function getModelId(selected: string): string | undefined {
+	if (selected === "auto") return undefined;
+	return selected;
+}
 
 /** Extract the last ```json ... ``` block and parse it */
 function extractDraft(text: string): CourseDraft | null {
@@ -390,7 +407,8 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 	const { theme, t, toggleTheme } = useTheme();
 	const navigate = useNavigate();
 	const [prompt, setPrompt] = useState("");
-	const [selectedModel, setSelectedModel] = useState("AUTO");
+	const [selectedModel, setSelectedModel] = useState("auto");
+	const [modelPickerOpen, setModelPickerOpen] = useState(false);
 
 	// Chat state
 	const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -448,7 +466,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 			const fullResponse = await streamPlanCourse(
 				{
 					prompt: newMessages[0].content,
-					model: MODEL_MAP[selectedModel],
+					model: getModelId(selectedModel),
 					messages: newMessages,
 				},
 				(delta) => {
@@ -549,7 +567,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 		}
 	}, [courses.length]);
 
-	const models = ["AUTO", "OPUS", "SONNET"] as const;
+	const selectedModelInfo = AI_MODELS.find((m) => m.id === selectedModel) || AI_MODELS[0];
 	const continueCourses = courses.slice(0, 3);
 
 	const templates = [
@@ -635,23 +653,66 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 									gap: 14,
 								}}
 							>
-								<Tracked size={9} tracking={0.25} style={{ color: t.inkGhost }}>
-									MODEL · {selectedModel}
-								</Tracked>
-								<svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" strokeWidth="1.2" style={{ color: t.inkGhost }}>
-									<path d="M1.5 3.5L4.5 6.5L7.5 3.5" />
-								</svg>
+								<button
+									onClick={() => setModelPickerOpen(!modelPickerOpen)}
+									style={{ background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: 0 }}
+								>
+									<Tracked size={9} tracking={0.25} style={{ color: t.inkGhost }}>
+										{selectedModelInfo.label}
+									</Tracked>
+									{selectedModelInfo.badge && (
+										<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 7, padding: "2px 5px", border: `1px solid ${t.divider}`, color: selectedModelInfo.cost === "$$" ? t.accent : t.inkGhost, letterSpacing: "0.1em" }}>
+											{selectedModelInfo.badge}
+										</span>
+									)}
+									<svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" strokeWidth="1.2" style={{ color: t.inkGhost, transform: modelPickerOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
+										<path d="M1.5 3.5L4.5 6.5L7.5 3.5" />
+									</svg>
+								</button>
 							</div>
 						</div>
 
-						<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
-							<div style={{ display: "flex", gap: 8 }}>
-								{models.map((m) => (
-									<Chip key={m} t={t} active={m === selectedModel} onClick={() => setSelectedModel(m)}>
-										{m}
-									</Chip>
-								))}
+						{/* Model picker dropdown */}
+						{modelPickerOpen && (
+							<div style={{ position: "relative", marginTop: 8 }}>
+								<div style={{
+									position: "absolute", right: 0, top: 0, zIndex: 20,
+									background: t.bgElevated, border: `1px solid ${t.dividerStrong}`,
+									width: 340, maxHeight: 400, overflowY: "auto",
+									boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+								}}>
+									{AI_MODELS.map((m) => (
+										<button
+											key={m.id}
+											onClick={() => { setSelectedModel(m.id); setModelPickerOpen(false); }}
+											style={{
+												display: "block", width: "100%", textAlign: "left",
+												padding: "10px 14px", border: "none", cursor: "pointer",
+												background: m.id === selectedModel ? t.bgCard : "transparent",
+												borderBottom: `1px solid ${t.divider}`,
+												transition: "background 0.15s",
+											}}
+											onMouseEnter={(e) => { if (m.id !== selectedModel) e.currentTarget.style.background = t.bgCard; }}
+											onMouseLeave={(e) => { if (m.id !== selectedModel) e.currentTarget.style.background = "transparent"; }}
+										>
+											<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+												<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, letterSpacing: "0.15em", color: m.id === selectedModel ? t.ink : t.inkMuted }}>
+													{m.label}
+												</span>
+												<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 7, padding: "2px 5px", border: `1px solid ${t.divider}`, color: m.cost === "$$" ? t.accent : m.badge === "FREE" ? "#10b981" : t.inkGhost, letterSpacing: "0.1em" }}>
+													{m.badge}
+												</span>
+											</div>
+											<div style={{ fontSize: 11, color: t.inkGhost, marginTop: 3 }}>
+												{m.desc}
+											</div>
+										</button>
+									))}
+								</div>
 							</div>
+						)}
+
+						<div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginTop: modelPickerOpen ? 0 : 18 }}>
 							<TrackedButton t={t} primary disabled={!prompt.trim()} onClick={handleCompose}>
 								COMPOSE
 							</TrackedButton>

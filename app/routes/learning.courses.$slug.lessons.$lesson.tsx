@@ -74,7 +74,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 	const slug = decodeURIComponent(params.slug || "");
 	const { data: course } = await supabase
 		.from("courses")
-		.select("id, slug, title, subtitle, cover_monogram, lessons(id, order_index, title, status)")
+		.select("id, slug, title, subtitle, cover_monogram, lessons(id, order_index, title, status, generated_by_model)")
 		.eq("slug", slug)
 		.single();
 
@@ -220,7 +220,7 @@ hyper:hover {
 			const res = await fetch("/learning/api/ai/generate-lesson", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ lessonId: lesson.id }),
+				body: JSON.stringify({ lessonId: lesson.id, model: lesson.generated_by_model || undefined }),
 			});
 			if (!res.ok || !res.body) {
 				setGenStage("failed to connect");

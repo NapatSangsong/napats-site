@@ -9,6 +9,16 @@ import { createServiceClient } from "~/lib/supabase.server";
 import { TopBar } from "~/components/learning/TopBar";
 import { Tracked, FilmDot, Rule, ProgressBar, TrackedButton } from "~/components/learning/primitives";
 
+const AI_MODELS = [
+	{ id: "auto", label: "AUTO", badge: "RECOMMENDED" },
+	{ id: "google/gemini-2.5-pro-preview-06-05", label: "GEMINI PRO", badge: "BEST" },
+	{ id: "google/gemini-2.5-flash-preview-05-20", label: "GEMINI FLASH", badge: "FAST" },
+	{ id: "anthropic/claude-sonnet-4-6", label: "CLAUDE SONNET", badge: "PREMIUM" },
+	{ id: "anthropic/claude-haiku-4-5-20251001", label: "CLAUDE HAIKU", badge: "FAST" },
+	{ id: "google/gemma-4-31b-it:free", label: "GEMMA 31B", badge: "FREE" },
+	{ id: "google/gemma-4-26b-a4b-it:free", label: "GEMMA 26B", badge: "FREE" },
+];
+
 export function meta({ data }: Route.MetaArgs) {
 	const title = data?.course?.title ?? "Course";
 	return [{ title: `Napat · Learning · ${title}` }];
@@ -21,7 +31,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 	const slug = decodeURIComponent(params.slug || "");
 	const { data: course } = await supabase
 		.from("courses")
-		.select("*, lessons(id, order_index, title, summary, outcomes, status, generated_at)")
+		.select("*, lessons(id, order_index, title, summary, outcomes, status, generated_at, generated_by_model)")
 		.eq("slug", slug)
 		.single();
 
@@ -54,6 +64,8 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 
 	const [deleting, setDeleting] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
+	const [regenModelFor, setRegenModelFor] = useState<string | null>(null);
+	const [regenAllModel, setRegenAllModel] = useState(false);
 
 	// Edit mode state
 	const [editMode, setEditMode] = useState(false);
@@ -87,6 +99,30 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 		});
 		if (res.ok) window.location.reload();
 	}, []);
+
+	const handleRegenWithModel = useCallback(async (lessonId: string, modelId: string) => {
+		const model = modelId === "auto" ? undefined : modelId;
+		await fetch("/learning/api/courses", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ action: "regenerate-lesson", lessonId, model }),
+		});
+		setRegenModelFor(null);
+		window.location.reload();
+	}, []);
+
+	const handleRegenAll = useCallback(async (modelId: string) => {
+		const model = modelId === "auto" ? undefined : modelId;
+		for (const lesson of lessons) {
+			await fetch("/learning/api/courses", {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ action: "regenerate-lesson", lessonId: lesson.id, model }),
+			});
+		}
+		setRegenAllModel(false);
+		window.location.reload();
+	}, [lessons]);
 
 	const handleAddLesson = useCallback(async () => {
 		const res = await fetch("/learning/api/courses", {
@@ -305,6 +341,7 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 							summary: string | null;
 							status: string;
 							outcomes: string[];
+							generated_by_model: string | null;
 						}) => {
 							const lp = progressMap.get(lesson.id) as { status: string; scroll_percent: number } | undefined;
 							const isReady = lesson.status === "ready" || lesson.status === "edited";
@@ -339,12 +376,28 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 										{String(lesson.order_index).padStart(2, "0")}
 									</span>
 									<div>
-										<div style={{
-											fontFamily: "Playfair Display, serif",
-											fontSize: 19,
-											color: t.inkStrong,
-										}}>
-											{lesson.title}
+										<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+											<span style={{
+												fontFamily: "Playfair Display, serif",
+												fontSize: 19,
+												color: t.inkStrong,
+											}}>
+												{lesson.title}
+											</span>
+											{lesson.generated_by_model && (
+												<span style={{
+													fontFamily: "JetBrains Mono, monospace",
+													fontSize: 8,
+													textTransform: "uppercase",
+													letterSpacing: "0.15em",
+													padding: "2px 6px",
+													border: `1px solid ${t.divider}`,
+													color: t.inkGhost,
+													whiteSpace: "nowrap",
+												}}>
+													{AI_MODELS.find(m => m.id === lesson.generated_by_model)?.label || lesson.generated_by_model.split("/").pop()?.toUpperCase()}
+												</span>
+											)}
 										</div>
 										{lesson.summary && (
 											<div style={{
@@ -358,7 +411,7 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 											</div>
 										)}
 									</div>
-									<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+									<div style={{ display: "flex", alignItems: "center", gap: 8, position: "relative" }}>
 										{isCompleted ? (
 											<Tracked size={9} tracking={0.22} style={{ color: t.inkMuted }}>DONE</Tracked>
 										) : isReady ? (
@@ -382,7 +435,10 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 										)}
 										<button
 											title="Regenerate lesson"
-											onClick={(e) => { e.stopPropagation(); handleLessonAction("regenerate-lesson", lesson.id); }}
+											onClick={(e) => {
+												e.stopPropagation();
+												setRegenModelFor(regenModelFor === lesson.id ? null : lesson.id);
+											}}
 											style={{
 												background: "transparent",
 												border: `1px solid ${t.divider}`,
@@ -425,15 +481,110 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 										>
 											&times;
 										</button>
+										{regenModelFor === lesson.id && (
+											<div
+												onClick={(e) => e.stopPropagation()}
+												style={{
+													position: "absolute",
+													top: "100%",
+													right: 0,
+													marginTop: 4,
+													background: t.bg,
+													border: `1px solid ${t.divider}`,
+													zIndex: 10,
+													minWidth: 200,
+												}}
+											>
+												{AI_MODELS.map((m) => (
+													<button
+														key={m.id}
+														onClick={(e) => {
+															e.stopPropagation();
+															handleRegenWithModel(lesson.id, m.id);
+														}}
+														style={{
+															display: "flex",
+															alignItems: "center",
+															justifyContent: "space-between",
+															gap: 8,
+															width: "100%",
+															padding: "8px 12px",
+															background: "transparent",
+															border: "none",
+															borderBottom: `1px solid ${t.divider}`,
+															cursor: "pointer",
+															fontFamily: "JetBrains Mono, monospace",
+															fontSize: 9,
+															textTransform: "uppercase",
+															letterSpacing: "0.15em",
+															color: t.ink,
+															textAlign: "left",
+														}}
+														onMouseEnter={(e) => { e.currentTarget.style.background = t.bgCard; }}
+														onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+													>
+														<span>{m.label}</span>
+														<span style={{ color: t.inkGhost, fontSize: 8 }}>{m.badge}</span>
+													</button>
+												))}
+											</div>
+										)}
 									</div>
 								</div>
 							);
 						})}
 					</div>
-					<div style={{ marginTop: 16 }}>
+					<div style={{ marginTop: 16, display: "flex", gap: 12, alignItems: "flex-start", position: "relative" }}>
 						<TrackedButton t={t} onClick={handleAddLesson}>
 							ADD LESSON
 						</TrackedButton>
+						<div style={{ position: "relative" }}>
+							<TrackedButton t={t} onClick={() => setRegenAllModel(!regenAllModel)}>
+								REGENERATE ALL
+							</TrackedButton>
+							{regenAllModel && (
+								<div style={{
+									position: "absolute",
+									top: "100%",
+									left: 0,
+									marginTop: 4,
+									background: t.bg,
+									border: `1px solid ${t.divider}`,
+									zIndex: 10,
+									minWidth: 200,
+								}}>
+									{AI_MODELS.map((m) => (
+										<button
+											key={m.id}
+											onClick={() => handleRegenAll(m.id)}
+											style={{
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "space-between",
+												gap: 8,
+												width: "100%",
+												padding: "8px 12px",
+												background: "transparent",
+												border: "none",
+												borderBottom: `1px solid ${t.divider}`,
+												cursor: "pointer",
+												fontFamily: "JetBrains Mono, monospace",
+												fontSize: 9,
+												textTransform: "uppercase",
+												letterSpacing: "0.15em",
+												color: t.ink,
+												textAlign: "left",
+											}}
+											onMouseEnter={(e) => { e.currentTarget.style.background = t.bgCard; }}
+											onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+										>
+											<span>{m.label}</span>
+											<span style={{ color: t.inkGhost, fontSize: 8 }}>{m.badge}</span>
+										</button>
+									))}
+								</div>
+							)}
+						</div>
 					</div>
 				</div>
 

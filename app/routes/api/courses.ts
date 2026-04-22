@@ -85,7 +85,10 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 		if (body.action === "regenerate-lesson") {
 			await supabase.from("lesson_blocks").delete().eq("lesson_id", body.lessonId);
-			await supabase.from("lessons").update({ status: "pending" }).eq("id", body.lessonId);
+			await supabase.from("lessons").update({
+				status: "pending",
+				generated_by_model: body.model || null,
+			}).eq("id", body.lessonId);
 			return Response.json({ ok: true });
 		}
 
