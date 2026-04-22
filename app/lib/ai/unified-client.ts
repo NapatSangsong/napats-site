@@ -26,14 +26,26 @@ export async function streamUnified(
 ): Promise<ReadableStream<string>> {
   const provider = options.provider ?? detectProvider(options.model);
 
-  // OpenRouter (default — free tier)
+  // OpenRouter (default)
   if (provider === "openrouter" && env.OPENROUTER_API_KEY) {
-    const result = await streamOpenRouter(
-      { OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
-      messages,
-      { ...options, route: options.route },
-    );
-    return result.stream;
+    try {
+      const result = await streamOpenRouter(
+        { OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
+        messages,
+        { ...options, route: options.route },
+      );
+      return result.stream;
+    } catch (err) {
+      // All OpenRouter models failed — fall through to Claude
+      if (env.ANTHROPIC_API_KEY) {
+        return streamAnthropic(
+          { ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+          messages,
+          { ...options, model: "claude-haiku-4-5-20251001" },
+        );
+      }
+      throw err;
+    }
   }
 
   // Gemini
@@ -68,12 +80,24 @@ export async function completeUnified(
   const provider = options.provider ?? detectProvider(options.model);
 
   if (provider === "openrouter" && env.OPENROUTER_API_KEY) {
-    const result = await completeOpenRouter(
-      { OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
-      messages,
-      { ...options, route: options.route },
-    );
-    return result.text;
+    try {
+      const result = await completeOpenRouter(
+        { OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
+        messages,
+        { ...options, route: options.route },
+      );
+      return result.text;
+    } catch (err) {
+      // Fall through to Claude
+      if (env.ANTHROPIC_API_KEY) {
+        return completeAnthropic(
+          { ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
+          messages,
+          { ...options, model: "claude-haiku-4-5-20251001" },
+        );
+      }
+      throw err;
+    }
   }
 
   if (provider === "gemini" && env.GEMINI_API_KEY) {
