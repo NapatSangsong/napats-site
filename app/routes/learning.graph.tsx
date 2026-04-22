@@ -661,6 +661,35 @@ export default function KnowledgeGraph({ loaderData }: Route.ComponentProps) {
 		dragRef.current.active = false;
 	}, []);
 
+	const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+		if (e.touches.length === 1) {
+			const touch = e.touches[0];
+			dragRef.current = {
+				active: true,
+				startX: touch.clientX,
+				startY: touch.clientY,
+				camStartX: cameraRef.current.x,
+				camStartY: cameraRef.current.y,
+			};
+		}
+	}, []);
+
+	const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+		if (!dragRef.current.active || e.touches.length !== 1) return;
+		const touch = e.touches[0];
+		const dx = touch.clientX - dragRef.current.startX;
+		const dy = touch.clientY - dragRef.current.startY;
+		cameraRef.current.x = dragRef.current.camStartX + dx / cameraRef.current.zoom;
+		cameraRef.current.y = dragRef.current.camStartY + dy / cameraRef.current.zoom;
+		draw();
+	}, [draw]);
+
+	const handleTouchEnd = useCallback(() => {
+		dragRef.current.active = false;
+	}, []);
+
 	const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
 		e.preventDefault();
 		const factor = e.deltaY > 0 ? 0.92 : 1.08;
@@ -769,6 +798,9 @@ export default function KnowledgeGraph({ loaderData }: Route.ComponentProps) {
 					onMouseMove={handleMouseMove}
 					onMouseUp={handleMouseUp}
 					onMouseLeave={handleMouseUp}
+					onTouchStart={handleTouchStart}
+					onTouchMove={handleTouchMove}
+					onTouchEnd={handleTouchEnd}
 					onWheel={handleWheel}
 				/>
 

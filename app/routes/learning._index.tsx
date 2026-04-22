@@ -694,7 +694,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 								<div style={{
 									position: "absolute", right: 0, top: 0, zIndex: 20,
 									background: t.bgElevated, border: `1px solid ${t.dividerStrong}`,
-									width: 340, maxHeight: 400, overflowY: "auto",
+									width: "min(340px, calc(100vw - 40px))", maxHeight: 400, overflowY: "auto",
 									boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
 								}}>
 									{AI_MODELS.map((m) => (

@@ -452,8 +452,10 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 												cursor: "pointer",
 												fontFamily: "JetBrains Mono, monospace",
 												fontSize: 13,
-												width: 28,
-												height: 28,
+												width: 36,
+												height: 36,
+												minWidth: 36,
+												minHeight: 36,
 												display: "flex",
 												alignItems: "center",
 												justifyContent: "center",
@@ -476,8 +478,10 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 												cursor: "pointer",
 												fontFamily: "JetBrains Mono, monospace",
 												fontSize: 13,
-												width: 28,
-												height: 28,
+												width: 36,
+												height: 36,
+												minWidth: 36,
+												minHeight: 36,
 												display: "flex",
 												alignItems: "center",
 												justifyContent: "center",
@@ -498,7 +502,7 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 													background: t.bg,
 													border: `1px solid ${t.divider}`,
 													zIndex: 10,
-													minWidth: 200,
+													width: "min(260px, calc(100vw - 40px))",
 												}}
 											>
 												{AI_MODELS.map((m) => (
@@ -557,7 +561,7 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 									background: t.bg,
 									border: `1px solid ${t.divider}`,
 									zIndex: 10,
-									minWidth: 200,
+									width: "min(260px, calc(100vw - 40px))",
 								}}>
 									{AI_MODELS.map((m) => (
 										<button

@@ -176,7 +176,7 @@ export default function LibraryPage({ loaderData }: Route.ComponentProps) {
 					</div>
 
 					{/* Filter tabs */}
-					<div style={{ display: "flex", gap: 18 }}>
+					<div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
 						{filters.map((f) => (
 							<button
 								key={f}

@@ -206,6 +206,7 @@ export function Chip({
 				textTransform: "uppercase",
 				letterSpacing: "0.2em",
 				padding: "6px 10px",
+				minHeight: 36,
 				border: `1px solid ${active ? t.dividerStrong : t.divider}`,
 				color: active ? t.ink : t.inkGhost,
 				whiteSpace: "nowrap",
