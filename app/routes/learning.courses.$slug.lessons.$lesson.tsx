@@ -179,6 +179,17 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 
 	const isPending = lesson.status === "pending";
 
+	// Model selection for lesson generation
+	const [lessonModel, setLessonModel] = useState(lesson.generated_by_model || "auto");
+	const [lessonModelPickerOpen, setLessonModelPickerOpen] = useState(false);
+	const LESSON_MODELS = [
+		{ id: "auto", label: "AUTO", desc: "ระบบเลือกให้", badge: "RECOMMENDED" },
+		{ id: "google/gemini-2.5-pro-preview-06-05", label: "GEMINI PRO", desc: "เก่งสุด · ไทยดี", badge: "BEST" },
+		{ id: "google/gemini-2.5-flash-preview-05-20", label: "GEMINI FLASH", desc: "เร็ว · ดี", badge: "FAST" },
+		{ id: "anthropic/claude-sonnet-4-6", label: "CLAUDE SONNET", desc: "เก่งภาษา", badge: "PREMIUM" },
+		{ id: "google/gemma-4-31b-it:free", label: "GEMMA 31B", desc: "ฟรี", badge: "FREE" },
+	];
+
 	// Inject hyper-node CSS styles
 	useEffect(() => {
 		if (typeof document === "undefined") return;
@@ -220,7 +231,7 @@ hyper:hover {
 			const res = await fetch("/learning/api/ai/generate-lesson", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ lessonId: lesson.id, model: lesson.generated_by_model || undefined }),
+				body: JSON.stringify({ lessonId: lesson.id, model: lessonModel !== "auto" ? lessonModel : (lesson.generated_by_model || undefined) }),
 			});
 			if (!res.ok || !res.body) {
 				setGenStage("failed to connect");
@@ -428,12 +439,7 @@ hyper:hover {
 		}
 	}, [blocks, perspectiveBlocks, activePerspective]);
 
-	// Auto-generate on mount if pending
-	useEffect(() => {
-		if (isPending && blocks.length === 0) {
-			generateLesson();
-		}
-	}, [isPending]); // eslint-disable-line react-hooks/exhaustive-deps
+	// No auto-generate — user picks model first via the model picker UI
 
 	// Scroll progress tracking (debounced)
 	useEffect(() => {
@@ -1749,8 +1755,51 @@ hyper:hover {
 					</div>
 				)}
 
-				{/* Generating indicator — show when generating OR when lesson is pending with no blocks */}
-				{(generating || (isPending && blocks.length === 0)) && (
+				{/* Model picker — show before generation starts */}
+				{isPending && blocks.length === 0 && !generating && (
+					<div style={{ marginTop: 32, maxWidth: isMobile ? "100%" : 720 }}>
+						<div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+							<Rule width={32} color={t.divider} />
+							<Tracked size={9} tracking={0.3} style={{ color: t.inkGhost }}>SELECT MODEL</Tracked>
+							<Rule width={32} color={t.divider} />
+						</div>
+						<div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+							{LESSON_MODELS.map((m) => (
+								<button
+									key={m.id}
+									onClick={() => setLessonModel(m.id)}
+									style={{
+										fontFamily: "JetBrains Mono, monospace", fontSize: 9,
+										textTransform: "uppercase", letterSpacing: "0.15em",
+										padding: "6px 10px", border: `1px solid ${lessonModel === m.id ? t.ink : t.divider}`,
+										color: lessonModel === m.id ? t.ink : t.inkGhost,
+										background: "transparent", cursor: "pointer",
+										transition: "all 0.2s",
+									}}
+								>
+									{m.label}
+									<span style={{ fontSize: 7, marginLeft: 4, opacity: 0.6 }}>{m.badge}</span>
+								</button>
+							))}
+						</div>
+						<button
+							onClick={() => generateLesson()}
+							style={{
+								fontFamily: "JetBrains Mono, monospace", fontSize: 10,
+								textTransform: "uppercase", letterSpacing: "0.2em",
+								padding: "10px 20px", border: `1px solid ${t.dividerStrong}`,
+								background: "transparent", color: t.ink, cursor: "pointer",
+								display: "inline-flex", alignItems: "center", gap: 8,
+							}}
+						>
+							GENERATE LESSON
+							<span style={{ width: 5, height: 5, borderRadius: "50%", background: t.accent, display: "inline-block" }} />
+						</button>
+					</div>
+				)}
+
+				{/* Generating indicator */}
+				{generating && (
 					<div style={{ marginTop: 48 }}>
 						<span style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkMuted, fontStyle: "italic" }}>
 							{genStage || "composing your lesson…"}
