@@ -78,14 +78,19 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 		.eq("slug", slug)
 		.single();
 
-	if (!course) throw new Response("course not found.", { status: 404 });
+	if (!course) {
+		// Might happen during race condition after generation — redirect to course list
+		return new Response(null, { status: 302, headers: { Location: "/learning" } });
+	}
 
 	const lessonIndex = parseInt(params.lesson, 10);
 	const lessons = (course.lessons || []).sort(
 		(a: { order_index: number }, b: { order_index: number }) => a.order_index - b.order_index,
 	);
 	const lesson = lessons.find((l: { order_index: number }) => l.order_index === lessonIndex);
-	if (!lesson) throw new Response("lesson not found.", { status: 404 });
+	if (!lesson) {
+		return new Response(null, { status: 302, headers: { Location: `/learning/courses/${slug}` } });
+	}
 
 	// Get blocks if lesson is ready
 	let blocks: unknown[] = [];
@@ -143,6 +148,15 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	const [scrollPercent, setScrollPercent] = useState(progress?.scroll_percent ?? 0);
 	const contentRef = useRef<HTMLDivElement>(null);
 
+	// Personal notes state
+	const [notes, setNotes] = useState<{ id: string; lesson_id: string; block_index: number | null; content: string; color: string }[]>([]);
+	const [noteEditing, setNoteEditing] = useState<{ blockIndex: number; content: string; color: string; noteId?: string } | null>(null);
+
+	// Highlight-to-translate state
+	const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
+	const [selectionTranslation, setSelectionTranslation] = useState<string>("");
+	const [selectionTranslating, setSelectionTranslating] = useState(false);
+
 	// Perspective switching state
 	const [activePerspective, setActivePerspective] = useState<"default" | "evolutionary" | "neuro" | "philosopher" | "architect">("default");
 	const [perspectiveBlocks, setPerspectiveBlocks] = useState<unknown[]>([]);
@@ -187,6 +201,14 @@ hyper:hover {
 `;
 		document.head.appendChild(style);
 	}, []);
+
+	// Load personal notes on mount
+	useEffect(() => {
+		fetch(`/learning/api/notes?lessonId=${lesson.id}`)
+			.then(r => r.json())
+			.then(data => { if (data.notes) setNotes(data.notes); })
+			.catch(() => {});
+	}, [lesson.id]);
 
 	// Generate lesson content if pending
 	const generateLesson = useCallback(async () => {
@@ -251,9 +273,11 @@ hyper:hover {
 
 			if (!hasError) {
 				setGenStage("saving to library…");
-				// Short delay so user sees the final stage
-				await new Promise((r) => setTimeout(r, 500));
-				window.location.reload();
+				// Wait for DB writes to settle, then navigate (not reload) to avoid race condition
+				await new Promise((r) => setTimeout(r, 1500));
+				setGenStage("loading content…");
+				// Use navigate to re-fetch loader data instead of full page reload
+				window.location.href = window.location.href;
 				return;
 			}
 		} catch {
@@ -1590,7 +1614,23 @@ hyper:hover {
 			)}
 
 			{/* Center content */}
-			<main ref={contentRef} style={{ overflowY: "auto", padding: isMobile ? "16px 20px 100px" : "28px 56px 80px", position: "relative", flex: isMobile ? 1 : undefined }}>
+			<main ref={contentRef} style={{ overflowY: "auto", padding: isMobile ? "16px 20px 100px" : "28px 56px 80px", position: "relative", flex: isMobile ? 1 : undefined }}
+				onMouseUp={(e) => {
+					const sel = window.getSelection();
+					const text = sel?.toString().trim();
+					if (text && text.length > 1 && text.length < 500) {
+						const range = sel!.getRangeAt(0);
+						const rect = range.getBoundingClientRect();
+						setSelection({ text, x: rect.left + rect.width / 2, y: rect.bottom + 8 });
+						setSelectionTranslation("");
+					} else {
+						// Delay clearing to allow tooltip clicks
+						setTimeout(() => {
+							if (!selectionTranslating) setSelection(null);
+						}, 200);
+					}
+				}}
+			>
 				{/* Header — desktop only (mobile has its own top bar) */}
 				{!isMobile && (
 				<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
@@ -1832,6 +1872,25 @@ hyper:hover {
 							</button>
 						);
 
+						const noteBtn = (
+							<button
+								onClick={() => setNoteEditing({ blockIndex: idx, content: "", color: "default" })}
+								style={{
+									position: "absolute", right: -60, top: 16,
+									width: 24, height: 24, borderRadius: "50%",
+									border: `1px solid ${t.divider}`, background: "transparent",
+									cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+									opacity: isHovered ? 0.7 : 0, transition: "opacity .25s",
+									color: t.inkMuted, fontSize: 12, padding: 0,
+								}}
+								title="Add note"
+							>
+								<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
+									<path d="M2 2h8v8H4L2 8V2z" /><path d="M4 10V8H2" />
+								</svg>
+							</button>
+						);
+
 						return (
 							<div
 								key={blockId}
@@ -2018,6 +2077,68 @@ hyper:hover {
 									</div>
 								);
 							})()}
+								{noteBtn}
+								{/* Notes for this block */}
+								{notes.filter(n => n.block_index === idx).map(note => (
+									<div key={note.id} style={{
+										marginTop: 8, padding: "10px 14px",
+										borderLeft: `3px solid ${note.color === "yellow" ? "#f59e0b" : note.color === "blue" ? "#3b82f6" : note.color === "green" ? "#10b981" : note.color === "pink" ? "#ec4899" : t.dividerStrong}`,
+										background: t.bgCard, fontSize: 13, color: t.inkMuted, lineHeight: 1.5,
+										position: "relative",
+									}}>
+										<div style={{ whiteSpace: "pre-wrap" }}>{note.content}</div>
+										<div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+											<button onClick={() => setNoteEditing({ blockIndex: idx, content: note.content, color: note.color, noteId: note.id })} style={{ background: "transparent", border: "none", color: t.inkGhost, cursor: "pointer", fontSize: 10, fontFamily: "JetBrains Mono, monospace", textTransform: "uppercase", letterSpacing: "0.15em" }}>EDIT</button>
+											<button onClick={async () => {
+												await fetch("/learning/api/notes", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ noteId: note.id }) });
+												setNotes(n => n.filter(x => x.id !== note.id));
+											}} style={{ background: "transparent", border: "none", color: t.accent, cursor: "pointer", fontSize: 10, fontFamily: "JetBrains Mono, monospace", textTransform: "uppercase", letterSpacing: "0.15em" }}>DELETE</button>
+										</div>
+									</div>
+								))}
+								{/* Note editor */}
+								{noteEditing && noteEditing.blockIndex === idx && (
+									<div style={{ marginTop: 8, padding: 12, border: `1px solid ${t.divider}`, background: t.bgCard }}>
+										<textarea
+											value={noteEditing.content}
+											onChange={(e) => setNoteEditing({ ...noteEditing, content: e.target.value })}
+											placeholder="Write your note..."
+											rows={3}
+											style={{ width: "100%", border: "none", outline: "none", background: "transparent", color: t.ink, fontSize: 13, resize: "vertical", fontFamily: "Inter, sans-serif" }}
+										/>
+										<div style={{ display: "flex", gap: 6, marginTop: 8, alignItems: "center" }}>
+											{["default", "yellow", "blue", "green", "pink"].map(c => (
+												<button key={c} onClick={() => setNoteEditing({ ...noteEditing, color: c })}
+													style={{
+														width: 16, height: 16, borderRadius: "50%", border: noteEditing.color === c ? "2px solid " + t.ink : `1px solid ${t.divider}`,
+														background: c === "yellow" ? "#f59e0b" : c === "blue" ? "#3b82f6" : c === "green" ? "#10b981" : c === "pink" ? "#ec4899" : t.dividerStrong,
+														cursor: "pointer", padding: 0,
+													}}
+												/>
+											))}
+											<div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+												<button onClick={() => setNoteEditing(null)} style={{ background: "transparent", border: `1px solid ${t.divider}`, color: t.inkGhost, cursor: "pointer", padding: "4px 10px", fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.15em" }}>CANCEL</button>
+												<button onClick={async () => {
+													if (!noteEditing.content.trim()) return;
+													const method = noteEditing.noteId ? "PATCH" : "POST";
+													const body = noteEditing.noteId
+														? { noteId: noteEditing.noteId, content: noteEditing.content, color: noteEditing.color }
+														: { lessonId: lesson.id, blockIndex: noteEditing.blockIndex, content: noteEditing.content, color: noteEditing.color };
+													const res = await fetch("/learning/api/notes", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+													if (res.ok) {
+														const data = await res.json();
+														if (noteEditing.noteId) {
+															setNotes(n => n.map(x => x.id === noteEditing.noteId ? { ...x, content: noteEditing.content, color: noteEditing.color } : x));
+														} else if (data.note) {
+															setNotes(n => [...n, data.note]);
+														}
+													}
+													setNoteEditing(null);
+												}} style={{ background: "transparent", border: `1px solid ${t.dividerStrong}`, color: t.ink, cursor: "pointer", padding: "4px 10px", fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.15em" }}>SAVE</button>
+											</div>
+										</div>
+									</div>
+								)}
 							</div>
 						);
 					})}
@@ -2290,6 +2411,68 @@ hyper:hover {
 								}} />
 							</button>
 						) : null}
+					</div>
+				)}
+
+				{/* Highlight-to-translate tooltip */}
+				{selection && (
+					<div style={{
+						position: "fixed",
+						left: Math.min(selection.x - 80, typeof window !== "undefined" ? window.innerWidth - 200 : 600),
+						top: selection.y,
+						background: t.bgElevated,
+						border: `1px solid ${t.dividerStrong}`,
+						padding: "8px 12px",
+						zIndex: 100,
+						boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+						maxWidth: 300,
+					}}>
+						{selectionTranslation ? (
+							<div>
+								<div style={{ fontFamily: "Playfair Display, serif", fontSize: 14, color: t.ink, lineHeight: 1.5 }}>
+									{selectionTranslation}
+								</div>
+								<button onClick={() => setSelection(null)} style={{ marginTop: 6, background: "transparent", border: "none", color: t.inkGhost, cursor: "pointer", fontFamily: "JetBrains Mono, monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.15em" }}>CLOSE</button>
+							</div>
+						) : (
+							<div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+								{selectionTranslating ? (
+									<>
+										<span className="learning-breathe" style={{ display: "inline-block", width: 4, height: 4, borderRadius: "50%", background: t.accent }} />
+										<span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: t.inkGhost }}>TRANSLATING…</span>
+									</>
+								) : (
+									<>
+										<button onClick={async () => {
+											setSelectionTranslating(true);
+											const hasThai = /[\u0E00-\u0E7F]/.test(selection.text);
+											const targetLang = hasThai ? "en" : "th";
+											try {
+												const res = await fetch("/learning/api/ai/translate", {
+													method: "POST",
+													headers: { "Content-Type": "application/json" },
+													body: JSON.stringify({ text: selection.text, targetLang }),
+												});
+												const data = await res.json();
+												setSelectionTranslation(data.translated || data.message || "translation failed");
+											} catch {
+												setSelectionTranslation("connection error");
+											} finally {
+												setSelectionTranslating(false);
+											}
+										}} style={{
+											background: "transparent", border: `1px solid ${t.divider}`,
+											padding: "4px 10px", cursor: "pointer",
+											fontFamily: "JetBrains Mono, monospace", fontSize: 9,
+											textTransform: "uppercase", letterSpacing: "0.15em", color: t.ink,
+										}}>
+											{/[\u0E00-\u0E7F]/.test(selection.text) ? "→ ENGLISH" : "→ ไทย"}
+										</button>
+										<button onClick={() => setSelection(null)} style={{ background: "transparent", border: "none", color: t.inkGhost, cursor: "pointer", fontSize: 14 }}>×</button>
+									</>
+								)}
+							</div>
+						)}
 					</div>
 				)}
 			</main>

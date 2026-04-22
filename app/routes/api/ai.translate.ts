@@ -34,12 +34,30 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const blocks = rawBody.blocks;
 	const targetLang = rawBody.targetLang;
+	const textToTranslate = rawBody.text; // Simple text mode
+
+	if (targetLang !== "en" && targetLang !== "th") {
+		return Response.json({ message: "invalid target language" }, { status: 400 });
+	}
+
+	// Simple text translation mode
+	if (typeof textToTranslate === "string" && textToTranslate.trim()) {
+		const langName = targetLang === "th" ? "Thai" : "English";
+		const selection = selectModel("translate");
+		try {
+			const translated = await completeUnified(
+				{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
+				[{ role: "user", content: textToTranslate.trim() }],
+				{ model: selection.model, provider: selection.provider, route: selection.route, system: `Translate the following text to ${langName}. Return ONLY the translation, nothing else.`, maxTokens: 1024 },
+			);
+			return Response.json({ translated: translated.trim() });
+		} catch (err) {
+			return Response.json({ message: `Translation failed: ${(err as Error).message?.slice(0, 100)}` }, { status: 502 });
+		}
+	}
 
 	if (!Array.isArray(blocks) || blocks.length === 0) {
 		return Response.json({ message: "no blocks to translate" }, { status: 400 });
-	}
-	if (targetLang !== "en" && targetLang !== "th") {
-		return Response.json({ message: "invalid target language" }, { status: 400 });
 	}
 	const langName = targetLang === "th" ? "Thai" : "English";
 
