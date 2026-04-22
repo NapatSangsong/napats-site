@@ -67,50 +67,51 @@ export function meta({ data }: Route.MetaArgs) {
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {
-	const env = context.cloudflare.env;
-	const supabase = createServiceClient(env);
+	try {
+		const env = context.cloudflare.env;
+		const supabase = createServiceClient(env);
 
-	// Get course — decode URI for Thai slugs
-	const slug = decodeURIComponent(params.slug || "");
-	const { data: course } = await supabase
-		.from("courses")
-		.select("id, slug, title, subtitle, cover_monogram, lessons(id, order_index, title, status, generated_by_model)")
-		.eq("slug", slug)
-		.single();
+		const slug = decodeURIComponent(params.slug || "");
+		const { data: course, error: courseError } = await supabase
+			.from("courses")
+			.select("id, slug, title, subtitle, cover_monogram, lessons(id, order_index, title, status, generated_by_model)")
+			.eq("slug", slug)
+			.single();
 
-	if (!course) {
-		// Might happen during race condition after generation — redirect to course list
-		return new Response(null, { status: 302, headers: { Location: "/learning" } });
-	}
+		if (courseError || !course) {
+			return new Response(null, { status: 302, headers: { Location: "/learning" } });
+		}
 
-	const lessonIndex = parseInt(params.lesson, 10);
-	const lessons = (course.lessons || []).sort(
-		(a: { order_index: number }, b: { order_index: number }) => a.order_index - b.order_index,
-	);
-	const lesson = lessons.find((l: { order_index: number }) => l.order_index === lessonIndex);
-	if (!lesson) {
-		return new Response(null, { status: 302, headers: { Location: `/learning/courses/${slug}` } });
-	}
+		const lessonIndex = parseInt(params.lesson, 10);
+		const lessons = (course.lessons || []).sort(
+			(a: { order_index: number }, b: { order_index: number }) => a.order_index - b.order_index,
+		);
+		const lesson = lessons.find((l: { order_index: number }) => l.order_index === lessonIndex);
+		if (!lesson) {
+			return new Response(null, { status: 302, headers: { Location: `/learning/courses/${slug}` } });
+		}
 
-	// Get blocks if lesson is ready
-	let blocks: unknown[] = [];
-	if (lesson.status === "ready" || lesson.status === "edited") {
-		const { data: blockData } = await supabase
-			.from("lesson_blocks")
+		let blocks: unknown[] = [];
+		if (lesson.status === "ready" || lesson.status === "edited") {
+			const { data: blockData } = await supabase
+				.from("lesson_blocks")
+				.select("*")
+				.eq("lesson_id", lesson.id)
+				.order("order_index", { ascending: true });
+			blocks = blockData || [];
+		}
+
+		const { data: progress } = await supabase
+			.from("lesson_progress")
 			.select("*")
 			.eq("lesson_id", lesson.id)
-			.order("order_index", { ascending: true });
-		blocks = blockData || [];
+			.maybeSingle();
+
+		return { course, lesson, lessons, blocks, progress: progress || null };
+	} catch {
+		// Any error → redirect to home instead of crashing
+		return new Response(null, { status: 302, headers: { Location: "/learning" } });
 	}
-
-	// Get progress
-	const { data: progress } = await supabase
-		.from("lesson_progress")
-		.select("*")
-		.eq("lesson_id", lesson.id)
-		.single();
-
-	return { course, lesson, lessons, blocks, progress };
 }
 
 export default function LessonReader({ loaderData }: Route.ComponentProps) {
