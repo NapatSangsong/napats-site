@@ -274,6 +274,12 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 							EDIT COURSE
 						</TrackedButton>
 					)}
+					<TrackedButton t={t} onClick={() => window.open(`/learning/api/export?courseId=${course.id}&format=json`, "_blank")}>
+						EXPORT JSON
+					</TrackedButton>
+					<TrackedButton t={t} onClick={() => window.open(`/learning/api/export?courseId=${course.id}&format=md`, "_blank")}>
+						EXPORT MD
+					</TrackedButton>
 					{!confirmDelete ? (
 						<TrackedButton t={t} onClick={() => setConfirmDelete(true)}>
 							DELETE COURSE

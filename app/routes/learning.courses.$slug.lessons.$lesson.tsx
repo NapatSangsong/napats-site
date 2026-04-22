@@ -178,6 +178,46 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	const [recallThreadId, setRecallThreadId] = useState<string | null>(null);
 	const recallEndRef = useRef<HTMLDivElement>(null);
 
+	// B1: Pre-lesson self-assessment
+	const [showAssessment, setShowAssessment] = useState(!progress?.self_assessment && initialBlocks.length > 0);
+	const [assessmentValue, setAssessmentValue] = useState(50);
+
+	// B2: Confidence tracking after recall
+	const [confidenceSet, setConfidenceSet] = useState(!!progress?.confidence);
+
+	const [activeSeconds, setActiveSeconds] = useState(0);
+
+	useEffect(() => {
+		let seconds = 0;
+		let lastActivity = Date.now();
+		const onActivity = () => { lastActivity = Date.now(); };
+		window.addEventListener("scroll", onActivity);
+		window.addEventListener("click", onActivity);
+		window.addEventListener("keydown", onActivity);
+
+		const interval = setInterval(() => {
+			if (document.visibilityState === "visible" && Date.now() - lastActivity < 60000) {
+				seconds += 10;
+				setActiveSeconds(seconds);
+				// Save every 30s
+				if (seconds % 30 === 0) {
+					fetch(`/learning/api/progress/${lesson.id}`, {
+						method: "PUT",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ time_spent_seconds: seconds }),
+					}).catch(() => {});
+				}
+			}
+		}, 10000);
+
+		return () => {
+			clearInterval(interval);
+			window.removeEventListener("scroll", onActivity);
+			window.removeEventListener("click", onActivity);
+			window.removeEventListener("keydown", onActivity);
+		};
+	}, [lesson.id]);
+
 	const isPending = lesson.status === "pending";
 
 	// Model selection for lesson generation
@@ -2208,7 +2248,14 @@ window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelecto
 					)}
 				</div>
 
-				{/* Socratic Recall Checkpoint */}
+				{/* Time spent tracker */}
+			<div style={{ display: "flex", gap: 16, alignItems: "center", marginTop: 24, padding: "12px 0", borderTop: `1px solid ${t.divider}` }}>
+				<Tracked size={9} tracking={0.2} style={{ color: t.inkGhost }}>
+					TIME SPENT · {Math.floor(activeSeconds / 60)}M {activeSeconds % 60}S
+				</Tracked>
+			</div>
+
+			{/* Socratic Recall Checkpoint */}
 				{blocks.length > 0 && (recallActive || recallConfirmed) && (
 					<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: isMobile ? 32 : 48 }}>
 						{/* Checkpoint divider */}

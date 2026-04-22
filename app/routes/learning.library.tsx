@@ -2,7 +2,7 @@
  * Library — grid of course cards with monogram covers and filter bar.
  * Matches the design's LibraryScreen: pure typography, no thumbnails.
  */
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router";
 import type { Route } from "./+types/learning.library";
 import { useTheme } from "./learning";
@@ -80,7 +80,33 @@ export default function LibraryPage({ loaderData }: Route.ComponentProps) {
 	const { theme, t, toggleTheme } = useTheme();
 	const navigate = useNavigate();
 	const [filter, setFilter] = useState<FilterKey>("ALL");
+	const [importing, setImporting] = useState(false);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 	const { courses } = loaderData;
+
+	const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		setImporting(true);
+		try {
+			const text = await file.text();
+			const data = JSON.parse(text);
+			const res = await fetch("/learning/api/import", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(data),
+			});
+			if (res.ok) {
+				const result = await res.json();
+				navigate(`/learning/courses/${result.course.slug}`);
+			}
+		} catch {
+			// import error
+		} finally {
+			setImporting(false);
+			if (fileInputRef.current) fileInputRef.current.value = "";
+		}
+	};
 
 	const filters: FilterKey[] = ["ALL", "IN PROGRESS", "COMPLETED", "HAND-CRAFTED"];
 
@@ -172,6 +198,20 @@ export default function LibraryPage({ loaderData }: Route.ComponentProps) {
 								</Tracked>
 							</button>
 						))}
+					<input
+						ref={fileInputRef}
+						type="file"
+						accept=".json"
+						onChange={handleImport}
+						style={{ display: "none" }}
+					/>
+					<TrackedButton
+						t={t}
+						onClick={() => fileInputRef.current?.click()}
+						disabled={importing}
+					>
+						{importing ? "IMPORTING..." : "IMPORT COURSE"}
+					</TrackedButton>
 					</div>
 				</div>
 

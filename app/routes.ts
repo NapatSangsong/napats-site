@@ -24,9 +24,12 @@ export default [
 	route("learning/api/ai/translate", "routes/api/ai.translate.ts"),
 	route("learning/api/ai/chat-history", "routes/api/ai.chat-history.ts"),
 	route("learning/api/notes", "routes/api/notes.ts"),
+	route("learning/api/journal", "routes/api/journal.ts"),
 	route("learning/api/progress/:lessonId", "routes/api/progress.$lessonId.ts"),
 	route("learning/api/review-schedule", "routes/api/review-schedule.ts"),
 	route("learning/api/graph", "routes/api/graph.ts"),
+	route("learning/api/export", "routes/api/export.ts"),
+	route("learning/api/import", "routes/api/import.ts"),
 	layout("routes/learning.tsx", [
 		route("learning", "routes/learning._index.tsx"),
 		route("learning/library", "routes/learning.library.tsx"),

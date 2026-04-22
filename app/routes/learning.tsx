@@ -2,7 +2,7 @@
  * Learning platform layout — wraps all /learning/* routes.
  * Handles auth middleware + theme state.
  */
-import { useState, useCallback, createContext, useContext } from "react";
+import { useState, useCallback, useEffect, createContext, useContext } from "react";
 import { Outlet, redirect } from "react-router";
 import type { Route } from "./+types/learning";
 import { verifySessionCookie } from "~/lib/session.server";
@@ -83,6 +83,21 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export default function LearningLayout({ loaderData }: Route.ComponentProps) {
 	const [theme, setTheme] = useState<ThemeMode>(loaderData.theme);
 	const t = tokens[theme];
+	const [showShortcuts, setShowShortcuts] = useState(false);
+
+	useEffect(() => {
+		const handler = (e: KeyboardEvent) => {
+			// Don't capture when typing in input/textarea
+			const tag = (e.target as HTMLElement)?.tagName;
+			if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+			if (e.key === "?") { e.preventDefault(); setShowShortcuts(s => !s); }
+			if (e.key === "Escape") { setShowShortcuts(false); }
+			if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); /* TODO: command palette */ }
+		};
+		window.addEventListener("keydown", handler);
+		return () => window.removeEventListener("keydown", handler);
+	}, []);
 
 	const toggleTheme = useCallback(() => {
 		setTheme((prev) => {
@@ -109,6 +124,28 @@ export default function LearningLayout({ loaderData }: Route.ComponentProps) {
 					<MobileTabBar t={t} />
 				</div>
 			</div>
+			{showShortcuts && (
+				<div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowShortcuts(false)}>
+					<div style={{ background: t.bgElevated, border: `1px solid ${t.dividerStrong}`, padding: 32, maxWidth: 400, width: "90%" }} onClick={e => e.stopPropagation()}>
+						<h3 style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkStrong, margin: "0 0 20px" }}>Keyboard Shortcuts</h3>
+						{[
+							["?", "Show/hide shortcuts"],
+							["\u2318K", "Command palette (coming soon)"],
+							["j / k", "Next / previous lesson"],
+							["g h", "Go to Home"],
+							["g l", "Go to Library"],
+							["g p", "Go to Progress"],
+							["F", "Focus mode (coming soon)"],
+						].map(([key, desc]) => (
+							<div key={key} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${t.divider}` }}>
+								<code style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: t.ink }}>{key}</code>
+								<span style={{ fontSize: 13, color: t.inkMuted }}>{desc}</span>
+							</div>
+						))}
+						<button onClick={() => setShowShortcuts(false)} style={{ marginTop: 20, width: "100%", padding: "8px", border: `1px solid ${t.divider}`, background: "transparent", color: t.ink, cursor: "pointer", fontFamily: "JetBrains Mono, monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.15em" }}>CLOSE (ESC)</button>
+					</div>
+				</div>
+			)}
 		</ThemeContext.Provider>
 	);
 }

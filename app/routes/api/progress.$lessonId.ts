@@ -29,7 +29,7 @@ export async function action({ params, request, context }: Route.ActionArgs) {
 		return Response.json({ error: "method not allowed" }, { status: 405 });
 	}
 
-	const body = await request.json() as { scroll_percent?: number; status?: string; recall_status?: string };
+	const body = await request.json() as { scroll_percent?: number; status?: string; recall_status?: string; time_spent_seconds?: number };
 	const supabase = createServiceClient(env);
 
 	const now = new Date().toISOString();
@@ -40,6 +40,9 @@ export async function action({ params, request, context }: Route.ActionArgs) {
 
 	if (body.scroll_percent !== undefined) {
 		update.scroll_percent = Math.min(100, Math.max(0, body.scroll_percent));
+	}
+	if (body.time_spent_seconds !== undefined) {
+		update.time_spent_seconds = Math.max(0, body.time_spent_seconds);
 	}
 	if (body.status === "in_progress" || body.status === "completed") {
 		update.status = body.status;

@@ -74,7 +74,23 @@ export async function loader({ context }: Route.LoaderArgs) {
 		// Supabase may not be set up yet
 	}
 
-	return { courses, totalLessons, reviewsDue };
+	let resumeLesson = null;
+	try {
+		const supabase2 = createServiceClient(env);
+		const { data: recentProgress } = await supabase2
+			.from("lesson_progress")
+			.select("lesson_id, scroll_percent, last_accessed_at, lessons(title, order_index, course_id, courses(title, slug))")
+			.eq("status", "in_progress")
+			.order("last_accessed_at", { ascending: false })
+			.limit(1)
+			.maybeSingle();
+		if (recentProgress?.last_accessed_at) {
+			const daysSince = (Date.now() - new Date(recentProgress.last_accessed_at).getTime()) / 86400000;
+			if (daysSince < 30) resumeLesson = recentProgress;
+		}
+	} catch {}
+
+	return { courses, totalLessons, reviewsDue, resumeLesson };
 }
 
 // ── Types ───────────────────────────────────────────────────
@@ -717,6 +733,30 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 								COMPOSE
 							</TrackedButton>
 						</div>
+
+						{/* Resume where you left off */}
+						{loaderData.resumeLesson && (
+							<div onClick={() => {
+								const r = loaderData.resumeLesson;
+								const course = r.lessons?.courses;
+								const lessonData = r.lessons;
+								if (course && lessonData) navigate(`/learning/courses/${course.slug}/lessons/${lessonData.order_index}`);
+							}} style={{
+								marginTop: 32, padding: "20px 24px", border: `1px solid ${t.dividerStrong}`, cursor: "pointer",
+								display: "flex", alignItems: "center", gap: 16, transition: "background 0.2s",
+							}} onMouseEnter={e => e.currentTarget.style.background = t.bgCard} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+								<FilmDot size={6} breathe />
+								<div style={{ flex: 1 }}>
+									<div style={{ fontFamily: "Playfair Display, serif", fontSize: 16, color: t.ink }}>
+										Continue: {loaderData.resumeLesson.lessons?.title}
+									</div>
+									<Tracked size={9} tracking={0.15} style={{ color: t.inkGhost, marginTop: 4, display: "block" }}>
+										{loaderData.resumeLesson.lessons?.courses?.title} · {Math.round(loaderData.resumeLesson.scroll_percent)}% SCROLLED
+									</Tracked>
+								</div>
+								<span style={{ color: t.inkGhost, fontSize: 20 }}>→</span>
+							</div>
+						)}
 
 						{/* Course templates */}
 						<div style={{ marginTop: 32 }}>
