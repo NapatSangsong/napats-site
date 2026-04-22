@@ -868,30 +868,35 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 								</div>
 							)}
 
-							{/* Progress indicator */}
-							{streaming && !streamingContent && (
-								<div style={{ padding: "20px 0" }}>
-									<div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+							{/* Progress indicator — stays visible throughout streaming */}
+							{streaming && (
+								<div style={{ padding: "12px 0", borderBottom: streamingContent ? `1px solid ${t.divider}` : "none", marginBottom: streamingContent ? 12 : 0 }}>
+									<div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
 										<FilmDot size={5} breathe />
-										<span style={{ fontFamily: "Playfair Display, serif", fontSize: 18, color: t.inkMuted, fontStyle: "italic" }}>
+										<span style={{ fontFamily: "Playfair Display, serif", fontSize: streamingContent ? 14 : 18, color: t.inkMuted, fontStyle: "italic", transition: "font-size 0.3s" }}>
 											{streamStage || "thinking…"}
 										</span>
 									</div>
-									{streamProgress > 0 && (
-										<div>
-											<div style={{ height: 2, background: t.divider, borderRadius: 1, overflow: "hidden", maxWidth: 320 }}>
-												<div style={{
-													height: "100%",
-													background: t.accent,
-													width: `${Math.min(95, Math.round((streamProgress / 5000) * 100))}%`,
-													transition: "width 0.5s ease",
-												}} />
-											</div>
-											<Tracked size={9} tracking={0.15} style={{ color: t.inkGhost, marginTop: 6, display: "block" }}>
-												{Math.round(streamProgress / 1000)}K CHARS
-											</Tracked>
-										</div>
-									)}
+									<div style={{ height: 2, background: t.divider, borderRadius: 1, overflow: "hidden", maxWidth: 320, position: "relative" }}>
+										{streamProgress > 0 ? (
+											<div style={{
+												height: "100%",
+												background: t.accent,
+												width: `${Math.min(95, Math.round((streamProgress / 5000) * 100))}%`,
+												transition: "width 0.5s ease",
+											}} />
+										) : (
+											<div className="learning-indeterminate" style={{
+												height: "100%",
+												background: t.accent,
+												width: "30%",
+												position: "absolute",
+											}} />
+										)}
+									</div>
+									<Tracked size={9} tracking={0.15} style={{ color: t.inkGhost, marginTop: 6, display: "block" }}>
+										{streamProgress > 0 ? `${Math.round(streamProgress / 1000)}K CHARS` : "WAITING FOR AI…"}
+									</Tracked>
 								</div>
 							)}
 

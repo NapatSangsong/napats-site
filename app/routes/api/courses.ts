@@ -35,6 +35,63 @@ export async function action({ request, context }: Route.ActionArgs) {
 	const denied = await requireAuth(request, env);
 	if (denied) return denied;
 
+	// PATCH: update course metadata or lesson actions
+	if (request.method === "PATCH") {
+		const body = await request.json() as any;
+		const supabase = createServiceClient(env as unknown as { SUPABASE_URL: string; SUPABASE_SERVICE_ROLE_KEY: string });
+
+		// Course metadata update
+		if (body.courseId && !body.action) {
+			const update: Record<string, unknown> = {};
+			if (body.title !== undefined) update.title = body.title;
+			if (body.subtitle !== undefined) update.subtitle = body.subtitle;
+			if (body.description !== undefined) update.description = body.description;
+			if (body.tags !== undefined) update.tags = body.tags;
+			if (body.difficulty !== undefined) update.difficulty = body.difficulty;
+			const { error } = await supabase.from("courses").update(update).eq("id", body.courseId);
+			if (error) return Response.json({ message: error.message }, { status: 500 });
+			return Response.json({ ok: true });
+		}
+
+		// Lesson actions
+		if (body.action === "update-lesson") {
+			const update: Record<string, unknown> = {};
+			if (body.title) update.title = body.title;
+			if (body.summary !== undefined) update.summary = body.summary;
+			if (body.outcomes) update.outcomes = body.outcomes;
+			const { error } = await supabase.from("lessons").update(update).eq("id", body.lessonId);
+			if (error) return Response.json({ message: error.message }, { status: 500 });
+			return Response.json({ ok: true });
+		}
+
+		if (body.action === "delete-lesson") {
+			const { error } = await supabase.from("lessons").delete().eq("id", body.lessonId);
+			if (error) return Response.json({ message: error.message }, { status: 500 });
+			return Response.json({ ok: true });
+		}
+
+		if (body.action === "add-lesson") {
+			const { data, error } = await supabase.from("lessons").insert({
+				course_id: body.courseId,
+				title: body.title || "New Lesson",
+				summary: body.summary || null,
+				outcomes: body.outcomes || [],
+				order_index: body.afterIndex ?? 99,
+				status: "pending",
+			}).select("id").single();
+			if (error) return Response.json({ message: error.message }, { status: 500 });
+			return Response.json({ lesson: data });
+		}
+
+		if (body.action === "regenerate-lesson") {
+			await supabase.from("lesson_blocks").delete().eq("lesson_id", body.lessonId);
+			await supabase.from("lessons").update({ status: "pending" }).eq("id", body.lessonId);
+			return Response.json({ ok: true });
+		}
+
+		return Response.json({ message: "unknown action" }, { status: 400 });
+	}
+
 	// DELETE: remove a course by id
 	if (request.method === "DELETE") {
 		const body = await request.json() as { courseId?: string };

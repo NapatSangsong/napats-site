@@ -55,6 +55,48 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 	const [deleting, setDeleting] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
 
+	// Edit mode state
+	const [editMode, setEditMode] = useState(false);
+	const [editTitle, setEditTitle] = useState(course.title);
+	const [editSubtitle, setEditSubtitle] = useState(course.subtitle || "");
+	const [editDescription, setEditDescription] = useState(course.description || "");
+	const [saving, setSaving] = useState(false);
+
+	const handleSaveCourse = useCallback(async () => {
+		if (saving) return;
+		setSaving(true);
+		try {
+			const res = await fetch("/learning/api/courses", {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ courseId: course.id, title: editTitle, subtitle: editSubtitle, description: editDescription }),
+			});
+			if (res.ok) window.location.reload();
+		} catch {
+			// error
+		} finally {
+			setSaving(false);
+		}
+	}, [course.id, editTitle, editSubtitle, editDescription, saving]);
+
+	const handleLessonAction = useCallback(async (action: string, lessonId: string) => {
+		const res = await fetch("/learning/api/courses", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ action, lessonId }),
+		});
+		if (res.ok) window.location.reload();
+	}, []);
+
+	const handleAddLesson = useCallback(async () => {
+		const res = await fetch("/learning/api/courses", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ action: "add-lesson", courseId: course.id, afterIndex: lessons.length }),
+		});
+		if (res.ok) window.location.reload();
+	}, [course.id, lessons.length]);
+
 	const handleDelete = useCallback(async () => {
 		if (deleting) return;
 		setDeleting(true);
@@ -102,28 +144,69 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 							{course.cover_monogram || course.title[0]}
 						</span>
 					</div>
-					<div>
-						<h1 style={{
-							fontFamily: "Playfair Display, serif",
-							fontSize: "clamp(28px, 6vw, 48px)",
-							fontWeight: 500,
-							color: t.inkStrong,
-							letterSpacing: "-0.02em",
-							lineHeight: 1,
-							margin: 0,
-						}}>
-							{course.title}<span style={{ color: t.accent }}>.</span>
-						</h1>
-						{course.subtitle && (
-							<p style={{
+					<div style={{ flex: 1 }}>
+						{editMode ? (
+							<input
+								value={editTitle}
+								onChange={(e) => setEditTitle(e.target.value)}
+								style={{
+									fontFamily: "Playfair Display, serif",
+									fontSize: "clamp(28px, 6vw, 48px)",
+									fontWeight: 500,
+									color: t.inkStrong,
+									letterSpacing: "-0.02em",
+									lineHeight: 1,
+									margin: 0,
+									background: "transparent",
+									border: `1px solid ${t.divider}`,
+									outline: "none",
+									width: "100%",
+									padding: "4px 8px",
+								}}
+							/>
+						) : (
+							<h1 style={{
 								fontFamily: "Playfair Display, serif",
-								fontSize: 22,
-								color: t.inkGhost,
-								fontStyle: "italic",
-								marginTop: 8,
+								fontSize: "clamp(28px, 6vw, 48px)",
+								fontWeight: 500,
+								color: t.inkStrong,
+								letterSpacing: "-0.02em",
+								lineHeight: 1,
+								margin: 0,
 							}}>
-								{course.subtitle}
-							</p>
+								{course.title}<span style={{ color: t.accent }}>.</span>
+							</h1>
+						)}
+						{editMode ? (
+							<input
+								value={editSubtitle}
+								onChange={(e) => setEditSubtitle(e.target.value)}
+								placeholder="Subtitle"
+								style={{
+									fontFamily: "Playfair Display, serif",
+									fontSize: 22,
+									color: t.inkGhost,
+									fontStyle: "italic",
+									marginTop: 8,
+									background: "transparent",
+									border: `1px solid ${t.divider}`,
+									outline: "none",
+									width: "100%",
+									padding: "4px 8px",
+								}}
+							/>
+						) : (
+							course.subtitle && (
+								<p style={{
+									fontFamily: "Playfair Display, serif",
+									fontSize: 22,
+									color: t.inkGhost,
+									fontStyle: "italic",
+									marginTop: 8,
+								}}>
+									{course.subtitle}
+								</p>
+							)
 						)}
 					</div>
 				</div>
@@ -141,6 +224,20 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 					<TrackedButton t={t} onClick={() => navigate(`/learning/courses/${course.slug}/lessons/0`)}>
 						{totalProg > 0 ? "CONTINUE LEARNING" : "START LEARNING"}
 					</TrackedButton>
+					{editMode ? (
+						<>
+							<TrackedButton t={t} primary onClick={handleSaveCourse} disabled={saving}>
+								{saving ? "SAVING…" : "SAVE"}
+							</TrackedButton>
+							<TrackedButton t={t} onClick={() => { setEditMode(false); setEditTitle(course.title); setEditSubtitle(course.subtitle || ""); setEditDescription(course.description || ""); }}>
+								CANCEL
+							</TrackedButton>
+						</>
+					) : (
+						<TrackedButton t={t} onClick={() => setEditMode(true)}>
+							EDIT COURSE
+						</TrackedButton>
+					)}
 					{!confirmDelete ? (
 						<TrackedButton t={t} onClick={() => setConfirmDelete(true)}>
 							DELETE COURSE
@@ -161,10 +258,34 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 				</div>
 
 				{/* Description */}
-				{course.description && (
-					<p style={{ fontSize: 16, lineHeight: 1.75, color: t.ink, fontWeight: 300, marginTop: 32, maxWidth: 640 }}>
-						{course.description}
-					</p>
+				{editMode ? (
+					<textarea
+						value={editDescription}
+						onChange={(e) => setEditDescription(e.target.value)}
+						placeholder="Course description"
+						rows={4}
+						style={{
+							fontSize: 16,
+							lineHeight: 1.75,
+							color: t.ink,
+							fontWeight: 300,
+							marginTop: 32,
+							maxWidth: 640,
+							width: "100%",
+							background: "transparent",
+							border: `1px solid ${t.divider}`,
+							outline: "none",
+							padding: "8px 12px",
+							fontFamily: "inherit",
+							resize: "vertical",
+						}}
+					/>
+				) : (
+					course.description && (
+						<p style={{ fontSize: 16, lineHeight: 1.75, color: t.ink, fontWeight: 300, marginTop: 32, maxWidth: 640 }}>
+							{course.description}
+						</p>
+					)
 				)}
 
 				{/* Lessons list */}
@@ -237,7 +358,7 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 											</div>
 										)}
 									</div>
-									<div>
+									<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
 										{isCompleted ? (
 											<Tracked size={9} tracking={0.22} style={{ color: t.inkMuted }}>DONE</Tracked>
 										) : isReady ? (
@@ -259,10 +380,60 @@ export default function CourseOverview({ loaderData }: Route.ComponentProps) {
 												{lesson.status.toUpperCase()}
 											</Tracked>
 										)}
+										<button
+											title="Regenerate lesson"
+											onClick={(e) => { e.stopPropagation(); handleLessonAction("regenerate-lesson", lesson.id); }}
+											style={{
+												background: "transparent",
+												border: `1px solid ${t.divider}`,
+												color: t.inkGhost,
+												cursor: "pointer",
+												fontFamily: "JetBrains Mono, monospace",
+												fontSize: 13,
+												width: 28,
+												height: 28,
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "center",
+												padding: 0,
+												lineHeight: 1,
+											}}
+										>
+											&#x21bb;
+										</button>
+										<button
+											title="Delete lesson"
+											onClick={(e) => {
+												e.stopPropagation();
+												if (confirm("Delete this lesson?")) handleLessonAction("delete-lesson", lesson.id);
+											}}
+											style={{
+												background: "transparent",
+												border: `1px solid ${t.divider}`,
+												color: t.inkGhost,
+												cursor: "pointer",
+												fontFamily: "JetBrains Mono, monospace",
+												fontSize: 13,
+												width: 28,
+												height: 28,
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "center",
+												padding: 0,
+												lineHeight: 1,
+											}}
+										>
+											&times;
+										</button>
 									</div>
 								</div>
 							);
 						})}
+					</div>
+					<div style={{ marginTop: 16 }}>
+						<TrackedButton t={t} onClick={handleAddLesson}>
+							ADD LESSON
+						</TrackedButton>
 					</div>
 				</div>
 

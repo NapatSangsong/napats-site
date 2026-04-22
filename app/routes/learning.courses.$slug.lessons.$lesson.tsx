@@ -1786,8 +1786,21 @@ hyper:hover {
 					</div>
 				)}
 
+				{/* Translation loading */}
+				{translating && (
+					<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: 32 }}>
+						<span style={{ fontFamily: "Playfair Display, serif", fontSize: 18, color: t.inkMuted, fontStyle: "italic" }}>
+							{activeLang === "th" ? "translating to Thai…" : "translating to English…"}
+						</span>
+						<span className="learning-breathe" style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: t.accent, marginLeft: 12 }} />
+						<div style={{ marginTop: 12, height: 2, background: t.divider, borderRadius: 1, overflow: "hidden", maxWidth: 320, position: "relative" }}>
+							<div className="learning-indeterminate" style={{ height: "100%", background: t.accent, width: "30%", position: "absolute" }} />
+						</div>
+					</div>
+				)}
+
 				{/* Blocks */}
-				<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: 32, opacity: perspectiveLoading && perspectiveBlocks.length === 0 ? 0.3 : 1, transition: "opacity 0.3s", pointerEvents: perspectiveLoading ? "none" : "auto" }}>
+				<div style={{ maxWidth: isMobile ? "100%" : 720, marginTop: translating ? 16 : 32, opacity: (perspectiveLoading && perspectiveBlocks.length === 0) || translating ? 0.3 : 1, transition: "opacity 0.3s", pointerEvents: perspectiveLoading || translating ? "none" : "auto" }}>
 					{(activeLang !== "original" && translatedBlocks.length > 0
 					? translatedBlocks
 					: activePerspective === "default" ? blocks : (perspectiveBlocks.length > 0 ? perspectiveBlocks : blocks)
