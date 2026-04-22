@@ -9,7 +9,7 @@ Personal portfolio + AI-powered learning platform by [Napat Sangsong](https://na
 | Framework | React Router 7 (SSR) |
 | Runtime | Cloudflare Workers (Edge) |
 | Database | Supabase PostgreSQL |
-| AI | Anthropic Claude API (Opus / Sonnet / Haiku) |
+| AI | OpenRouter (Gemini Flash/Pro + free models) with Claude fallback |
 | Styling | Tailwind CSS 4 + Inline Styles |
 | Language | TypeScript 5.9 |
 | Build | Vite 6 |
@@ -24,18 +24,17 @@ pnpm dev                        # http://localhost:5173
 
 ### Environment Variables
 
-Create `.dev.vars` with:
-
 ```
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-key
 ANTHROPIC_API_KEY=sk-ant-...
+OPENROUTER_API_KEY=sk-or-v1-...
 SESSION_HMAC_SECRET=random-32-char-string
 ```
 
 ### Database Setup
 
-Run migrations in order against your Supabase project:
+Run migrations in order:
 
 ```
 docs/migrations/001_learning_init.sql
@@ -43,6 +42,7 @@ docs/migrations/002_seed_placeholder_courses.sql
 docs/migrations/003_spaced_repetition.sql
 docs/migrations/004_recall_checkpoint.sql
 docs/migrations/005_knowledge_graph.sql
+docs/migrations/006_lesson_notes.sql
 ```
 
 ### Deploy
@@ -51,120 +51,106 @@ docs/migrations/005_knowledge_graph.sql
 pnpm run deploy
 ```
 
-## Project Structure
+## Learning Platform — 34 Features
 
-```
-app/
-  routes/
-    home.tsx                          # Portfolio landing page
-    learning._index.tsx               # Learning command center
-    learning.courses.$slug.tsx        # Course overview
-    learning.courses.$slug.lessons.$lesson.tsx  # Lesson viewer
-    learning.graph.tsx                # Knowledge graph visualization
-    learning.progress.tsx             # Progress dashboard
-    learning.settings.tsx             # User preferences
-    learning.library.tsx              # Course library
-    learning.gate.tsx                 # Auth gate
-  routes/api/                         # 17 API endpoints
-    ai.plan-course.ts                 # Course planning (SSE)
-    ai.generate-lesson.ts             # Lesson generation (SSE)
-    ai.perspective-lesson.ts          # Perspective switching (SSE)
-    ai.deep-dive.ts                   # Hyper-node sub-lessons (SSE)
-    ai.chat.ts                        # Tutor chat + Socratic recall
-    ai.generate-quiz.ts               # Quiz generation
-    ai.grade.ts                       # AI grading
-    ai.suggest-courses.ts             # Personalized suggestions
-    ai.related-courses.ts             # Post-completion suggestions
-    ai.build-graph.ts                 # Knowledge graph extraction
-    ai.refine-block.ts                # Block editing
-    courses.ts                        # Course CRUD
-    settings.ts                       # User preferences
-    progress.$lessonId.ts             # Progress tracking
-    review-schedule.ts                # Spaced repetition
-    graph.ts                          # Graph data
-    session.ts                        # Authentication
-  lib/ai/
-    client.ts                         # Anthropic API client (fetch-based)
-    router.ts                         # Auto model selection (11 actions)
-    helpers.server.ts                 # SSE, auth, slug utilities
-    schemas.ts                        # Zod validation (7 body schemas)
-    prompts/                          # 13 AI system prompts
-  components/learning/                # 8 UI components
-    BlockRenderer.tsx                 # 9 block types + hyper-node support
-    ChatPanel.tsx                     # AI tutor chat
-    TopBar.tsx                        # Navigation bar
-    primitives.tsx                    # Design system primitives
-  styles/learning.css                 # Animations
-docs/
-  migrations/                         # 5 SQL migrations
-  learning/                           # Architecture docs
-```
+### Course Creation
+- **Interactive AI Coach** — multi-turn chat with warm learning coach persona
+- **Adaptive Difficulty** — auto-detects level from your language
+- **Learning Style Awareness** — tailors to reading/visual/hands-on preferences
+- **Smart Prerequisites** — checks your library, suggests what you need first
+- **8 Course Templates** — Quick intro, Deep dive, 30-day challenge, Project-based, ELI5, Interview prep, Cheat sheet, Compare & contrast
+- **Visual Preview Card** — beautiful card with lessons, difficulty, time estimate
+- **AI Suggestions** — "Suggested For You" based on progress
+- **Progress Bar** — live stage labels + animated bar during AI generation
 
-## Site Sections
+### Lesson Viewer
+- **9 Block Types** — prose, heading, code, callout, mermaid, katex, image, quote, interactive
+- **Markdown Tables** — pipe-delimited tables render as HTML
+- **Mermaid Diagrams** — rendered via CDN in themed iframe
+- **KaTeX Math** — LaTeX rendered via KaTeX CDN
+- **Interactive Blocks** — sandboxed iframe with HTML wrapper
+- **Mandatory Concept Maps** — Mermaid diagram at lesson start
 
-### Portfolio (`/`)
-- Hero with animated marquee
-- About, Work, Expertise sections
-- Personal interests (Music, Literature, Coffee, Thuaifu)
-- Contact information
+### Perspective Switching (5 Lenses)
+- Default, Evolutionary Biologist, Neuro-Engineer, Philosopher, Software Architect
 
-### Learning Platform (`/learning`)
+### Hyper-Nodes (Recursive Deep-Dive)
+- Click `<hyper>` terms for inline sub-lessons (3 levels deep)
+- Breadcrumb navigation for drill-down path
 
-An AI-powered personal learning system with 15+ features:
+### Personal Notes
+- Add colored sticky notes on any block
+- 5 color options, inline editor, persisted to database
+- Edit and delete on hover
 
-#### Course Creation
-- **Interactive AI Coach** — Multi-turn conversation to design courses
-- **Adaptive Difficulty** — Auto-detects level from your language
-- **Learning Style Awareness** — Tailors content to reading/visual/hands-on preferences
-- **Smart Prerequisites** — References your library, suggests what to learn first
-- **Course Templates** — Quick Start: 30-min intro, Weekend deep dive, 30-day challenge, Project-based
-- **AI Suggestions** — Personalized "Suggested For You" based on progress
+### Highlight-to-Translate
+- Select any text → floating tooltip with translate button
+- Auto-detects Thai/English → translates to the other
+- Full page TH/EN toggle in lesson header
 
-#### Lesson Viewer
-- **9 Block Types** — Prose, heading, code, callout, mermaid, katex, image, quote, interactive
-- **Mandatory Concept Maps** — Mermaid diagram at the start of every lesson
-- **Hyper-Nodes** — Clickable key terms generate inline sub-lessons (3 levels deep)
-- **Deep-Dive Breadcrumbs** — Clickable path trail for navigation
-- **Minsu AI Tutor** — Chat panel for block-level questions
-
-#### Perspective Switching (5 Lenses)
-| Lens | Framework |
-|------|-----------|
-| Default | Standard educational content |
-| Evolutionary Biologist | Natural selection, fitness landscapes, phylogenetic history |
-| Neuro-Engineer | Neural circuitry, signal processing, system architecture |
-| Philosopher | Phenomenology, qualia, epistemology, thought experiments |
-| Software Architect | Design patterns, distributed systems, engineering analogies |
-
-#### Socratic Active Recall
+### Socratic Active Recall
 - Feynman Technique checkpoint after each lesson
-- Must explain the concept back to AI
-- No multiple choice — conversational debate
-- Next lesson locked until understanding confirmed
+- Conversational debate — no multiple choice
+- AI confirms understanding before unlocking next lesson
+- Retry + Skip buttons if stuck
 
-#### Knowledge Graph (`/learning/graph`)
+### Course Editing
+- Edit course title, subtitle, description inline
+- Regenerate, delete, or add individual lessons
+- Delete entire course with confirmation
+
+### Completion Certificate
+- Shows when all lessons are 100% complete
+- Printable certificate with course title, date, lesson count
+- DOWNLOAD button opens print dialog
+
+### Knowledge Graph (`/learning/graph`)
 - Force-directed canvas visualization
 - AI-detected course relationships
-- **Knowledge Entropy** — Nodes fade based on Ebbinghaus forgetting curve
-- Glitch effect on overdue nodes
+- Knowledge Entropy — nodes fade based on Ebbinghaus forgetting curve
 
-#### Spaced Repetition
+### Spaced Repetition
 - Expanding intervals: 1 → 3 → 7 → 14 → 30 → 60 days
-- Review-due alerts on home page and progress dashboard
+- Review-due alerts on home + progress dashboard
 
-## AI Model Routing
+### Progress Dashboard
+- Overall stats: courses, lessons completed, time learned
+- Active courses with progress bars
+- Spaced repetition schedule
 
-| Task | Model |
-|------|-------|
-| Course planning | Opus |
-| Lesson generation, quizzes, grading, recall, deep-dive, perspectives | Sonnet |
-| Chat (short), suggestions, graph building | Haiku |
+### AI Provider Architecture
+- **Primary:** OpenRouter (Gemini 2.5 Flash/Pro + free Gemma models)
+- **Fallback:** Claude Haiku (when all OpenRouter models are cooling down)
+- **Rate-limit rotation:** auto-rotates across 5 free models with KV cooldown tracking
 
-## Database Schema
+### 20 API Endpoints
 
-13 tables across 5 migrations:
+| Endpoint | Purpose |
+|----------|---------|
+| `ai/plan-course` | Course planning (SSE) |
+| `ai/generate-lesson` | Lesson generation (SSE) |
+| `ai/perspective-lesson` | Perspective switching (SSE) |
+| `ai/deep-dive` | Hyper-node sub-lessons (SSE) |
+| `ai/chat` | Tutor chat + Socratic recall |
+| `ai/chat-history` | Load chat thread history |
+| `ai/generate-quiz` | Quiz generation |
+| `ai/grade` | AI grading |
+| `ai/suggest-courses` | Personalized recommendations |
+| `ai/related-courses` | Post-completion suggestions |
+| `ai/build-graph` | Knowledge graph extraction |
+| `ai/refine-block` | Block editing |
+| `ai/translate` | Text + block translation |
+| `courses` | Course CRUD + lesson management |
+| `settings` | User preferences |
+| `notes` | Personal notes CRUD |
+| `progress/:lessonId` | Progress + recall status |
+| `review-schedule` | Spaced repetition |
+| `graph` | Knowledge graph data |
+| `session` | Authentication |
 
-`sessions` · `courses` · `lessons` · `lesson_blocks` · `lesson_block_history` · `lesson_progress` · `chat_threads` · `chat_messages` · `quizzes` · `quiz_attempts` · `settings` · `review_schedule` · `course_relationships`
+### Database (14 Tables)
+
+`sessions` · `courses` · `lessons` · `lesson_blocks` · `lesson_block_history` · `lesson_progress` · `lesson_notes` · `chat_threads` · `chat_messages` · `quizzes` · `quiz_attempts` · `settings` · `review_schedule` · `course_relationships`
 
 ## License
 
