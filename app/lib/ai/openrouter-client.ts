@@ -16,7 +16,7 @@ interface OpenRouterEnv {
 // ── Cooldown tracking via KV ────────────────────────────────
 
 const COOLDOWN_PREFIX = "ai:cooldown:";
-const DEFAULT_COOLDOWN_S = 15; // Short cooldown — free tier resets quickly
+const DEFAULT_COOLDOWN_S = 60; // Minimum KV TTL is 60s
 
 interface CooldownEntry {
   until: number;
@@ -41,13 +41,14 @@ async function setCooldown(kv: KVNamespace | undefined, modelId: string, retryAf
   const existing = await getCooldown(kv, modelId);
   const failures = (existing?.failures ?? 0) + 1;
   // Escalate: 3+ consecutive failures → 5 min cooldown
-  const cooldownS = failures >= 3 ? 300 : Math.max(10, Math.min(600, retryAfterS || DEFAULT_COOLDOWN_S));
+  // KV requires minimum TTL of 60 seconds
+  const cooldownS = failures >= 3 ? 300 : Math.max(60, Math.min(600, retryAfterS || DEFAULT_COOLDOWN_S));
   const entry: CooldownEntry = {
     until: Date.now() + cooldownS * 1000,
     reason,
     failures,
   };
-  await kv.put(COOLDOWN_PREFIX + modelId, JSON.stringify(entry), { expirationTtl: cooldownS + 10 });
+  await kv.put(COOLDOWN_PREFIX + modelId, JSON.stringify(entry), { expirationTtl: Math.max(60, cooldownS + 10) });
 }
 
 async function clearCooldown(kv: KVNamespace | undefined, modelId: string): Promise<void> {

@@ -92,26 +92,50 @@ export async function action({ request, context }: Route.ActionArgs) {
 			send("delta", value);
 		}
 
-		// Parse blocks from accumulated JSON
-		let blocks: Record<string, unknown>[];
+		// Parse blocks from accumulated JSON — try multiple strategies
+		let blocks: Record<string, unknown>[] = [];
+		let parseError = "";
+
+		// Strategy 1: strip markdown fences
+		let jsonStr = fullText.trim();
+		const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+		if (fenceMatch) jsonStr = fenceMatch[1].trim();
+
+		// Strategy 2: extract JSON array
+		if (!jsonStr.startsWith("[")) {
+			const arrMatch = jsonStr.match(/\[[\s\S]*\]/);
+			if (arrMatch) jsonStr = arrMatch[0];
+		}
+
 		try {
-			// Strip markdown fences if the AI wrapped the JSON
-			let jsonStr = fullText.trim();
-			const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
-			if (fenceMatch) jsonStr = fenceMatch[1].trim();
-			// Also try extracting a raw JSON array
-			if (!jsonStr.startsWith("[")) {
-				const arrMatch = jsonStr.match(/\[[\s\S]*\]/);
-				if (arrMatch) jsonStr = arrMatch[0];
-			}
 			const parsed = JSON.parse(jsonStr);
 			blocks = Array.isArray(parsed) ? parsed : [];
-			if (blocks.length === 0) {
-				send("error", JSON.stringify({ message: "AI returned empty block array" }));
-				return;
+		} catch (e1) {
+			parseError = (e1 as Error).message;
+			// Strategy 3: try to fix common JSON issues (trailing comma, etc.)
+			try {
+				const cleaned = jsonStr
+					.replace(/,\s*]/g, "]")    // trailing comma before ]
+					.replace(/,\s*}/g, "}")    // trailing comma before }
+					.replace(/[\x00-\x1f]/g, " "); // control characters
+				const parsed = JSON.parse(cleaned);
+				blocks = Array.isArray(parsed) ? parsed : [];
+				parseError = "";
+			} catch {
+				// Strategy 4: if model returned plain text, wrap it as a single prose block
+				if (fullText.length > 50) {
+					blocks = [{ type: "prose", markdown: fullText }];
+					parseError = "";
+				}
 			}
-		} catch (err) {
-			send("error", JSON.stringify({ message: "failed to parse generated blocks", detail: (err as Error).message, preview: fullText.slice(0, 200) }));
+		}
+
+		if (blocks.length === 0) {
+			send("error", JSON.stringify({
+				message: "failed to parse lesson content",
+				detail: parseError,
+				preview: fullText.slice(0, 300),
+			}));
 			return;
 		}
 
