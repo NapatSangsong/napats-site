@@ -96,16 +96,14 @@ export async function action({ request, context }: Route.ActionArgs) {
 		let blocks: Record<string, unknown>[] = [];
 		let parseError = "";
 
-		// Strategy 1: strip markdown fences
+		// Strategy 1: strip markdown fences (greedy regex to avoid stopping at backticks inside code blocks)
 		let jsonStr = fullText.trim();
-		const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+		const fenceMatch = jsonStr.match(/^```(?:json)?\s*([\s\S]*)```\s*$/);
 		if (fenceMatch) jsonStr = fenceMatch[1].trim();
 
-		// Strategy 2: extract JSON array
-		if (!jsonStr.startsWith("[")) {
-			const arrMatch = jsonStr.match(/\[[\s\S]*\]/);
-			if (arrMatch) jsonStr = arrMatch[0];
-		}
+		// Strategy 2: extract JSON array (always try — fence-strip may leave extra text)
+		const arrMatch = jsonStr.match(/\[[\s\S]*\]/);
+		if (arrMatch) jsonStr = arrMatch[0];
 
 		try {
 			const parsed = JSON.parse(jsonStr);

@@ -429,7 +429,7 @@ hyper:hover {
 			setPerspectiveStage("rendering…");
 			try {
 				let jsonStr = fullText.trim();
-				const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+				const fenceMatch = jsonStr.match(/^```(?:json)?\s*([\s\S]*)```\s*$/);
 				if (fenceMatch) jsonStr = fenceMatch[1].trim();
 				const jsonMatch = jsonStr.match(/\[[\s\S]*\]/);
 				const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : jsonStr);
