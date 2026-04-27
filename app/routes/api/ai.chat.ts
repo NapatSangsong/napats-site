@@ -159,7 +159,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 		systemPrompt = chatPrompt({ courseTitle, lessonTitle, language: chatLang });
 	}
 
-	const selection = selectModel("chat", message.length);
+	const selection = selectModel(scope === "recall" ? "socraticRecall" : "chat", message.length);
 	const model = requestedModel ?? selection.model;
 	const provider = requestedModel
 		? requestedModel.includes("/") ? "openrouter" as const : requestedModel.startsWith("gemini") ? "gemini" as const : "anthropic" as const
