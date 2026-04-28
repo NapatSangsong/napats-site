@@ -89,6 +89,8 @@ export async function streamOpenRouter(
     ? [options.route.primary, ...options.route.fallbacks]
     : [options.model];
 
+  let lastError: Error | null = null;
+
   for (const modelId of modelsToTry) {
     // Skip models in cooldown
     const cooldown = await getCooldown(env.RATE_LIMIT_KV, modelId);
@@ -100,18 +102,16 @@ export async function streamOpenRouter(
       await clearCooldown(env.RATE_LIMIT_KV, modelId);
       return { stream: stream as ReadableStream<string>, model: modelId };
     } catch (err) {
-      const msg = (err as Error).message;
+      lastError = err as Error;
+      const msg = lastError.message;
       if (msg.includes("429") || msg.includes("rate")) {
         await setCooldown(env.RATE_LIMIT_KV, modelId, DEFAULT_COOLDOWN_S, "rate_limited");
-        continue;
       }
-      // Non-rate-limit error — short cooldown, don't block for long
-      // Use in-memory skip only (no KV) to avoid the 60s minimum TTL issue
       continue;
     }
   }
 
-  throw new Error("All models are cooling down — try again in a minute");
+  throw lastError ?? new Error("All models are cooling down — try again in a minute");
 }
 
 /**
@@ -126,6 +126,8 @@ export async function completeOpenRouter(
     ? [options.route.primary, ...options.route.fallbacks]
     : [options.model];
 
+  let lastError: Error | null = null;
+
   for (const modelId of modelsToTry) {
     const cooldown = await getCooldown(env.RATE_LIMIT_KV, modelId);
     if (cooldown) continue;
@@ -135,17 +137,16 @@ export async function completeOpenRouter(
       await clearCooldown(env.RATE_LIMIT_KV, modelId);
       return { text, model: modelId };
     } catch (err) {
-      const msg = (err as Error).message;
+      lastError = err as Error;
+      const msg = lastError.message;
       if (msg.includes("429") || msg.includes("rate")) {
         await setCooldown(env.RATE_LIMIT_KV, modelId, DEFAULT_COOLDOWN_S, "rate_limited");
-        continue;
       }
-      // Non-rate-limit error — skip without KV cooldown
       continue;
     }
   }
 
-  throw new Error("All models are cooling down — try again in a minute");
+  throw lastError ?? new Error("All models are cooling down — try again in a minute");
 }
 
 // ── Core API call ───────────────────────────────────────────

@@ -245,9 +245,9 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	const [mermaidPopup, setMermaidPopup] = useState<string | null>(null); // mermaid code for popup
 	const LESSON_MODELS = [
 		{ id: "auto", label: "AUTO", desc: "ระบบเลือกให้", badge: "RECOMMENDED" },
-		{ id: "google/gemini-2.5-pro-preview-06-05", label: "GEMINI PRO", desc: "เก่งสุด · ไทยดี", badge: "BEST" },
-		{ id: "google/gemini-2.5-flash-preview-05-20", label: "GEMINI FLASH", desc: "เร็ว · ดี", badge: "FAST" },
-		{ id: "anthropic/claude-sonnet-4-6", label: "CLAUDE SONNET", desc: "เก่งภาษา", badge: "PREMIUM" },
+		{ id: "google/gemini-pro-latest", label: "GEMINI PRO", desc: "เก่งสุด · ไทยดี", badge: "BEST" },
+		{ id: "google/gemini-flash-latest", label: "GEMINI FLASH", desc: "เร็ว · ดี", badge: "FAST" },
+		{ id: "anthropic/claude-sonnet-4.6", label: "CLAUDE SONNET", desc: "เก่งภาษา", badge: "PREMIUM" },
 		{ id: "google/gemma-4-31b-it:free", label: "GEMMA 31B", desc: "ฟรี", badge: "FREE" },
 	];
 

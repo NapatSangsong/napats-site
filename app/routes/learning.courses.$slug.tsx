@@ -11,10 +11,9 @@ import { Tracked, FilmDot, Rule, ProgressBar, TrackedButton } from "~/components
 
 const AI_MODELS = [
 	{ id: "auto", label: "AUTO", badge: "RECOMMENDED" },
-	{ id: "google/gemini-2.5-pro-preview-06-05", label: "GEMINI PRO", badge: "BEST" },
-	{ id: "google/gemini-2.5-flash-preview-05-20", label: "GEMINI FLASH", badge: "FAST" },
-	{ id: "anthropic/claude-sonnet-4-6", label: "CLAUDE SONNET", badge: "PREMIUM" },
-	{ id: "anthropic/claude-haiku-4-5-20251001", label: "CLAUDE HAIKU", badge: "FAST" },
+	{ id: "google/gemini-pro-latest", label: "GEMINI PRO", badge: "BEST" },
+	{ id: "google/gemini-flash-latest", label: "GEMINI FLASH", badge: "FAST" },
+	{ id: "anthropic/claude-sonnet-4.6", label: "CLAUDE SONNET", badge: "PREMIUM" },
 	{ id: "google/gemma-4-31b-it:free", label: "GEMMA 31B", badge: "FREE" },
 	{ id: "google/gemma-4-26b-a4b-it:free", label: "GEMMA 26B", badge: "FREE" },
 ];

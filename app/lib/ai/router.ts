@@ -30,9 +30,8 @@ export interface ModelSelection {
 
 // ── Model roster ────────────────────────────────────────────
 // Paid (best quality/cost ratio on OpenRouter)
-const GEMINI_FLASH = "google/gemini-2.5-flash-preview-05-20";  // ~$0.15/M — fast, great quality
-const GEMINI_PRO = "google/gemini-2.5-pro-preview-06-05";      // ~$1.25/M — highest quality
-const CLAUDE_HAIKU = "anthropic/claude-haiku-4-5-20251001";     // ~$0.80/M — fast Claude
+const GEMINI_FLASH = "google/gemini-flash-latest";  // fast, great quality
+const GEMINI_PRO = "google/gemini-pro-latest";      // highest quality
 
 // Free fallbacks
 const GEMMA_26B = "google/gemma-4-26b-a4b-it:free";

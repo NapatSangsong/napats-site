@@ -115,10 +115,9 @@ interface CourseDraft {
 export const AI_MODELS = [
 	{ id: "auto", label: "AUTO", desc: "ระบบเลือกให้อัตโนมัติ", badge: "RECOMMENDED", cost: "" },
 	// Premium
-	{ id: "google/gemini-2.5-pro-preview-06-05", label: "GEMINI 2.5 PRO", desc: "เก่งสุด · วิเคราะห์ลึก · ไทยดีมาก", badge: "BEST", cost: "$" },
-	{ id: "anthropic/claude-sonnet-4-6", label: "CLAUDE SONNET 4.6", desc: "เก่งภาษา · เนื้อหาดี · โค้ดเก่ง", badge: "PREMIUM", cost: "$$" },
-	{ id: "anthropic/claude-haiku-4-5-20251001", label: "CLAUDE HAIKU 4.5", desc: "เร็วมาก · ตอบสั้นกระชับ", badge: "FAST", cost: "$" },
-	{ id: "google/gemini-2.5-flash-preview-05-20", label: "GEMINI 2.5 FLASH", desc: "เร็ว · คุณภาพดี · ประหยัด", badge: "FAST", cost: "$" },
+	{ id: "google/gemini-pro-latest", label: "GEMINI PRO", desc: "เก่งสุด · วิเคราะห์ลึก · ไทยดีมาก", badge: "BEST", cost: "$" },
+	{ id: "anthropic/claude-sonnet-4.6", label: "CLAUDE SONNET 4.6", desc: "เก่งภาษา · เนื้อหาดี · โค้ดเก่ง", badge: "PREMIUM", cost: "$$" },
+	{ id: "google/gemini-flash-latest", label: "GEMINI FLASH", desc: "เร็ว · คุณภาพดี · ประหยัด", badge: "FAST", cost: "$" },
 	// Mid-tier
 	{ id: "qwen/qwen3.5-122b-a10b", label: "QWEN 3.5 122B", desc: "วิเคราะห์เชิงลึก · Multimodal · MoE", badge: "SMART", cost: "$" },
 	{ id: "mistralai/mistral-small-2603", label: "MISTRAL SMALL 4", desc: "เก่งหลายภาษา · 262K context", badge: "MULTILINGUAL", cost: "$" },
