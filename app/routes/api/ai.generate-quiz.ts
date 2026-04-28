@@ -66,9 +66,6 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const selection = selectModel("generateQuiz");
 	const model = requestedModel ?? selection.model;
-	const provider = requestedModel
-		? requestedModel.includes("/") ? "openrouter" as const : requestedModel.startsWith("gemini") ? "gemini" as const : "anthropic" as const
-		: selection.provider;
 	const systemPrompt = generateQuizSystem({
 		lessonTitle: lesson.title,
 		lessonContent,
@@ -77,9 +74,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	try {
 		const raw = await completeUnified(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
+			{ OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 			[{ role: "user", content: `Generate ${count} quiz questions for the lesson "${lesson.title}".` }],
-			{ model, provider, route: selection.route, system: systemPrompt, maxTokens: 8192, temperature: 0.3 },
+			{ model, route: selection.route, system: systemPrompt, maxTokens: 8192, temperature: 0.3 },
 		);
 
 		const quiz = JSON.parse(raw);

@@ -39,9 +39,6 @@ export async function action({ request, context }: Route.ActionArgs) {
 	const { prompt, model: requestedModel, messages: history } = body.data;
 	const selection = selectModel("planCourse");
 	const model = requestedModel ?? selection.model;
-	const provider = requestedModel
-		? requestedModel.includes("/") ? "openrouter" as const : requestedModel.startsWith("gemini") ? "gemini" as const : "anthropic" as const
-		: selection.provider;
 
 	// Load context from database
 	const supabase = createServiceClient(env);
@@ -105,9 +102,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const stream = createSSEStream(async ({ send }) => {
 		const textStream = await streamUnified(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
+			{ OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 			messages,
-			{ model, provider, route: selection.route, system: systemPrompt, maxTokens: 8192 },
+			{ model, route: selection.route, system: systemPrompt, maxTokens: 8192 },
 		);
 
 		const reader = textStream.getReader();

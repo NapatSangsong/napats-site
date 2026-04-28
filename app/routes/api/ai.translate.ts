@@ -46,9 +46,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 		const selection = selectModel("translate");
 		try {
 			const translated = await completeUnified(
-				{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
+				{ OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 				[{ role: "user", content: textToTranslate.trim() }],
-				{ model: selection.model, provider: selection.provider, route: selection.route, system: `Translate the following text to ${langName}. Return ONLY the translation, nothing else.`, maxTokens: 1024 },
+				{ model: selection.model, route: selection.route, system: `Translate the following text to ${langName}. Return ONLY the translation, nothing else.`, maxTokens: 1024 },
 			);
 			return Response.json({ translated: translated.trim() });
 		} catch (err) {
@@ -75,9 +75,9 @@ Rules:
 	let response: string;
 	try {
 		response = await completeUnified(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
+			{ OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 			[{ role: "user", content: JSON.stringify(blocks) }],
-			{ model: selection.model, provider: selection.provider, route: selection.route, system, maxTokens: 16384 },
+			{ model: selection.model, route: selection.route, system, maxTokens: 16384 },
 		);
 	} catch (err) {
 		return Response.json({ message: `AI error: ${(err as Error).message?.slice(0, 100)}` }, { status: 502 });

@@ -62,9 +62,6 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const selection = selectModel("perspectiveLesson");
 	const model = requestedModel ?? selection.model;
-	const provider = requestedModel
-		? requestedModel.includes("/") ? "openrouter" as const : requestedModel.startsWith("gemini") ? "gemini" as const : "anthropic" as const
-		: selection.provider;
 	const systemPrompt = perspectiveLessonPrompt({
 		courseTitle: course?.title ?? "Untitled Course",
 		lessonTitle: lesson.title,
@@ -76,9 +73,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const stream = createSSEStream(async ({ send }) => {
 		const textStream = await streamUnified(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
+			{ OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 			[{ role: "user", content: `Rewrite the full lesson "${lesson.title}" through the ${perspective} perspective. Return ONLY the JSON array of blocks.` }],
-			{ model, provider, route: selection.route, system: systemPrompt, maxTokens: 16384 },
+			{ model, route: selection.route, system: systemPrompt, maxTokens: 16384 },
 		);
 
 		const reader = textStream.getReader();

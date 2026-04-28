@@ -1,127 +1,43 @@
 /**
- * Unified AI client — routes to OpenRouter (free), Gemini, or Claude
- * based on the provider selection from the router.
+ * Unified AI client — all requests go through OpenRouter.
  */
 
 import type { ChatMessage, ChatOptions } from "./client";
-import { streamChat as streamAnthropic, completeChat as completeAnthropic } from "./client";
-import { streamGeminiChat, completeGeminiChat } from "./gemini-client";
 import { streamOpenRouter, completeOpenRouter, type ModelRoute } from "./openrouter-client";
-import type { Provider } from "./router";
 
 export interface AIEnv {
-  ANTHROPIC_API_KEY?: string;
-  GEMINI_API_KEY?: string;
-  OPENROUTER_API_KEY?: string;
+  OPENROUTER_API_KEY: string;
   RATE_LIMIT_KV?: KVNamespace;
 }
 
 /**
- * Stream a chat completion using the appropriate provider.
+ * Stream a chat completion via OpenRouter.
  */
 export async function streamUnified(
   env: AIEnv,
   messages: ChatMessage[],
-  options: ChatOptions & { provider?: Provider; route?: ModelRoute },
+  options: ChatOptions & { route?: ModelRoute },
 ): Promise<ReadableStream<string>> {
-  const provider = options.provider ?? detectProvider(options.model);
-
-  // OpenRouter (default)
-  if (provider === "openrouter" && env.OPENROUTER_API_KEY) {
-    try {
-      const result = await streamOpenRouter(
-        { OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
-        messages,
-        { ...options, route: options.route },
-      );
-      return result.stream;
-    } catch (err) {
-      // All OpenRouter models failed — fall through to Claude
-      if (env.ANTHROPIC_API_KEY) {
-        return streamAnthropic(
-          { ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
-          messages,
-          { ...options, model: "claude-haiku-4-5-20251001" },
-        );
-      }
-      throw err;
-    }
-  }
-
-  // Gemini
-  if (provider === "gemini" && env.GEMINI_API_KEY) {
-    return streamGeminiChat(
-      { GEMINI_API_KEY: env.GEMINI_API_KEY },
-      messages,
-      options,
-    );
-  }
-
-  // Claude (fallback)
-  if (env.ANTHROPIC_API_KEY) {
-    return streamAnthropic(
-      { ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
-      messages,
-      options,
-    );
-  }
-
-  throw new Error("No API key available");
+  const result = await streamOpenRouter(
+    { OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
+    messages,
+    { ...options, route: options.route },
+  );
+  return result.stream;
 }
 
 /**
- * Non-streaming chat completion using the appropriate provider.
+ * Non-streaming chat completion via OpenRouter.
  */
 export async function completeUnified(
   env: AIEnv,
   messages: ChatMessage[],
-  options: ChatOptions & { provider?: Provider; route?: ModelRoute },
+  options: ChatOptions & { route?: ModelRoute },
 ): Promise<string> {
-  const provider = options.provider ?? detectProvider(options.model);
-
-  if (provider === "openrouter" && env.OPENROUTER_API_KEY) {
-    try {
-      const result = await completeOpenRouter(
-        { OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
-        messages,
-        { ...options, route: options.route },
-      );
-      return result.text;
-    } catch (err) {
-      // Fall through to Claude
-      if (env.ANTHROPIC_API_KEY) {
-        return completeAnthropic(
-          { ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
-          messages,
-          { ...options, model: "claude-haiku-4-5-20251001" },
-        );
-      }
-      throw err;
-    }
-  }
-
-  if (provider === "gemini" && env.GEMINI_API_KEY) {
-    return completeGeminiChat(
-      { GEMINI_API_KEY: env.GEMINI_API_KEY },
-      messages,
-      options,
-    );
-  }
-
-  if (env.ANTHROPIC_API_KEY) {
-    return completeAnthropic(
-      { ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY },
-      messages,
-      options,
-    );
-  }
-
-  throw new Error("No API key available");
-}
-
-function detectProvider(model: string): Provider {
-  if (model.includes("/") && model.includes(":free")) return "openrouter";
-  if (model.startsWith("gemini")) return "gemini";
-  if (model.startsWith("claude")) return "anthropic";
-  return "openrouter";
+  const result = await completeOpenRouter(
+    { OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
+    messages,
+    { ...options, route: options.route },
+  );
+  return result.text;
 }

@@ -20,7 +20,7 @@ export type AIAction =
   | "buildGraph"
   | "translate";
 
-export type Provider = "openrouter" | "gemini" | "anthropic";
+export type Provider = "openrouter";
 
 export interface ModelSelection {
   model: string;

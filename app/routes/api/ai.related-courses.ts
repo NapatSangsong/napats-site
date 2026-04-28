@@ -51,9 +51,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const selection = selectModel("summarise");
 	const response = await completeUnified(
-		{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
+		{ OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 		[{ role: "user", content: "What should I learn next?" }],
-		{ model: selection.model, provider: selection.provider, route: selection.route, system, maxTokens: 2048 },
+		{ model: selection.model, route: selection.route, system, maxTokens: 2048 },
 	);
 
 	try {

@@ -49,9 +49,6 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const selection = selectModel("generateLesson");
 	const model = requestedModel ?? selection.model;
-	const provider = requestedModel
-		? requestedModel.includes("/") ? "openrouter" as const : requestedModel.startsWith("gemini") ? "gemini" as const : "anthropic" as const
-		: selection.provider;
 	const systemPrompt = refineBlockSystem({
 		blockType: block.kind,
 		blockContent: JSON.stringify(block.content),
@@ -60,9 +57,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 	const stream = createSSEStream(async ({ send }) => {
 		const textStream = await streamUnified(
-			{ ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, GEMINI_API_KEY: env.GEMINI_API_KEY, OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
+			{ OPENROUTER_API_KEY: env.OPENROUTER_API_KEY, RATE_LIMIT_KV: env.RATE_LIMIT_KV },
 			[{ role: "user", content: instruction }],
-			{ model, provider, route: selection.route, system: systemPrompt, maxTokens: 4096 },
+			{ model, route: selection.route, system: systemPrompt, maxTokens: 4096 },
 		);
 
 		let fullText = "";
