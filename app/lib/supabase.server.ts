@@ -11,5 +11,12 @@ export function createServiceClient(env: {
 }): SupabaseClient {
 	return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
 		auth: { persistSession: false, autoRefreshToken: false },
+		// Explicitly pin the Authorization header so the supabase-js auth module
+		// cannot override it with a user session token in stateless Workers env.
+		global: {
+			headers: {
+				Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+			},
+		},
 	});
 }

@@ -1,0 +1,8782 @@
+[
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780810150248,
+    "value": "0"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780810277971,
+    "value": "1"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780810385531,
+    "value": "4"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780811489043,
+    "value": "4"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780811568126,
+    "value": "5"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780811632372,
+    "value": "9"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780811696606,
+    "value": "15"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780811760908,
+    "value": "21"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780811825200,
+    "value": "26"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780811885939,
+    "value": "29"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780811948904,
+    "value": "33"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812011861,
+    "value": "38"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812074809,
+    "value": "41"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812137765,
+    "value": "47"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812200711,
+    "value": "53"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812263655,
+    "value": "57"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812326612,
+    "value": "61"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812389574,
+    "value": "64"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812475390,
+    "value": "67"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812561207,
+    "value": "70"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812647019,
+    "value": "73"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812709976,
+    "value": "76"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812772916,
+    "value": "82"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812835871,
+    "value": "88"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780812898809,
+    "value": "92"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813007485,
+    "value": "95"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813110429,
+    "value": "98"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813196246,
+    "value": "102"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813259210,
+    "value": "105"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813278874,
+    "value": "106"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813322158,
+    "value": "109"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813385115,
+    "value": "116"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813448067,
+    "value": "120"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813522464,
+    "value": "123"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813625427,
+    "value": "126"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813711247,
+    "value": "129"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813774210,
+    "value": "133"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813837168,
+    "value": "137"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813900127,
+    "value": "141"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780813963079,
+    "value": "145"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814026046,
+    "value": "148"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814089002,
+    "value": "152"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814174819,
+    "value": "155"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814237773,
+    "value": "158"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814300735,
+    "value": "163"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814363696,
+    "value": "168"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814426645,
+    "value": "173"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814489602,
+    "value": "178"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814552568,
+    "value": "182"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814621248,
+    "value": "185"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814684203,
+    "value": "188"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814747163,
+    "value": "191"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814810128,
+    "value": "196"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814873080,
+    "value": "201"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814936040,
+    "value": "206"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780814998995,
+    "value": "211"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815067669,
+    "value": "214"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815153479,
+    "value": "217"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815222147,
+    "value": "220"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815290817,
+    "value": "223"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815335670,
+    "value": "223"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815352905,
+    "value": "225"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815417164,
+    "value": "229"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815481412,
+    "value": "234"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815545661,
+    "value": "239"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815609912,
+    "value": "242"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815706240,
+    "value": "245"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815770493,
+    "value": "248"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815834750,
+    "value": "251"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815898996,
+    "value": "255"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780815963236,
+    "value": "260"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780817440668,
+    "value": "346"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780817504919,
+    "value": "351"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780817569166,
+    "value": "356"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780817633406,
+    "value": "359"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780817729714,
+    "value": "363"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780817793956,
+    "value": "366"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780817858202,
+    "value": "370"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780817922443,
+    "value": "374"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780817986688,
+    "value": "378"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818050936,
+    "value": "383"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818115184,
+    "value": "388"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818179421,
+    "value": "393"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818243658,
+    "value": "398"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818307903,
+    "value": "402"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818372142,
+    "value": "407"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818436388,
+    "value": "411"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818500632,
+    "value": "416"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818564884,
+    "value": "421"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818629132,
+    "value": "426"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818693382,
+    "value": "429"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818757630,
+    "value": "432"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818853937,
+    "value": "436"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818916473,
+    "value": "438"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818918181,
+    "value": "439"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780818982432,
+    "value": "442"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780819078758,
+    "value": "445"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780819142999,
+    "value": "448"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780819239316,
+    "value": "453"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780819303564,
+    "value": "457"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780819367799,
+    "value": "462"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780819432051,
+    "value": "466"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780819496297,
+    "value": "470"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780819560555,
+    "value": "475"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780819624795,
+    "value": "479"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780819689046,
+    "value": "482"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780819753296,
+    "value": "485"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780819849622,
+    "value": "489"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780819945946,
+    "value": "492"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780820010199,
+    "value": "497"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780820074449,
+    "value": "501"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780820138693,
+    "value": "506"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780820202998,
+    "value": "510"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780820267191,
+    "value": "514"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780820331435,
+    "value": "518"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780820395681,
+    "value": "522"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780820524078,
+    "value": "525"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780820712753,
+    "value": "527"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780820716601,
+    "value": "529"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780820812921,
+    "value": "533"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780820877176,
+    "value": "537"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780820941424,
+    "value": "541"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780821005667,
+    "value": "544"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780821101985,
+    "value": "547"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780821198305,
+    "value": "550"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780821294627,
+    "value": "553"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780821358874,
+    "value": "556"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780821455201,
+    "value": "559"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780821551523,
+    "value": "562"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780821679920,
+    "value": "565"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780821808295,
+    "value": "568"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780821904614,
+    "value": "571"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780821968852,
+    "value": "574"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780822065168,
+    "value": "577"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780822321823,
+    "value": "580"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780822450189,
+    "value": "583"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780822508282,
+    "value": "584"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780822546510,
+    "value": "586"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780822610762,
+    "value": "589"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780822771227,
+    "value": "592"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780822899601,
+    "value": "595"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780822995923,
+    "value": "598"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780823092239,
+    "value": "602"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780823348920,
+    "value": "605"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780823509360,
+    "value": "608"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780823573605,
+    "value": "611"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780823669928,
+    "value": "614"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780823798319,
+    "value": "617"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780824087014,
+    "value": "621"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780824183325,
+    "value": "624"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780824279649,
+    "value": "627"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780824600475,
+    "value": "631"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780824696795,
+    "value": "634"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780824761049,
+    "value": "637"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780824985673,
+    "value": "640"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780825178187,
+    "value": "643"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780825274519,
+    "value": "646"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780825338760,
+    "value": "649"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780825435098,
+    "value": "652"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780825595555,
+    "value": "655"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780825756008,
+    "value": "658"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780825852352,
+    "value": "661"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780825916566,
+    "value": "664"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780826098487,
+    "value": "666"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780826109274,
+    "value": "667"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780826333845,
+    "value": "670"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780826430171,
+    "value": "674"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780826526484,
+    "value": "677"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780826847332,
+    "value": "680"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780826943611,
+    "value": "683"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780827007916,
+    "value": "686"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780827328679,
+    "value": "689"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780827457058,
+    "value": "692"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780827553378,
+    "value": "696"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780827810047,
+    "value": "699"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780828034626,
+    "value": "702"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780828130946,
+    "value": "706"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780828227259,
+    "value": "709"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780828548060,
+    "value": "712"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780828644376,
+    "value": "715"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780828740671,
+    "value": "719"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780828997335,
+    "value": "722"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780829189837,
+    "value": "725"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780829286165,
+    "value": "728"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780829350417,
+    "value": "731"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780829671237,
+    "value": "734"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780829767552,
+    "value": "737"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780829863870,
+    "value": "741"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780829992253,
+    "value": "744"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780830248906,
+    "value": "747"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780830345217,
+    "value": "750"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780830409463,
+    "value": "753"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780830505780,
+    "value": "756"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780830666231,
+    "value": "759"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780830922884,
+    "value": "762"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780831019199,
+    "value": "766"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780831115519,
+    "value": "769"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780831372200,
+    "value": "772"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780831564719,
+    "value": "775"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780831628964,
+    "value": "778"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780831725307,
+    "value": "781"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780832046097,
+    "value": "784"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780832142427,
+    "value": "787"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780832238751,
+    "value": "790"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780832559569,
+    "value": "793"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780832720009,
+    "value": "796"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780832784250,
+    "value": "799"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780833008842,
+    "value": "802"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780833105162,
+    "value": "806"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780833201484,
+    "value": "809"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780833265730,
+    "value": "812"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780833362039,
+    "value": "816"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780833490426,
+    "value": "819"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780833747086,
+    "value": "822"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780833843402,
+    "value": "825"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780833907644,
+    "value": "828"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780834003972,
+    "value": "831"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780834196508,
+    "value": "834"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780834324897,
+    "value": "837"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780834421214,
+    "value": "840"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780834485558,
+    "value": "843"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780834549706,
+    "value": "846"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780834613951,
+    "value": "849"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780834902688,
+    "value": "852"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780835031066,
+    "value": "855"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780835077778,
+    "value": "856"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780835095308,
+    "value": "858"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780835191623,
+    "value": "861"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780835255865,
+    "value": "864"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780835320108,
+    "value": "867"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780835416423,
+    "value": "870"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780835480664,
+    "value": "873"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780835576980,
+    "value": "876"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780835641220,
+    "value": "879"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780835865798,
+    "value": "882"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780835962123,
+    "value": "885"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780836058442,
+    "value": "889"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780836154758,
+    "value": "892"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780836218999,
+    "value": "895"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780836283241,
+    "value": "898"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780836379555,
+    "value": "902"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780836475869,
+    "value": "905"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780836540114,
+    "value": "908"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780836796774,
+    "value": "911"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780837117581,
+    "value": "914"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780837213869,
+    "value": "917"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780837278112,
+    "value": "920"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780837550720,
+    "value": "920"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780837727805,
+    "value": "921"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780837856182,
+    "value": "924"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780837920431,
+    "value": "927"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780837984688,
+    "value": "930"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780838209273,
+    "value": "933"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780838337648,
+    "value": "936"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780838466032,
+    "value": "940"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780838530274,
+    "value": "943"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780838594526,
+    "value": "946"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780838658770,
+    "value": "949"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780838723008,
+    "value": "952"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780838787244,
+    "value": "955"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780838851495,
+    "value": "959"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780838979873,
+    "value": "962"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780839172394,
+    "value": "966"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780839268717,
+    "value": "970"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780839336805,
+    "value": "971"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780839461236,
+    "value": "973"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780839653746,
+    "value": "976"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780839717986,
+    "value": "980"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780839782230,
+    "value": "983"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780839910598,
+    "value": "986"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780840038968,
+    "value": "990"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780840103208,
+    "value": "993"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780840167449,
+    "value": "996"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780840231695,
+    "value": "999"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780840360084,
+    "value": "1002"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780840488455,
+    "value": "1005"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780840584758,
+    "value": "1008"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780840649001,
+    "value": "1011"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780840713253,
+    "value": "1014"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780840777501,
+    "value": "1017"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780840841759,
+    "value": "1021"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780840906002,
+    "value": "1024"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780841034391,
+    "value": "1027"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780841132402,
+    "value": "1029"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780841162778,
+    "value": "1030"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780841259098,
+    "value": "1033"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780841323359,
+    "value": "1037"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780841451741,
+    "value": "1040"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780841580138,
+    "value": "1043"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780841676457,
+    "value": "1046"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780841743108,
+    "value": "1049"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780841869109,
+    "value": "1052"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780842093713,
+    "value": "1056"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780842157965,
+    "value": "1059"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780842222215,
+    "value": "1062"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780842478896,
+    "value": "1065"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780842575222,
+    "value": "1068"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780842639471,
+    "value": "1072"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780842703735,
+    "value": "1075"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780842832138,
+    "value": "1078"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780842928423,
+    "value": "1079"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780842992668,
+    "value": "1081"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843089027,
+    "value": "1084"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843185323,
+    "value": "1087"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843249576,
+    "value": "1090"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843313840,
+    "value": "1094"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843378106,
+    "value": "1098"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843442337,
+    "value": "1101"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843506594,
+    "value": "1104"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843570848,
+    "value": "1107"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843635102,
+    "value": "1111"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843699355,
+    "value": "1114"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843763606,
+    "value": "1118"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843827855,
+    "value": "1121"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843892105,
+    "value": "1124"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780843956359,
+    "value": "1128"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844020622,
+    "value": "1131"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844084877,
+    "value": "1134"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844149128,
+    "value": "1137"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844245440,
+    "value": "1140"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844309690,
+    "value": "1143"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844373941,
+    "value": "1146"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844438191,
+    "value": "1149"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844502442,
+    "value": "1152"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844566690,
+    "value": "1156"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844630938,
+    "value": "1159"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844695187,
+    "value": "1162"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844791517,
+    "value": "1165"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844887840,
+    "value": "1169"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780844952088,
+    "value": "1172"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780845016339,
+    "value": "1175"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780845080598,
+    "value": "1178"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780845144844,
+    "value": "1181"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780845209100,
+    "value": "1184"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780845305430,
+    "value": "1187"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780845369690,
+    "value": "1190"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780845466015,
+    "value": "1193"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780845530274,
+    "value": "1197"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780845594534,
+    "value": "1200"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780845819147,
+    "value": "1203"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780845915475,
+    "value": "1206"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780845979726,
+    "value": "1209"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780846043975,
+    "value": "1212"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780846140304,
+    "value": "1215"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780846204551,
+    "value": "1218"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780846365007,
+    "value": "1221"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780846493400,
+    "value": "1224"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780846557654,
+    "value": "1227"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780846653987,
+    "value": "1230"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780846718244,
+    "value": "1233"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780846814603,
+    "value": "1236"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780847071252,
+    "value": "1239"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780847135498,
+    "value": "1242"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780847231825,
+    "value": "1246"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780847488523,
+    "value": "1249"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780847584851,
+    "value": "1252"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780847649098,
+    "value": "1255"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780847714655,
+    "value": "1258"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780847873804,
+    "value": "1261"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780848034261,
+    "value": "1264"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780848130581,
+    "value": "1267"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780848226907,
+    "value": "1271"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780848315699,
+    "value": "1273"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780848323218,
+    "value": "1274"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780848483681,
+    "value": "1277"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780848612056,
+    "value": "1280"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780848708371,
+    "value": "1283"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780848772617,
+    "value": "1286"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780848836913,
+    "value": "1289"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780849093535,
+    "value": "1292"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780849157784,
+    "value": "1295"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780849254103,
+    "value": "1299"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780849318351,
+    "value": "1302"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780849639164,
+    "value": "1305"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780849703412,
+    "value": "1308"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780849767653,
+    "value": "1311"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780849831892,
+    "value": "1314"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780850089444,
+    "value": "1317"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780850249003,
+    "value": "1320"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780850377385,
+    "value": "1323"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780850473712,
+    "value": "1326"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780850634177,
+    "value": "1329"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780850858760,
+    "value": "1332"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780850923003,
+    "value": "1335"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780851051391,
+    "value": "1338"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780851275979,
+    "value": "1341"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780851372299,
+    "value": "1344"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780851468617,
+    "value": "1347"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780851725289,
+    "value": "1350"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780851821607,
+    "value": "1353"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780851908327,
+    "value": "1355"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780851917925,
+    "value": "1356"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780852206656,
+    "value": "1359"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780852302968,
+    "value": "1362"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780852367219,
+    "value": "1365"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780852495597,
+    "value": "1368"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780852656095,
+    "value": "1371"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780852752399,
+    "value": "1374"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780852848666,
+    "value": "1377"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780853041170,
+    "value": "1381"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780853137487,
+    "value": "1385"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780853233792,
+    "value": "1388"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780853330107,
+    "value": "1391"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780853554705,
+    "value": "1394"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780853683095,
+    "value": "1397"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780853779473,
+    "value": "1401"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780853875778,
+    "value": "1404"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780854164510,
+    "value": "1407"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780854260835,
+    "value": "1410"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780854325086,
+    "value": "1413"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780854421409,
+    "value": "1416"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780854710155,
+    "value": "1419"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780854774406,
+    "value": "1422"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780854838651,
+    "value": "1425"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780854934973,
+    "value": "1428"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780854951000,
+    "value": "1428"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780854999857,
+    "value": "1429"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780855288586,
+    "value": "1433"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780855384905,
+    "value": "1437"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780855481935,
+    "value": "1440"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780855577555,
+    "value": "1443"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780855898348,
+    "value": "1446"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780855994685,
+    "value": "1450"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780856090978,
+    "value": "1453"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780856411790,
+    "value": "1456"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780856508101,
+    "value": "1459"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780856604426,
+    "value": "1462"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780856736435,
+    "value": "1463"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780856925234,
+    "value": "1465"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780857021545,
+    "value": "1469"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780857117860,
+    "value": "1472"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780857470737,
+    "value": "1475"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780857567050,
+    "value": "1478"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780857663367,
+    "value": "1481"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780858016235,
+    "value": "1484"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780858112554,
+    "value": "1487"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780858208865,
+    "value": "1490"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780858529682,
+    "value": "1493"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780858626002,
+    "value": "1496"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780858722319,
+    "value": "1499"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780859075208,
+    "value": "1502"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780859171522,
+    "value": "1505"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780859267836,
+    "value": "1508"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780859588668,
+    "value": "1511"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780859717061,
+    "value": "1514"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780859813388,
+    "value": "1517"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780860166282,
+    "value": "1520"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780860262588,
+    "value": "1523"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780860328523,
+    "value": "1525"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780860358895,
+    "value": "1526"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780860487290,
+    "value": "1529"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780860808057,
+    "value": "1532"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780860904369,
+    "value": "1535"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780861000691,
+    "value": "1538"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780861353554,
+    "value": "1541"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780861449873,
+    "value": "1544"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780861738609,
+    "value": "1547"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780861899059,
+    "value": "1550"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780861995366,
+    "value": "1553"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780862091687,
+    "value": "1556"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780862412476,
+    "value": "1559"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780862508797,
+    "value": "1562"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780862605118,
+    "value": "1565"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780862957998,
+    "value": "1568"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780863054355,
+    "value": "1571"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780863150634,
+    "value": "1574"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780863503489,
+    "value": "1577"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780863599807,
+    "value": "1580"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780863696131,
+    "value": "1583"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780863856615,
+    "value": "1586"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780864017090,
+    "value": "1589"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780864081338,
+    "value": "1592"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780864177661,
+    "value": "1595"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780864306049,
+    "value": "1598"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780864530644,
+    "value": "1601"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780864626968,
+    "value": "1604"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780864787421,
+    "value": "1607"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780865076152,
+    "value": "1610"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780865172464,
+    "value": "1613"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780865268786,
+    "value": "1616"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780865461315,
+    "value": "1619"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780865716994,
+    "value": "1621"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780865750048,
+    "value": "1623"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780865846353,
+    "value": "1626"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780865910602,
+    "value": "1629"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780866263491,
+    "value": "1632"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780866327736,
+    "value": "1635"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780866391979,
+    "value": "1638"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780866712793,
+    "value": "1641"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780866841171,
+    "value": "1644"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780866937479,
+    "value": "1647"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780867162089,
+    "value": "1650"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780867386641,
+    "value": "1653"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780867450888,
+    "value": "1656"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780867707562,
+    "value": "1659"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780867900090,
+    "value": "1662"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780867996406,
+    "value": "1665"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780868092736,
+    "value": "1668"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780868456301,
+    "value": "1669"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780868541931,
+    "value": "1672"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780868638247,
+    "value": "1675"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780868959061,
+    "value": "1678"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780869087443,
+    "value": "1681"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780869311067,
+    "value": "1683"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780869408259,
+    "value": "1684"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780869600768,
+    "value": "1687"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780869697076,
+    "value": "1690"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780870060637,
+    "value": "1692"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780870178333,
+    "value": "1695"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780870306707,
+    "value": "1698"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780870659524,
+    "value": "1701"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780870787921,
+    "value": "1704"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780871107018,
+    "value": "1705"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780871237096,
+    "value": "1708"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780871333410,
+    "value": "1711"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780871696934,
+    "value": "1713"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780871782563,
+    "value": "1716"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780871878906,
+    "value": "1719"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780872242408,
+    "value": "1720"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780872360108,
+    "value": "1723"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780872456424,
+    "value": "1726"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780872819952,
+    "value": "1727"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780872903147,
+    "value": "1728"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780872937647,
+    "value": "1730"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780873033965,
+    "value": "1733"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780873397436,
+    "value": "1735"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780873483075,
+    "value": "1738"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780873846596,
+    "value": "1740"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780873964287,
+    "value": "1743"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780874060589,
+    "value": "1746"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780874424108,
+    "value": "1747"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780874509725,
+    "value": "1750"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780874606043,
+    "value": "1753"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780874958896,
+    "value": "1756"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780875055205,
+    "value": "1759"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780875311852,
+    "value": "1762"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780875504351,
+    "value": "1765"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780875568605,
+    "value": "1768"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780875921435,
+    "value": "1771"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780876017776,
+    "value": "1774"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780876146146,
+    "value": "1777"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780876434854,
+    "value": "1780"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780876496111,
+    "value": "1781"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780876531176,
+    "value": "1783"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780876819915,
+    "value": "1786"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780876916236,
+    "value": "1789"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780877012558,
+    "value": "1792"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780877237161,
+    "value": "1795"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780877333501,
+    "value": "1798"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780877429780,
+    "value": "1802"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780877494052,
+    "value": "1805"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780877686553,
+    "value": "1808"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780877814918,
+    "value": "1812"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780877879164,
+    "value": "1815"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780877975493,
+    "value": "1819"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780878200086,
+    "value": "1822"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780878291828,
+    "value": "1824"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780878296408,
+    "value": "1825"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780878392715,
+    "value": "1829"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780878489032,
+    "value": "1832"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780878585358,
+    "value": "1835"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780878681667,
+    "value": "1838"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780878778004,
+    "value": "1842"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780878970550,
+    "value": "1845"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780879098931,
+    "value": "1848"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780879195240,
+    "value": "1851"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780879291556,
+    "value": "1854"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780879355806,
+    "value": "1857"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780879452122,
+    "value": "1860"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780879676739,
+    "value": "1863"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780879773055,
+    "value": "1866"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780879837297,
+    "value": "1869"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780880061922,
+    "value": "1872"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780880425455,
+    "value": "1874"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780880788999,
+    "value": "1875"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780881152554,
+    "value": "1877"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780881312969,
+    "value": "1880"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780881601655,
+    "value": "1883"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780881883647,
+    "value": "1884"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780881965163,
+    "value": "1885"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780882328665,
+    "value": "1886"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780882692190,
+    "value": "1888"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780883055676,
+    "value": "1890"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780883269568,
+    "value": "1893"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780883429982,
+    "value": "1896"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780883622481,
+    "value": "1899"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780883847030,
+    "value": "1902"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780884007458,
+    "value": "1905"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780884167889,
+    "value": "1908"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780884264194,
+    "value": "1911"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780884328450,
+    "value": "1914"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780884424754,
+    "value": "1917"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780884521061,
+    "value": "1920"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780884585303,
+    "value": "1923"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780884681621,
+    "value": "1926"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780884777919,
+    "value": "1929"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780884842175,
+    "value": "1932"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780884938483,
+    "value": "1935"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780885034774,
+    "value": "1938"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780885195214,
+    "value": "1941"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780885323600,
+    "value": "1944"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780885476575,
+    "value": "1946"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780885484049,
+    "value": "1947"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780885612420,
+    "value": "1950"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780885772864,
+    "value": "1953"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780885901242,
+    "value": "1956"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780886061702,
+    "value": "1959"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780886190084,
+    "value": "1962"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780886350524,
+    "value": "1965"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780886510976,
+    "value": "1968"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780886639354,
+    "value": "1971"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780886799776,
+    "value": "1974"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780886960210,
+    "value": "1977"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780887120652,
+    "value": "1980"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780887273647,
+    "value": "1982"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780887281095,
+    "value": "1983"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780887441512,
+    "value": "1986"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780887601963,
+    "value": "1989"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780887762393,
+    "value": "1992"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780887890787,
+    "value": "1995"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780888179597,
+    "value": "2001"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780888340039,
+    "value": "2004"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780888468420,
+    "value": "2007"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780888596795,
+    "value": "2010"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780888693107,
+    "value": "2014"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780888789417,
+    "value": "2017"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780888885742,
+    "value": "2020"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780888949976,
+    "value": "2023"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780889046318,
+    "value": "2026"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780889142616,
+    "value": "2029"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780889206860,
+    "value": "2032"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780889303180,
+    "value": "2035"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780889367425,
+    "value": "2038"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780889463764,
+    "value": "2041"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780889560080,
+    "value": "2044"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780889624308,
+    "value": "2047"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780889720625,
+    "value": "2050"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780889816948,
+    "value": "2054"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780889913259,
+    "value": "2057"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780890009587,
+    "value": "2060"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780890073839,
+    "value": "2063"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780890170123,
+    "value": "2066"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780890266447,
+    "value": "2069"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780890362771,
+    "value": "2073"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780890459079,
+    "value": "2076"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780890555398,
+    "value": "2079"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780890619642,
+    "value": "2082"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780890715957,
+    "value": "2085"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780890780205,
+    "value": "2088"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780890865622,
+    "value": "2090"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780890876512,
+    "value": "2091"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780890972822,
+    "value": "2095"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780891069127,
+    "value": "2098"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780891165431,
+    "value": "2101"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780891229676,
+    "value": "2104"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780891325975,
+    "value": "2107"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780891422294,
+    "value": "2111"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780891518608,
+    "value": "2114"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780891614916,
+    "value": "2117"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780891679158,
+    "value": "2120"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780891775497,
+    "value": "2123"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780891871937,
+    "value": "2127"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780891968095,
+    "value": "2130"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780892064423,
+    "value": "2133"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780892128667,
+    "value": "2136"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780892224985,
+    "value": "2139"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780892321293,
+    "value": "2143"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780892417599,
+    "value": "2146"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780892513914,
+    "value": "2149"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780892578160,
+    "value": "2152"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780892661064,
+    "value": "2154"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780892674466,
+    "value": "2155"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780892770780,
+    "value": "2158"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780892835021,
+    "value": "2161"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780892931327,
+    "value": "2164"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780893027644,
+    "value": "2168"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780893123959,
+    "value": "2171"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780893220276,
+    "value": "2174"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780893284525,
+    "value": "2177"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780893444989,
+    "value": "2180"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780893573370,
+    "value": "2183"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780893669692,
+    "value": "2186"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780893766012,
+    "value": "2189"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780893894403,
+    "value": "2192"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780894054866,
+    "value": "2195"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780894215324,
+    "value": "2198"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780894311639,
+    "value": "2201"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780894440029,
+    "value": "2204"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780894536354,
+    "value": "2207"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780894728893,
+    "value": "2210"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780894921468,
+    "value": "2213"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780895081903,
+    "value": "2216"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780895242359,
+    "value": "2219"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780895402808,
+    "value": "2222"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780895563270,
+    "value": "2225"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780895691645,
+    "value": "2228"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780895787971,
+    "value": "2232"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780895916407,
+    "value": "2235"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780896076842,
+    "value": "2238"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780896205228,
+    "value": "2241"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780896254090,
+    "value": "2242"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780896333623,
+    "value": "2244"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780896462026,
+    "value": "2247"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780896622493,
+    "value": "2250"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780896782960,
+    "value": "2253"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780896943440,
+    "value": "2256"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780897103892,
+    "value": "2259"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780897264365,
+    "value": "2262"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780897424824,
+    "value": "2265"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780897585301,
+    "value": "2268"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780897745764,
+    "value": "2271"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780897842067,
+    "value": "2274"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780897970469,
+    "value": "2277"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780898051217,
+    "value": "2278"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780898162990,
+    "value": "2280"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780898323462,
+    "value": "2283"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780898483918,
+    "value": "2286"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780898676452,
+    "value": "2289"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780898901059,
+    "value": "2292"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780899093658,
+    "value": "2295"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780899286153,
+    "value": "2298"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780899446603,
+    "value": "2301"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780899607114,
+    "value": "2304"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780899799615,
+    "value": "2307"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780899960072,
+    "value": "2310"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780900152597,
+    "value": "2313"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780900313047,
+    "value": "2316"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780900505559,
+    "value": "2319"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780900666007,
+    "value": "2322"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780900858528,
+    "value": "2325"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780901051044,
+    "value": "2328"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780901243559,
+    "value": "2331"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780901436086,
+    "value": "2334"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780901500331,
+    "value": "2337"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780901644513,
+    "value": "2339"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780901660793,
+    "value": "2340"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780901821243,
+    "value": "2343"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780901949624,
+    "value": "2346"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780902045947,
+    "value": "2349"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780902142262,
+    "value": "2352"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780902238593,
+    "value": "2355"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780902366963,
+    "value": "2358"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780902559476,
+    "value": "2361"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780902751994,
+    "value": "2364"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780902944512,
+    "value": "2367"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780903137058,
+    "value": "2370"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780903329568,
+    "value": "2373"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780903440525,
+    "value": "2374"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780903522088,
+    "value": "2376"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780903714614,
+    "value": "2379"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780903875055,
+    "value": "2382"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780904067585,
+    "value": "2385"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780904260121,
+    "value": "2388"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780904452673,
+    "value": "2391"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780904645215,
+    "value": "2394"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780904709481,
+    "value": "2397"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780904805791,
+    "value": "2400"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780904902116,
+    "value": "2403"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780905062573,
+    "value": "2406"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780905158908,
+    "value": "2410"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780905237043,
+    "value": "2411"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780905319387,
+    "value": "2413"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780905447799,
+    "value": "2416"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780905608228,
+    "value": "2419"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780905768680,
+    "value": "2422"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780905929135,
+    "value": "2425"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780906089589,
+    "value": "2428"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780906250117,
+    "value": "2431"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780906442587,
+    "value": "2434"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780906603060,
+    "value": "2437"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780906763508,
+    "value": "2440"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780906859815,
+    "value": "2443"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780907020263,
+    "value": "2446"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780907148642,
+    "value": "2449"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780907244963,
+    "value": "2452"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780907437488,
+    "value": "2455"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780907630048,
+    "value": "2458"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780907726352,
+    "value": "2461"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780907822678,
+    "value": "2464"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780907919000,
+    "value": "2467"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780908015319,
+    "value": "2470"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780908175785,
+    "value": "2473"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780908272103,
+    "value": "2476"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780908560858,
+    "value": "2479"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780908753400,
+    "value": "2482"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780908830043,
+    "value": "2483"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780909042150,
+    "value": "2485"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780909234669,
+    "value": "2488"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780909587544,
+    "value": "2491"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780909748014,
+    "value": "2494"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780910068804,
+    "value": "2497"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780910229254,
+    "value": "2500"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780910389711,
+    "value": "2503"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780910626793,
+    "value": "2504"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780910710503,
+    "value": "2506"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780910870970,
+    "value": "2509"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780911191734,
+    "value": "2512"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780911544603,
+    "value": "2515"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780911737126,
+    "value": "2518"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780911865515,
+    "value": "2521"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780912058050,
+    "value": "2524"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780912218509,
+    "value": "2527"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780912378960,
+    "value": "2530"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780912539388,
+    "value": "2533"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780912699830,
+    "value": "2536"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780912828210,
+    "value": "2539"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780912956616,
+    "value": "2542"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780913085001,
+    "value": "2545"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780913181349,
+    "value": "2548"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780913341817,
+    "value": "2551"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780913470178,
+    "value": "2554"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780913598562,
+    "value": "2557"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780913694889,
+    "value": "2560"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780913791209,
+    "value": "2563"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780913887526,
+    "value": "2566"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780913983838,
+    "value": "2569"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780914080154,
+    "value": "2572"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780914176469,
+    "value": "2575"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780914219716,
+    "value": "2576"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780914272788,
+    "value": "2578"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780914369103,
+    "value": "2581"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780914433357,
+    "value": "2584"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780914529669,
+    "value": "2587"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780914625988,
+    "value": "2590"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780914722302,
+    "value": "2593"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780914818621,
+    "value": "2596"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780915182198,
+    "value": "2598"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780915545761,
+    "value": "2600"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780915909340,
+    "value": "2602"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780916016146,
+    "value": "2603"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780916272911,
+    "value": "2604"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780916486806,
+    "value": "2607"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780916850346,
+    "value": "2608"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780917213919,
+    "value": "2610"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780917577473,
+    "value": "2612"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780917812527,
+    "value": "2613"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780918304590,
+    "value": "2615"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780918668116,
+    "value": "2617"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780919031645,
+    "value": "2618"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780919181382,
+    "value": "2621"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780919341835,
+    "value": "2624"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780919502282,
+    "value": "2627"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780919609004,
+    "value": "2628"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780919694798,
+    "value": "2630"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780919823172,
+    "value": "2633"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780919983612,
+    "value": "2636"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780920176119,
+    "value": "2639"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780920336568,
+    "value": "2642"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780920529083,
+    "value": "2645"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780920689519,
+    "value": "2648"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780921053054,
+    "value": "2649"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780921363114,
+    "value": "2652"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780921715962,
+    "value": "2655"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780922079482,
+    "value": "2657"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780922442959,
+    "value": "2658"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780922806442,
+    "value": "2659"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780923169963,
+    "value": "2661"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780923533479,
+    "value": "2662"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780923559894,
+    "value": "2662"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780923833423,
+    "value": "2663"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780924090037,
+    "value": "2666"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780924453522,
+    "value": "2667"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780924817026,
+    "value": "2669"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780925180519,
+    "value": "2671"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780925565339,
+    "value": "2672"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780925928800,
+    "value": "2673"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780926270924,
+    "value": "2676"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780926559581,
+    "value": "2679"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780926784121,
+    "value": "2682"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780926880427,
+    "value": "2686"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780926976765,
+    "value": "2689"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780927073051,
+    "value": "2692"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780927137293,
+    "value": "2695"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780927233610,
+    "value": "2698"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780927329912,
+    "value": "2701"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780927426218,
+    "value": "2704"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780927522623,
+    "value": "2707"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780927618836,
+    "value": "2710"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780927715152,
+    "value": "2713"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780927811468,
+    "value": "2716"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780927907770,
+    "value": "2719"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928004076,
+    "value": "2722"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928068317,
+    "value": "2725"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928164623,
+    "value": "2729"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928260952,
+    "value": "2732"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928357240,
+    "value": "2735"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928421466,
+    "value": "2738"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928517777,
+    "value": "2741"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928582286,
+    "value": "2745"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928646289,
+    "value": "2748"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928710528,
+    "value": "2751"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928774745,
+    "value": "2754"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928838985,
+    "value": "2758"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928903223,
+    "value": "2761"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928936656,
+    "value": "2763"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780928967461,
+    "value": "2764"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780929063770,
+    "value": "2767"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780929128027,
+    "value": "2770"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780929224306,
+    "value": "2773"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780929320609,
+    "value": "2776"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780929416904,
+    "value": "2779"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780929513847,
+    "value": "2782"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780929609519,
+    "value": "2785"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780929705821,
+    "value": "2788"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780929802131,
+    "value": "2791"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780929898448,
+    "value": "2794"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780929994744,
+    "value": "2797"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780930091220,
+    "value": "2800"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780930187337,
+    "value": "2803"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780930283647,
+    "value": "2806"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780930379945,
+    "value": "2809"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780930508318,
+    "value": "2812"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780930556072,
+    "value": "2812"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780930605216,
+    "value": "2813"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780930701542,
+    "value": "2816"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780930797851,
+    "value": "2819"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780930862052,
+    "value": "2822"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780930926301,
+    "value": "2825"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780930990529,
+    "value": "2828"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780931054768,
+    "value": "2831"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780931119011,
+    "value": "2834"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780931183246,
+    "value": "2838"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780931279565,
+    "value": "2841"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780931375848,
+    "value": "2844"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780931472254,
+    "value": "2847"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780931568457,
+    "value": "2850"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780931664774,
+    "value": "2853"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780931761088,
+    "value": "2856"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780931857394,
+    "value": "2859"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780931953705,
+    "value": "2862"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780932017959,
+    "value": "2865"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780932114265,
+    "value": "2868"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780932467025,
+    "value": "2871"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780932787823,
+    "value": "2874"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780932916220,
+    "value": "2877"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780933012497,
+    "value": "2880"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780933333264,
+    "value": "2883"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780933429558,
+    "value": "2886"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780933718279,
+    "value": "2889"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780933814565,
+    "value": "2892"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780934071221,
+    "value": "2895"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780934137878,
+    "value": "2896"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780934199618,
+    "value": "2898"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780934295913,
+    "value": "2901"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780934584600,
+    "value": "2904"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780934680911,
+    "value": "2907"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780934937564,
+    "value": "2910"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780935033888,
+    "value": "2913"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780935258495,
+    "value": "2916"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780935418931,
+    "value": "2919"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780935515240,
+    "value": "2922"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780935803953,
+    "value": "2925"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780935900253,
+    "value": "2928"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780935933285,
+    "value": "2929"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780935996553,
+    "value": "2931"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780936317282,
+    "value": "2934"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780936413588,
+    "value": "2937"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780936702316,
+    "value": "2940"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780936830675,
+    "value": "2943"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780937151450,
+    "value": "2946"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780937247754,
+    "value": "2949"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780937504390,
+    "value": "2952"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780937600700,
+    "value": "2955"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780937728886,
+    "value": "2957"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780937889419,
+    "value": "2958"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780937985721,
+    "value": "2961"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780938274441,
+    "value": "2964"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780938370750,
+    "value": "2967"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780938467056,
+    "value": "2970"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780938787792,
+    "value": "2973"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780938884098,
+    "value": "2976"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780939204827,
+    "value": "2979"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780939301127,
+    "value": "2982"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780939589799,
+    "value": "2985"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780939686141,
+    "value": "2988"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780940006867,
+    "value": "2991"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780940103175,
+    "value": "2994"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780940391896,
+    "value": "2997"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780940488209,
+    "value": "3000"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780940809003,
+    "value": "3003"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780940905324,
+    "value": "3006"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780941194027,
+    "value": "3009"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780941320691,
+    "value": "3011"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780941322407,
+    "value": "3012"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780941611115,
+    "value": "3015"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780941739491,
+    "value": "3018"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780942060270,
+    "value": "3021"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780942156573,
+    "value": "3024"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780942252891,
+    "value": "3027"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780942573660,
+    "value": "3030"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780942669975,
+    "value": "3033"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780942958680,
+    "value": "3036"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780943087091,
+    "value": "3039"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780943407882,
+    "value": "3042"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780943472095,
+    "value": "3045"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780943632559,
+    "value": "3048"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780943825110,
+    "value": "3051"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780943921423,
+    "value": "3055"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780944017728,
+    "value": "3058"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780944178183,
+    "value": "3061"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780944306561,
+    "value": "3064"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780944370834,
+    "value": "3067"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780944435065,
+    "value": "3070"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780944723770,
+    "value": "3073"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780944788007,
+    "value": "3076"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780944884316,
+    "value": "3079"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780945108919,
+    "value": "3082"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780945205227,
+    "value": "3085"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780945269444,
+    "value": "3088"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780945558156,
+    "value": "3091"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780945622400,
+    "value": "3094"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780945718720,
+    "value": "3098"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780946007453,
+    "value": "3102"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780946103754,
+    "value": "3106"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780946328332,
+    "value": "3109"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780946456718,
+    "value": "3113"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780946553044,
+    "value": "3116"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780946708887,
+    "value": "3117"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780946777596,
+    "value": "3119"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780946873911,
+    "value": "3122"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780946970227,
+    "value": "3125"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780947226845,
+    "value": "3128"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780947323166,
+    "value": "3131"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780947451525,
+    "value": "3134"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780947676113,
+    "value": "3137"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780947772393,
+    "value": "3140"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780947868699,
+    "value": "3143"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780948157368,
+    "value": "3146"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780948221618,
+    "value": "3149"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780948414087,
+    "value": "3152"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780948505365,
+    "value": "3153"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780948542455,
+    "value": "3155"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780948606709,
+    "value": "3158"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780948703008,
+    "value": "3161"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780948927581,
+    "value": "3164"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780949023880,
+    "value": "3167"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780949120183,
+    "value": "3170"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780949344759,
+    "value": "3173"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780949505184,
+    "value": "3176"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780949633547,
+    "value": "3179"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780949858111,
+    "value": "3182"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780950018564,
+    "value": "3185"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780950114851,
+    "value": "3188"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780950302029,
+    "value": "3189"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780950371450,
+    "value": "3191"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780950467750,
+    "value": "3194"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780950564055,
+    "value": "3197"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780950852767,
+    "value": "3200"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780950916996,
+    "value": "3203"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780950981231,
+    "value": "3206"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780951301959,
+    "value": "3209"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780951366208,
+    "value": "3212"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780951430433,
+    "value": "3215"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780951751161,
+    "value": "3218"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780951815400,
+    "value": "3221"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780952098095,
+    "value": "3222"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780952136184,
+    "value": "3224"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780952200424,
+    "value": "3227"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780952296732,
+    "value": "3230"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780952585381,
+    "value": "3233"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780952649620,
+    "value": "3236"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780952970383,
+    "value": "3239"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780953034637,
+    "value": "3242"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780953098856,
+    "value": "3245"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780953323425,
+    "value": "3248"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780953515936,
+    "value": "3251"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780953580147,
+    "value": "3254"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780953893121,
+    "value": "3256"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780953900926,
+    "value": "3257"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780954029284,
+    "value": "3261"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780954253844,
+    "value": "3264"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780954478409,
+    "value": "3268"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780954574695,
+    "value": "3271"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780954895433,
+    "value": "3274"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780954991735,
+    "value": "3277"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780955344567,
+    "value": "3280"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780955472949,
+    "value": "3283"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780955689412,
+    "value": "3284"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780955825808,
+    "value": "3286"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780955922114,
+    "value": "3289"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780956274900,
+    "value": "3292"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780956403275,
+    "value": "3295"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780956756118,
+    "value": "3298"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780956852426,
+    "value": "3301"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780957205269,
+    "value": "3304"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780957301567,
+    "value": "3307"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780957485904,
+    "value": "3308"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780957665063,
+    "value": "3309"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780957782749,
+    "value": "3312"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780957879064,
+    "value": "3315"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780958242498,
+    "value": "3317"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780958328109,
+    "value": "3320"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780958680942,
+    "value": "3323"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780958777232,
+    "value": "3326"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780959140802,
+    "value": "3328"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780959226395,
+    "value": "3331"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780959282353,
+    "value": "3332"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780959322714,
+    "value": "3334"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780959686189,
+    "value": "3336"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780959771810,
+    "value": "3339"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780960135365,
+    "value": "3341"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780960220978,
+    "value": "3344"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780960541764,
+    "value": "3347"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780960670133,
+    "value": "3350"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780960958836,
+    "value": "3353"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780961151322,
+    "value": "3356"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780961375908,
+    "value": "3359"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780961600484,
+    "value": "3362"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780961696775,
+    "value": "3365"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780962060279,
+    "value": "3366"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780962145909,
+    "value": "3369"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780962466722,
+    "value": "3372"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780962563031,
+    "value": "3375"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780962755536,
+    "value": "3378"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780962874554,
+    "value": "3379"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780962948033,
+    "value": "3381"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780963012294,
+    "value": "3384"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780963108607,
+    "value": "3387"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780963204914,
+    "value": "3390"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780963365323,
+    "value": "3394"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780963429581,
+    "value": "3397"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780963493805,
+    "value": "3400"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780963590117,
+    "value": "3403"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780963814698,
+    "value": "3406"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780963910985,
+    "value": "3409"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780964039389,
+    "value": "3412"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780964135698,
+    "value": "3415"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780964231999,
+    "value": "3418"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780964328275,
+    "value": "3421"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780964424585,
+    "value": "3424"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780964585034,
+    "value": "3427"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780964777548,
+    "value": "3430"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780964873852,
+    "value": "3433"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780965130461,
+    "value": "3436"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780965226772,
+    "value": "3439"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780965291038,
+    "value": "3442"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780965387312,
+    "value": "3445"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780965643973,
+    "value": "3448"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780965708211,
+    "value": "3451"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780965804527,
+    "value": "3454"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780966061199,
+    "value": "3457"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780966125423,
+    "value": "3460"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780966189660,
+    "value": "3463"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780966466000,
+    "value": "3465"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780966478382,
+    "value": "3466"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780966841967,
+    "value": "3468"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780967205446,
+    "value": "3469"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780967568964,
+    "value": "3470"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780967932508,
+    "value": "3471"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780968262237,
+    "value": "3472"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780968691542,
+    "value": "3473"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780969332850,
+    "value": "3474"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780969749768,
+    "value": "3475"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780969942285,
+    "value": "3478"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780970305790,
+    "value": "3479"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780970669290,
+    "value": "3480"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780971032795,
+    "value": "3481"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780971396288,
+    "value": "3482"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780971546026,
+    "value": "3485"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780971854417,
+    "value": "3486"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780972155483,
+    "value": "3489"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780972283842,
+    "value": "3492"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780972380143,
+    "value": "3495"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780972476447,
+    "value": "3498"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780972604816,
+    "value": "3501"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780972968366,
+    "value": "3502"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780973246354,
+    "value": "3505"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780973535040,
+    "value": "3508"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780973898480,
+    "value": "3509"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780974262022,
+    "value": "3511"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780974433137,
+    "value": "3514"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780974593578,
+    "value": "3517"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780974721970,
+    "value": "3520"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780974882381,
+    "value": "3523"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780975074893,
+    "value": "3526"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780975267355,
+    "value": "3529"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780975446742,
+    "value": "3531"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780975459854,
+    "value": "3532"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780975652358,
+    "value": "3535"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780975812804,
+    "value": "3538"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780975973238,
+    "value": "3541"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780976165731,
+    "value": "3544"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780976326174,
+    "value": "3547"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780976486620,
+    "value": "3550"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780976647069,
+    "value": "3553"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780976839570,
+    "value": "3556"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780977000033,
+    "value": "3559"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780977160465,
+    "value": "3562"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780977243672,
+    "value": "3563"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780977320910,
+    "value": "3565"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780977513405,
+    "value": "3568"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780977705909,
+    "value": "3571"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780977866353,
+    "value": "3574"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780978058880,
+    "value": "3577"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780978251352,
+    "value": "3580"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780978443858,
+    "value": "3583"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780978604314,
+    "value": "3586"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780978764732,
+    "value": "3589"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780978957231,
+    "value": "3592"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780979245876,
+    "value": "3595"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780979406300,
+    "value": "3598"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780979566725,
+    "value": "3601"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780979759220,
+    "value": "3604"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780979919669,
+    "value": "3607"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780980112168,
+    "value": "3610"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780980272604,
+    "value": "3613"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780980433055,
+    "value": "3616"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780980625529,
+    "value": "3619"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780980753925,
+    "value": "3622"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780980837092,
+    "value": "3623"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780980882276,
+    "value": "3625"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780981074778,
+    "value": "3628"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780981235220,
+    "value": "3631"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780981331532,
+    "value": "3634"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780981491967,
+    "value": "3637"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780981620350,
+    "value": "3640"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780981748762,
+    "value": "3643"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780981877097,
+    "value": "3646"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780982005478,
+    "value": "3649"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780982101786,
+    "value": "3652"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780982262224,
+    "value": "3655"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780982422649,
+    "value": "3658"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780982551013,
+    "value": "3661"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780982633495,
+    "value": "3662"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780982711448,
+    "value": "3664"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780982839824,
+    "value": "3667"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780982968187,
+    "value": "3671"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780983096557,
+    "value": "3675"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780983256996,
+    "value": "3678"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780983385354,
+    "value": "3681"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780983545794,
+    "value": "3684"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780983674171,
+    "value": "3687"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780983802561,
+    "value": "3690"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780983962990,
+    "value": "3693"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780984091364,
+    "value": "3696"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780984155606,
+    "value": "3699"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780984348128,
+    "value": "3702"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780984430096,
+    "value": "3703"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780984508560,
+    "value": "3705"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780984668990,
+    "value": "3708"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780984829421,
+    "value": "3711"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780985021928,
+    "value": "3714"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780985182365,
+    "value": "3717"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780985374903,
+    "value": "3720"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780985535317,
+    "value": "3723"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780985695766,
+    "value": "3726"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780985888278,
+    "value": "3729"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780986048748,
+    "value": "3732"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780986209172,
+    "value": "3735"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780986369619,
+    "value": "3738"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780986562130,
+    "value": "3741"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780986722600,
+    "value": "3744"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780986883029,
+    "value": "3747"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780987011403,
+    "value": "3750"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780987139781,
+    "value": "3753"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780987300237,
+    "value": "3756"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780987428616,
+    "value": "3759"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780987589091,
+    "value": "3762"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780987781593,
+    "value": "3765"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780987974107,
+    "value": "3768"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780988294891,
+    "value": "3771"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780988487418,
+    "value": "3774"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780988647884,
+    "value": "3777"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780988808340,
+    "value": "3780"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780988968787,
+    "value": "3783"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780989225440,
+    "value": "3786"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780989353826,
+    "value": "3789"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780989514347,
+    "value": "3792"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780989642727,
+    "value": "3795"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780989803176,
+    "value": "3798"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780989899487,
+    "value": "3801"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780990059937,
+    "value": "3804"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780990220382,
+    "value": "3807"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780990412893,
+    "value": "3810"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780990605405,
+    "value": "3813"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780990797905,
+    "value": "3816"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780990990414,
+    "value": "3819"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780991182933,
+    "value": "3822"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780991343384,
+    "value": "3825"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780991535915,
+    "value": "3828"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780991616976,
+    "value": "3829"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780991728479,
+    "value": "3831"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780991888959,
+    "value": "3834"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780992049333,
+    "value": "3837"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780992209780,
+    "value": "3840"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780992371283,
+    "value": "3843"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780992530701,
+    "value": "3846"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780992691128,
+    "value": "3849"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780992883663,
+    "value": "3852"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780993044096,
+    "value": "3855"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780993236603,
+    "value": "3858"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780993413842,
+    "value": "3860"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780993429116,
+    "value": "3861"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780993621608,
+    "value": "3864"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780993814129,
+    "value": "3867"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780993974570,
+    "value": "3870"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780994167056,
+    "value": "3873"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780994295419,
+    "value": "3876"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780994423788,
+    "value": "3879"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780994552159,
+    "value": "3882"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780994680540,
+    "value": "3885"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780994840983,
+    "value": "3888"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780995001431,
+    "value": "3891"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780995161846,
+    "value": "3894"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780995209988,
+    "value": "3895"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780995322280,
+    "value": "3897"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780995514802,
+    "value": "3900"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780995675254,
+    "value": "3903"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780995867753,
+    "value": "3906"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780996028186,
+    "value": "3909"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780996188624,
+    "value": "3912"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780996381117,
+    "value": "3915"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780996541555,
+    "value": "3918"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780996669932,
+    "value": "3921"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780996830381,
+    "value": "3924"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780996990812,
+    "value": "3927"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780997151255,
+    "value": "3930"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780997279626,
+    "value": "3933"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780997440059,
+    "value": "3936"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780997600498,
+    "value": "3939"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780997760924,
+    "value": "3942"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780997921369,
+    "value": "3945"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780998113874,
+    "value": "3948"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780998274315,
+    "value": "3951"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780998434780,
+    "value": "3954"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780998563159,
+    "value": "3957"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780998723619,
+    "value": "3960"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780998803442,
+    "value": "3961"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780998884090,
+    "value": "3963"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780999076598,
+    "value": "3966"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780999237051,
+    "value": "3969"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780999397503,
+    "value": "3972"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780999590021,
+    "value": "3975"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780999718410,
+    "value": "3978"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1780999878868,
+    "value": "3981"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781000039301,
+    "value": "3984"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781000199740,
+    "value": "3987"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781000392265,
+    "value": "3990"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781000552693,
+    "value": "3993"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781000713144,
+    "value": "3996"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781000873591,
+    "value": "3999"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781001237118,
+    "value": "4001"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781001354804,
+    "value": "4004"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781001718374,
+    "value": "4005"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781001868124,
+    "value": "4008"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781001996500,
+    "value": "4011"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781002360039,
+    "value": "4013"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781002541853,
+    "value": "4016"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781002734356,
+    "value": "4019"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781002990986,
+    "value": "4022"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781003354516,
+    "value": "4024"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781003718026,
+    "value": "4025"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781004081530,
+    "value": "4028"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781004445022,
+    "value": "4030"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781004808508,
+    "value": "4031"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781005172043,
+    "value": "4033"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781005535594,
+    "value": "4035"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781005899132,
+    "value": "4037"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781006262637,
+    "value": "4039"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781006551323,
+    "value": "4042"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781006914849,
+    "value": "4044"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781007278383,
+    "value": "4046"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781007641924,
+    "value": "4048"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781008005442,
+    "value": "4049"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781008368935,
+    "value": "4050"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781008732464,
+    "value": "4052"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781009095996,
+    "value": "4054"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781009459530,
+    "value": "4056"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781009823030,
+    "value": "4057"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781010186542,
+    "value": "4058"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781010550056,
+    "value": "4060"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781010913538,
+    "value": "4061"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781011170187,
+    "value": "4064"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781011362646,
+    "value": "4067"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781011426881,
+    "value": "4070"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781011491118,
+    "value": "4073"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781011555361,
+    "value": "4076"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781011619613,
+    "value": "4080"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781011683842,
+    "value": "4083"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781011748081,
+    "value": "4087"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781011812321,
+    "value": "4090"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781011876560,
+    "value": "4093"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781011940797,
+    "value": "4096"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012005030,
+    "value": "4099"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012069274,
+    "value": "4102"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012133499,
+    "value": "4106"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012197739,
+    "value": "4109"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012261970,
+    "value": "4112"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012326207,
+    "value": "4115"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012422508,
+    "value": "4118"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012486743,
+    "value": "4121"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012583049,
+    "value": "4125"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012647281,
+    "value": "4128"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012711514,
+    "value": "4131"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012775749,
+    "value": "4134"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012839984,
+    "value": "4137"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781012936282,
+    "value": "4140"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781013032579,
+    "value": "4143"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781013096812,
+    "value": "4146"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781013161039,
+    "value": "4150"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781013225264,
+    "value": "4153"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781013321559,
+    "value": "4156"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781013385789,
+    "value": "4159"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781013482094,
+    "value": "4163"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781013546317,
+    "value": "4166"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781013610563,
+    "value": "4169"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781013706855,
+    "value": "4172"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781013803144,
+    "value": "4175"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781013867377,
+    "value": "4178"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781013931645,
+    "value": "4181"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781014027919,
+    "value": "4185"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781014124217,
+    "value": "4188"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781014220529,
+    "value": "4191"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781014284768,
+    "value": "4194"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781014349015,
+    "value": "4197"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781014413252,
+    "value": "4200"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781014509561,
+    "value": "4204"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781014605870,
+    "value": "4207"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781014702184,
+    "value": "4211"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781014766432,
+    "value": "4214"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781014830665,
+    "value": "4217"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781014926977,
+    "value": "4220"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781014968185,
+    "value": "4221"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015023280,
+    "value": "4224"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015087540,
+    "value": "4227"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015151770,
+    "value": "4230"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015216005,
+    "value": "4233"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015312309,
+    "value": "4236"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015376537,
+    "value": "4240"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015440775,
+    "value": "4243"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015505014,
+    "value": "4247"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015601322,
+    "value": "4250"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015697614,
+    "value": "4253"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015761848,
+    "value": "4256"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015826083,
+    "value": "4259"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015890320,
+    "value": "4263"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781015954558,
+    "value": "4266"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781016018795,
+    "value": "4269"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781016083026,
+    "value": "4273"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781016147262,
+    "value": "4276"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781016211499,
+    "value": "4280"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781016275725,
+    "value": "4284"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781016339951,
+    "value": "4287"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781016532451,
+    "value": "4290"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781016596693,
+    "value": "4293"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781016693019,
+    "value": "4297"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781016763807,
+    "value": "4299"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781016789299,
+    "value": "4300"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781016885609,
+    "value": "4303"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781016981909,
+    "value": "4307"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781017078218,
+    "value": "4311"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781017174526,
+    "value": "4314"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781017270830,
+    "value": "4317"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781017367138,
+    "value": "4320"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781017463452,
+    "value": "4323"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781017655960,
+    "value": "4326"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781017752266,
+    "value": "4329"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781017848563,
+    "value": "4332"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781017912800,
+    "value": "4335"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781017977044,
+    "value": "4338"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781018105431,
+    "value": "4341"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781018297879,
+    "value": "4344"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781018394202,
+    "value": "4348"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781018458406,
+    "value": "4352"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781018554704,
+    "value": "4355"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781018651012,
+    "value": "4358"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781018811446,
+    "value": "4361"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781018939804,
+    "value": "4364"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781019036143,
+    "value": "4367"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781019100323,
+    "value": "4370"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781019164558,
+    "value": "4373"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781019228788,
+    "value": "4377"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781019293022,
+    "value": "4381"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781019357257,
+    "value": "4384"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781019549767,
+    "value": "4387"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781019678131,
+    "value": "4390"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781019806491,
+    "value": "4393"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781020031028,
+    "value": "4396"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781020127334,
+    "value": "4399"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781020355156,
+    "value": "4400"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781020448100,
+    "value": "4402"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781020576466,
+    "value": "4405"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781020897200,
+    "value": "4408"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781020993484,
+    "value": "4411"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781021282174,
+    "value": "4414"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781021378474,
+    "value": "4417"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781021538908,
+    "value": "4420"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781021795504,
+    "value": "4423"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781021923853,
+    "value": "4426"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781022244553,
+    "value": "4429"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781022340861,
+    "value": "4432"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781022661541,
+    "value": "4435"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781022757838,
+    "value": "4438"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781023121276,
+    "value": "4440"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781023206887,
+    "value": "4443"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781023570335,
+    "value": "4445"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781023655954,
+    "value": "4448"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781023946771,
+    "value": "4449"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781024008734,
+    "value": "4451"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781024105029,
+    "value": "4454"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781024457790,
+    "value": "4457"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781024554085,
+    "value": "4460"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781024917611,
+    "value": "4462"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781025003210,
+    "value": "4465"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781025366718,
+    "value": "4467"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781025452331,
+    "value": "4470"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781025742128,
+    "value": "4472"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781025773092,
+    "value": "4473"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781025869392,
+    "value": "4476"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781026190155,
+    "value": "4479"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781026318518,
+    "value": "4482"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781026607220,
+    "value": "4485"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781026735565,
+    "value": "4488"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781026831861,
+    "value": "4491"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781027184663,
+    "value": "4494"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781027280970,
+    "value": "4497"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781027633730,
+    "value": "4500"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781027954481,
+    "value": "4503"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781028082841,
+    "value": "4506"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781028179145,
+    "value": "4509"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781028531952,
+    "value": "4512"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781028628252,
+    "value": "4515"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781028981041,
+    "value": "4518"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781029205596,
+    "value": "4521"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781029462175,
+    "value": "4524"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781029654654,
+    "value": "4527"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781029943300,
+    "value": "4530"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781030167859,
+    "value": "4533"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781030424449,
+    "value": "4536"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781030787960,
+    "value": "4538"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781030937702,
+    "value": "4541"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781031130603,
+    "value": "4543"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781031418852,
+    "value": "4546"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781031643380,
+    "value": "4549"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781031899937,
+    "value": "4552"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781032220626,
+    "value": "4555"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781032381029,
+    "value": "4558"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781032744534,
+    "value": "4560"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781032894258,
+    "value": "4563"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781033257731,
+    "value": "4565"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781033375393,
+    "value": "4568"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781033599938,
+    "value": "4571"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781033856516,
+    "value": "4574"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781034219997,
+    "value": "4576"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781034369707,
+    "value": "4579"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781034722203,
+    "value": "4581"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781034882900,
+    "value": "4584"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781035107445,
+    "value": "4587"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781035396081,
+    "value": "4590"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781035620652,
+    "value": "4593"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781035941359,
+    "value": "4596"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781036304861,
+    "value": "4598"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781036486647,
+    "value": "4601"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781036850144,
+    "value": "4603"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781037031922,
+    "value": "4606"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781037395445,
+    "value": "4607"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781037513099,
+    "value": "4610"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781037833824,
+    "value": "4613"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781038058377,
+    "value": "4616"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781038314742,
+    "value": "4618"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781038347005,
+    "value": "4619"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781038571537,
+    "value": "4622"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781038892254,
+    "value": "4625"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781039084731,
+    "value": "4628"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781039437530,
+    "value": "4631"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781039597927,
+    "value": "4634"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781039662156,
+    "value": "4637"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781039822567,
+    "value": "4640"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781040015052,
+    "value": "4643"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781040111133,
+    "value": "4644"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781040143415,
+    "value": "4646"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781040303838,
+    "value": "4649"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781040624546,
+    "value": "4652"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781040720841,
+    "value": "4656"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781041009527,
+    "value": "4659"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781041169915,
+    "value": "4662"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781041266202,
+    "value": "4665"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781041522823,
+    "value": "4668"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781041715279,
+    "value": "4671"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781041843657,
+    "value": "4674"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781042132285,
+    "value": "4677"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781042324781,
+    "value": "4680"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781042517246,
+    "value": "4683"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781042773853,
+    "value": "4686"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781042870147,
+    "value": "4689"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781043062641,
+    "value": "4692"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781043287142,
+    "value": "4695"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781043383426,
+    "value": "4698"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781043607975,
+    "value": "4701"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781043703249,
+    "value": "4702"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781043768349,
+    "value": "4704"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781043992873,
+    "value": "4707"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781044313542,
+    "value": "4710"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781044666355,
+    "value": "4713"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781044890903,
+    "value": "4716"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781045254361,
+    "value": "4718"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781045436160,
+    "value": "4721"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781045799645,
+    "value": "4723"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781046045537,
+    "value": "4726"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781046409009,
+    "value": "4728"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781046622835,
+    "value": "4731"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781046986301,
+    "value": "4733"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781047168080,
+    "value": "4736"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781047295458,
+    "value": "4738"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781047649259,
+    "value": "4741"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781047745566,
+    "value": "4744"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781048108986,
+    "value": "4746"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781048194583,
+    "value": "4749"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781048515313,
+    "value": "4752"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781048611602,
+    "value": "4755"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781048932298,
+    "value": "4758"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781049028598,
+    "value": "4762"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781049221067,
+    "value": "4765"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781049349412,
+    "value": "4768"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781049413637,
+    "value": "4771"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781049477885,
+    "value": "4774"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781049638279,
+    "value": "4777"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781049798690,
+    "value": "4780"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781049894978,
+    "value": "4783"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781049991261,
+    "value": "4786"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781050087548,
+    "value": "4789"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781050183841,
+    "value": "4792"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781050280134,
+    "value": "4795"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781050536712,
+    "value": "4799"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781050633000,
+    "value": "4802"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781050729293,
+    "value": "4805"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781050793546,
+    "value": "4808"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781050886108,
+    "value": "4810"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781050889815,
+    "value": "4811"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781051146399,
+    "value": "4814"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781051242733,
+    "value": "4817"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781051467265,
+    "value": "4820"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781051595583,
+    "value": "4823"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781051691878,
+    "value": "4826"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781051788176,
+    "value": "4829"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781051884468,
+    "value": "4832"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781051980789,
+    "value": "4835"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781052077063,
+    "value": "4838"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781052141297,
+    "value": "4841"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781052301727,
+    "value": "4844"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781052558354,
+    "value": "4847"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781052921812,
+    "value": "4848"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781053285287,
+    "value": "4849"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781053648794,
+    "value": "4850"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781054012298,
+    "value": "4851"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781054375799,
+    "value": "4853"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781054739275,
+    "value": "4854"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781055102745,
+    "value": "4856"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781055540981,
+    "value": "4857"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781056021976,
+    "value": "4858"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781056502967,
+    "value": "4859"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781056951876,
+    "value": "4860"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781057315315,
+    "value": "4861"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781057678767,
+    "value": "4862"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781058042262,
+    "value": "4864"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781058405735,
+    "value": "4866"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781058555472,
+    "value": "4869"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781058908283,
+    "value": "4872"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781059271728,
+    "value": "4873"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781059635194,
+    "value": "4874"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781059865116,
+    "value": "4875"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781059998649,
+    "value": "4876"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781060362095,
+    "value": "4877"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781060725546,
+    "value": "4879"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781061088985,
+    "value": "4880"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781061452436,
+    "value": "4882"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781061570102,
+    "value": "4885"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781061660784,
+    "value": "4886"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781061730504,
+    "value": "4888"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781061890939,
+    "value": "4891"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781061987255,
+    "value": "4894"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781062179679,
+    "value": "4897"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781062372135,
+    "value": "4900"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781062564597,
+    "value": "4903"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781062757053,
+    "value": "4906"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781062949499,
+    "value": "4909"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781063109881,
+    "value": "4912"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781063238216,
+    "value": "4915"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781063398607,
+    "value": "4918"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781063456675,
+    "value": "4919"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781063559016,
+    "value": "4921"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781063719413,
+    "value": "4924"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781063879798,
+    "value": "4927"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781063976061,
+    "value": "4930"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781064136459,
+    "value": "4933"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781064296863,
+    "value": "4936"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781064457281,
+    "value": "4939"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781064649746,
+    "value": "4942"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781064842214,
+    "value": "4945"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781065002631,
+    "value": "4948"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781065195106,
+    "value": "4951"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781065387558,
+    "value": "4954"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781065580090,
+    "value": "4957"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781065740507,
+    "value": "4960"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781065900904,
+    "value": "4963"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781066093380,
+    "value": "4966"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781066253828,
+    "value": "4969"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781066382154,
+    "value": "4972"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781066542561,
+    "value": "4975"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781066702975,
+    "value": "4978"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781066863417,
+    "value": "4981"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781067023801,
+    "value": "4984"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781067216272,
+    "value": "4987"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781067408747,
+    "value": "4990"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781067601224,
+    "value": "4993"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781067793693,
+    "value": "4996"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781067986178,
+    "value": "4999"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781068146598,
+    "value": "5002"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781068307023,
+    "value": "5005"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781068435379,
+    "value": "5009"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781068563736,
+    "value": "5012"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781068724151,
+    "value": "5015"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781068846502,
+    "value": "5016"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781068916660,
+    "value": "5018"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781069077083,
+    "value": "5021"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781069237481,
+    "value": "5024"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781069365832,
+    "value": "5027"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781069494196,
+    "value": "5030"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781069654621,
+    "value": "5033"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781069815050,
+    "value": "5036"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781069943404,
+    "value": "5039"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781070071767,
+    "value": "5042"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781070200128,
+    "value": "5045"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781070328487,
+    "value": "5048"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781070456858,
+    "value": "5051"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781070642607,
+    "value": "5053"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781070649350,
+    "value": "5054"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781070809780,
+    "value": "5057"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781070970201,
+    "value": "5060"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781071130614,
+    "value": "5063"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781071291025,
+    "value": "5066"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781071483497,
+    "value": "5069"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781071643917,
+    "value": "5072"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781071804341,
+    "value": "5075"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781071964756,
+    "value": "5078"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781072125168,
+    "value": "5081"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781072317660,
+    "value": "5084"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781072439239,
+    "value": "5085"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781072510111,
+    "value": "5087"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781072670505,
+    "value": "5090"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781072766789,
+    "value": "5093"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781072959248,
+    "value": "5096"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781073055540,
+    "value": "5100"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781073151826,
+    "value": "5103"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781073312243,
+    "value": "5106"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781073440597,
+    "value": "5109"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781073601028,
+    "value": "5112"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781073761440,
+    "value": "5115"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781073889805,
+    "value": "5118"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781074050230,
+    "value": "5121"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781074210657,
+    "value": "5124"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781074371073,
+    "value": "5127"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781074531495,
+    "value": "5130"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781074723953,
+    "value": "5133"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781074884367,
+    "value": "5136"
+  },
+  {
+    "code": "forward_energy_total",
+    "event_time": 1781075044785,
+    "value": "5139"
+  }
+]

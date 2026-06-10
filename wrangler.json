@@ -8,8 +8,12 @@
 		"enabled": true
 	},
 	"upload_source_maps": true,
+	"triggers": {
+		"crons": ["*/15 * * * *"]
+	},
 	"vars": {
 		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare",
+		"TUYA_ENDPOINT": "https://openapi-sg.iotbing.com",
 		"LEARNING_DEFAULT_MODEL": "claude-sonnet-4-6",
 		"LEARNING_SESSION_DAYS": "30",
 		"LEARNING_REMEMBER_DAYS": "90",
@@ -21,5 +25,8 @@
 			"binding": "RATE_LIMIT_KV",
 			"id": "4ebcc5d79c3641369a028a9c97af9f2c"
 		}
+	],
+	"routes": [
+		{ "pattern": "ai.napats.dev/*", "zone_name": "napats.dev" }
 	]
 }

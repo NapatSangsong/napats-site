@@ -16,3 +16,11 @@ MASTER_PASSWORD_HASH=SALT_BASE64:HASH_BASE64
 # Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 SESSION_HMAC_SECRET=BASE64_32_BYTES
 GEMINI_API_KEY=your-gemini-api-key-here
+
+# Tuya smart meter (energy dashboard)
+TUYA_ACCESS_ID=your-tuya-access-id
+TUYA_ACCESS_SECRET=your-tuya-access-secret
+TUYA_DEVICE_ID=your-tuya-device-id
+
+# Energy page gate key (any string; SHA-256 of this is stored in the cookie)
+ENERGY_PAGE_KEY=your-energy-page-key

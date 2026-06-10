@@ -2,8 +2,19 @@ import { type RouteConfig, index, layout, route } from "@react-router/dev/routes
 
 export default [
 	index("routes/home.tsx"),
+
+	// LINE Bot
+	route("line/webhook", "routes/line.webhook.ts"),
+	route("line/decision", "routes/line.decision.ts"),
 	route("vault", "routes/vault.tsx"),
 	route("vault/signin", "routes/vault-signin.tsx"),
+
+	// Energy dashboard (private, key-gated, not in nav)
+	route("energy", "routes/energy.tsx"),
+	route("api/energy/live", "routes/api/energy.live.ts"),
+	route("api/energy/history", "routes/api/energy.history.ts"),
+	route("api/energy/weather", "routes/api/energy.weather.ts"),
+	route("api/energy/solar", "routes/api/energy.solar.ts"),
 
 	// Learning platform — API routes
 	route("learning/gate", "routes/learning.gate.tsx"),
