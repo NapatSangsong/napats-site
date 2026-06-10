@@ -10,5 +10,13 @@ declare namespace Cloudflare {
 		ANTHROPIC_API_KEY: string;
 		MASTER_PASSWORD_HASH: string;
 		SESSION_HMAC_SECRET: string;
+		// LINE Bot secrets
+		LINE_CHANNEL_ACCESS_TOKEN: string;
+		LINE_CHANNEL_SECRET: string;
+		// Energy dashboard secrets (TUYA_ENDPOINT is a var in wrangler.json)
+		TUYA_ACCESS_ID: string;
+		TUYA_ACCESS_SECRET: string;
+		TUYA_DEVICE_ID: string;
+		ENERGY_PAGE_KEY: string;
 	}
 }
