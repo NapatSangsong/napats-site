@@ -7,6 +7,13 @@
  */
 import { data } from "react-router";
 
+/**
+ * TEMPORARY: when true, /energy and its APIs are fully public (no key needed).
+ * Flip back to `false` to re-enable the key gate — that single change restores
+ * the original behaviour everywhere (page loader + all /api/energy/* routes).
+ */
+export const ENERGY_PUBLIC = true;
+
 const COOKIE_NAME = "__Host-napats-energy";
 const COOKIE_MAX_AGE = 180 * 24 * 3600; // 180 days
 
@@ -55,6 +62,7 @@ export async function requireEnergyAuth(
 	request: Request,
 	env: { ENERGY_PAGE_KEY: string },
 ): Promise<void> {
+	if (ENERGY_PUBLIC) return; // public mode — no key required
 	if (!(await isAuthorized(request, env))) {
 		throw data(null, { status: 404 });
 	}

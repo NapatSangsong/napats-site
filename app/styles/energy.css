@@ -1359,3 +1359,135 @@
 	opacity: 0.8;
 	font-size: 0.78rem;
 }
+
+/* ── Finance basis toggle (MEA baseline ↔ measured/realtime) ─────── */
+.energy-root .basis-bar {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 70px 0 -14px;
+	padding: 10px 14px;
+	background: var(--night-2);
+	border: 1px solid var(--line);
+	border-radius: 14px;
+}
+.energy-root .basis-label {
+	font-size: 0.82rem;
+	color: var(--ink-dim);
+	font-weight: 600;
+}
+.energy-root .basis-seg {
+	display: inline-flex;
+	background: rgba(16, 23, 42, 0.6);
+	border: 1px solid var(--line);
+	border-radius: 99px;
+	padding: 3px;
+	margin-left: auto;
+}
+.energy-root .basis-seg button {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	color: var(--ink-dim);
+	font: inherit;
+	font-size: 0.8rem;
+	font-weight: 600;
+	padding: 5px 14px;
+	border-radius: 99px;
+	cursor: pointer;
+	transition: background 0.18s, color 0.18s;
+}
+.energy-root .basis-seg button.on {
+	background: #4da3ff;
+	color: #08111f;
+}
+.energy-root .basis-hint {
+	flex-basis: 100%;
+	font-size: 0.74rem;
+	color: var(--ink-dim);
+	opacity: 0.85;
+}
+
+/* ── Install gauge (ติด vs ไม่ติด) ───────────────────────────────── */
+.energy-root .gauge-wrap {
+	margin: 8px 0 16px;
+}
+.energy-root .gauge-track {
+	position: relative;
+	height: 16px;
+	border-radius: 99px;
+	background: linear-gradient(90deg, #ff6a5e 0%, #ffb454 50%, #5ae08f 100%);
+	margin: 40px 0 10px;
+}
+.energy-root .gauge-mid {
+	position: absolute;
+	left: 50%;
+	top: -7px;
+	bottom: -7px;
+	width: 2px;
+	background: var(--ink-dim);
+	opacity: 0.45;
+	transform: translateX(-50%);
+}
+.energy-root .gauge-arrow {
+	position: absolute;
+	top: -34px;
+	transform: translateX(-50%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1px;
+	transition: left 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.energy-root .gauge-arrow .g-val {
+	font-size: 0.82rem;
+	font-weight: 600;
+	white-space: nowrap;
+	color: var(--ink);
+}
+.energy-root .gauge-arrow.yes .g-val,
+.energy-root .gauge-arrow.yes .g-tip {
+	color: var(--good);
+}
+.energy-root .gauge-arrow.no .g-val,
+.energy-root .gauge-arrow.no .g-tip {
+	color: var(--sun);
+}
+.energy-root .gauge-arrow .g-tip {
+	font-size: 1.1rem;
+	line-height: 0.7;
+}
+.energy-root .gauge-ends {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.8rem;
+	color: var(--ink-dim);
+}
+.energy-root .gauge-ends span:first-child {
+	color: #ff8b7e;
+}
+.energy-root .gauge-ends span:last-child {
+	color: var(--good);
+}
+.energy-root .gauge-verdict {
+	margin-top: 14px;
+	font-size: 0.96rem;
+	font-weight: 600;
+}
+.energy-root .gauge-verdict.yes {
+	color: var(--good);
+}
+.energy-root .gauge-verdict.no {
+	color: var(--sun);
+}
+.energy-root .gauge-note {
+	margin-top: 6px;
+	font-size: 0.82rem;
+	color: var(--ink-dim);
+}
+@media (prefers-reduced-motion: reduce) {
+	.energy-root .gauge-arrow {
+		transition: none;
+	}
+}
