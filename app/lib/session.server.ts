@@ -32,7 +32,7 @@ async function derivePasswordHash(password: string, salt: Uint8Array): Promise<U
 	const bits = await crypto.subtle.deriveBits(
 		{
 			name: "PBKDF2",
-			salt,
+			salt: salt as BufferSource,
 			iterations: PBKDF2_ITERATIONS,
 			hash: "SHA-256",
 		},
@@ -91,7 +91,7 @@ async function hmacSign(payload: string, secret: string): Promise<string> {
 	const enc = new TextEncoder();
 	const key = await crypto.subtle.importKey(
 		"raw",
-		base64ToBytes(secret),
+		base64ToBytes(secret) as BufferSource,
 		{ name: "HMAC", hash: "SHA-256" },
 		false,
 		["sign"],

@@ -177,8 +177,8 @@ export default function ProgressPage({ loaderData }: Route.ComponentProps) {
 
 	useEffect(() => {
 		fetch("/learning/api/review-schedule")
-			.then((r) => r.json())
-			.then((data: { due: ReviewItem[]; upcoming: ReviewItem[] }) => {
+			.then((r) => r.json() as Promise<{ due: ReviewItem[]; upcoming: ReviewItem[] }>)
+			.then((data) => {
 				setDueReviews(data.due || []);
 				setUpcomingReviews(data.upcoming || []);
 				setReviewsLoaded(true);

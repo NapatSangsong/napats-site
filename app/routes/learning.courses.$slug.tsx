@@ -5,15 +5,16 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import type { Route } from "./+types/learning.courses.$slug";
 import { useTheme } from "./learning";
+import type { ThemeTokens } from "~/lib/theme";
 import { createServiceClient } from "~/lib/supabase.server";
 import { TopBar } from "~/components/learning/TopBar";
 import { Tracked, FilmDot, Rule, ProgressBar, TrackedButton } from "~/components/learning/primitives";
 
 const AI_MODELS = [
 	{ id: "auto", label: "AUTO", badge: "RECOMMENDED" },
-	{ id: "google/gemini-pro-latest", label: "GEMINI PRO", badge: "BEST" },
-	{ id: "google/gemini-flash-latest", label: "GEMINI FLASH", badge: "FAST" },
-	{ id: "anthropic/claude-sonnet-4.6", label: "CLAUDE SONNET", badge: "PREMIUM" },
+	{ id: "google/gemini-2.5-pro-preview", label: "GEMINI PRO", badge: "BEST" },
+	{ id: "google/gemini-2.0-flash-001", label: "GEMINI FLASH", badge: "FAST" },
+	{ id: "anthropic/claude-sonnet-4-5", label: "CLAUDE SONNET", badge: "PREMIUM" },
 	{ id: "google/gemma-4-31b-it:free", label: "GEMMA 31B", badge: "FREE" },
 	{ id: "google/gemma-4-26b-a4b-it:free", label: "GEMMA 26B", badge: "FREE" },
 ];
@@ -684,7 +685,7 @@ type Suggestion = {
 	connection: string;
 };
 
-function WhatsNextSection({ courseId, t }: { courseId: string; t: Record<string, string> }) {
+function WhatsNextSection({ courseId, t }: { courseId: string; t: ThemeTokens }) {
 	const navigate = useNavigate();
 	const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -699,9 +700,9 @@ function WhatsNextSection({ courseId, t }: { courseId: string; t: Record<string,
 		})
 			.then((res) => {
 				if (!res.ok) throw new Error("fetch failed");
-				return res.json();
+				return res.json() as Promise<{ suggestions: Suggestion[] }>;
 			})
-			.then((data: { suggestions: Suggestion[] }) => {
+			.then((data) => {
 				if (!cancelled) setSuggestions(data.suggestions || []);
 			})
 			.catch(() => {

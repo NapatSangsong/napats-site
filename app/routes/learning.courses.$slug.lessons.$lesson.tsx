@@ -245,9 +245,9 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	const [mermaidPopup, setMermaidPopup] = useState<string | null>(null); // mermaid code for popup
 	const LESSON_MODELS = [
 		{ id: "auto", label: "AUTO", desc: "ระบบเลือกให้", badge: "RECOMMENDED" },
-		{ id: "google/gemini-pro-latest", label: "GEMINI PRO", desc: "เก่งสุด · ไทยดี", badge: "BEST" },
-		{ id: "google/gemini-flash-latest", label: "GEMINI FLASH", desc: "เร็ว · ดี", badge: "FAST" },
-		{ id: "anthropic/claude-sonnet-4.6", label: "CLAUDE SONNET", desc: "เก่งภาษา", badge: "PREMIUM" },
+		{ id: "google/gemini-2.5-pro-preview", label: "GEMINI PRO", desc: "เก่งสุด · ไทยดี", badge: "BEST" },
+		{ id: "google/gemini-2.0-flash-001", label: "GEMINI FLASH", desc: "เร็ว · ดี", badge: "FAST" },
+		{ id: "anthropic/claude-sonnet-4-5", label: "CLAUDE SONNET", desc: "เก่งภาษา", badge: "PREMIUM" },
 		{ id: "google/gemma-4-31b-it:free", label: "GEMMA 31B", desc: "ฟรี", badge: "FREE" },
 	];
 
@@ -277,7 +277,7 @@ hyper:hover {
 	// Load personal notes on mount
 	useEffect(() => {
 		fetch(`/learning/api/notes?lessonId=${lesson.id}`)
-			.then(r => r.json())
+			.then(r => r.json() as Promise<{ notes?: { id: string; lesson_id: string; block_index: number | null; content: string; color: string }[] }>)
 			.then(data => { if (data.notes) setNotes(data.notes); })
 			.catch(() => {});
 	}, [lesson.id]);
@@ -285,7 +285,7 @@ hyper:hover {
 	// Load journal entries on mount
 	useEffect(() => {
 		fetch(`/learning/api/journal?lessonId=${lesson.id}`)
-			.then(r => r.json())
+			.then(r => r.json() as Promise<{ entries?: { id: string; content: string; kind: string; created_at: string }[] }>)
 			.then(data => { if (data.entries) setJournalEntries(data.entries); })
 			.catch(() => {});
 	}, [lesson.id]);
@@ -368,7 +368,7 @@ hyper:hover {
 	}, [lesson.id, generating]);
 
 	// Fetch perspective-shifted lesson content
-	const fetchPerspective = useCallback(async (perspective: "evolutionary" | "neuro" | "philosopher") => {
+	const fetchPerspective = useCallback(async (perspective: "evolutionary" | "neuro" | "philosopher" | "architect") => {
 		// Return cached if available
 		if (perspectiveCacheRef.current[perspective]?.length) {
 			setPerspectiveBlocks(perspectiveCacheRef.current[perspective]);
@@ -485,7 +485,7 @@ hyper:hover {
 				body: JSON.stringify({ blocks: currentBlocks, targetLang: lang }),
 			});
 
-			const data = await res.json();
+			const data = (await res.json()) as { message?: string; blocks?: unknown[] };
 
 			if (!res.ok) {
 				setTranslateError(data.message || "translation failed");
@@ -564,7 +564,7 @@ hyper:hover {
 				}),
 			});
 			if (!res.ok) {
-				const errBody = await res.json().catch(() => ({ message: "connection failed" }));
+				const errBody = (await res.json().catch(() => ({ message: "connection failed" }))) as { message?: string };
 				setRecallMessages([
 					{ role: "user", content: "I just finished this lesson. I'm ready for the recall checkpoint." },
 					{ role: "assistant", content: errBody.message || "connection failed — click retry" },
@@ -679,7 +679,7 @@ hyper:hover {
 				}),
 			});
 			if (!res.ok) {
-				const errBody = await res.json().catch(() => ({ message: "connection failed" }));
+				const errBody = (await res.json().catch(() => ({ message: "connection failed" }))) as { message?: string };
 				setRecallMessages((m) => {
 					const next = [...m];
 					next[next.length - 1] = { role: "assistant", content: errBody.message || "connection failed — click retry" };
@@ -2268,11 +2268,12 @@ window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelecto
 														: { lessonId: lesson.id, blockIndex: noteEditing.blockIndex, content: noteEditing.content, color: noteEditing.color };
 													const res = await fetch("/learning/api/notes", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 													if (res.ok) {
-														const data = await res.json();
+														const data = (await res.json()) as { note?: { id: string; lesson_id: string; block_index: number | null; content: string; color: string } };
 														if (noteEditing.noteId) {
 															setNotes(n => n.map(x => x.id === noteEditing.noteId ? { ...x, content: noteEditing.content, color: noteEditing.color } : x));
 														} else if (data.note) {
-															setNotes(n => [...n, data.note]);
+															const note = data.note;
+															setNotes(n => [...n, note]);
 														}
 													}
 													setNoteEditing(null);
@@ -2658,9 +2659,10 @@ window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelecto
 											headers: { "Content-Type": "application/json" },
 											body: JSON.stringify({ lessonId: lesson.id, content: journalText.trim(), kind: "reflection" }),
 										});
-										const data = await res.json();
+										const data = (await res.json()) as { entry?: { id: string; content: string; kind: string; created_at: string } };
 										if (data.entry) {
-											setJournalEntries((prev) => [data.entry, ...prev]);
+											const entry = data.entry;
+											setJournalEntries((prev) => [entry, ...prev]);
 											setJournalText("");
 										}
 									} catch { /* ignore */ } finally { setJournalSaving(false); }
@@ -2977,7 +2979,7 @@ window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelecto
 													headers: { "Content-Type": "application/json" },
 													body: JSON.stringify({ text: selection.text, targetLang }),
 												});
-												const data = await res.json();
+												const data = (await res.json()) as { translated?: string; message?: string };
 												setSelectionTranslation(data.translated || data.message || "translation failed");
 											} catch {
 												setSelectionTranslation("connection error");

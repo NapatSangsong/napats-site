@@ -106,13 +106,15 @@ async function handleLogin(
 	try {
 		const supabase = createServiceClient(env);
 		ctx.waitUntil(
-			supabase.from("sessions").upsert({
-				dev_id: devId,
-				label: detectDeviceLabel(request.headers.get("User-Agent")),
-				user_agent: request.headers.get("User-Agent")?.slice(0, 256),
-				ip_hash: await hashIp(ip),
-				last_seen_at: new Date().toISOString(),
-			}),
+			Promise.resolve(
+				supabase.from("sessions").upsert({
+					dev_id: devId,
+					label: detectDeviceLabel(request.headers.get("User-Agent")),
+					user_agent: request.headers.get("User-Agent")?.slice(0, 256),
+					ip_hash: await hashIp(ip),
+					last_seen_at: new Date().toISOString(),
+				}),
+			),
 		);
 	} catch {
 		// Non-critical — session cookie is the source of truth

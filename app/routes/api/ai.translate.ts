@@ -10,7 +10,7 @@ import { requireAuth } from "~/lib/ai/helpers.server";
 import { z } from "zod";
 
 const TranslateBody = z.object({
-	blocks: z.array(z.record(z.unknown())),
+	blocks: z.array(z.record(z.string(), z.unknown())),
 	targetLang: z.enum(["en", "th"]),
 	sourceLang: z.string().optional(),
 });
