@@ -1491,3 +1491,126 @@
 		transition: none;
 	}
 }
+
+/* ── Realtime per-period tally (today vs yesterday) ──────────────── */
+.energy-root .ptally {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 6px;
+	table-layout: fixed;
+}
+.energy-root .ptally th:first-child,
+.energy-root .ptally td:first-child {
+	width: 38%;
+}
+.energy-root .ptally th,
+.energy-root .ptally td {
+	padding: 10px 8px;
+	text-align: right;
+	vertical-align: bottom;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+@media (max-width: 440px) {
+	.energy-root .ptally th,
+	.energy-root .ptally td {
+		padding: 8px 4px;
+	}
+	.energy-root .ptally tbody th {
+		font-size: 0.8rem;
+	}
+	.energy-root .ptally td b {
+		font-size: 0.92rem;
+	}
+	.energy-root .ptally .pt-baht {
+		font-size: 0.74rem;
+	}
+}
+.energy-root .ptally thead th {
+	font-size: 0.78rem;
+	color: var(--ink-dim);
+	font-weight: 600;
+	border-bottom: 1px solid var(--line);
+}
+.energy-root .ptally thead th small {
+	display: block;
+	font-weight: 400;
+	font-size: 0.66rem;
+	opacity: 0.8;
+}
+.energy-root .ptally tbody th {
+	text-align: left;
+	font-weight: 600;
+	font-size: 0.9rem;
+	color: var(--ink);
+	white-space: nowrap;
+}
+.energy-root .ptally tbody th small {
+	display: block;
+	font-weight: 400;
+	font-size: 0.7rem;
+	color: var(--ink-dim);
+}
+.energy-root .ptally td b {
+	font-size: 1.05rem;
+	font-weight: 600;
+	color: var(--ink);
+}
+.energy-root .ptally td small {
+	color: var(--ink-dim);
+	font-size: 0.7rem;
+}
+.energy-root .ptally .pt-baht {
+	display: block;
+	font-family: "IBM Plex Mono", monospace;
+	font-size: 0.82rem;
+	color: var(--ink-dim);
+}
+.energy-root .ptally tbody tr {
+	border-bottom: 1px solid rgba(44, 58, 96, 0.5);
+}
+/* highlight the live "today" column */
+.energy-root .ptally thead th:last-child,
+.energy-root .ptally td:last-child {
+	background: rgba(77, 163, 255, 0.06);
+}
+.energy-root .ptally thead th:last-child {
+	color: #4da3ff;
+}
+.energy-root .ptally .pt-on th,
+.energy-root .ptally .pt-on .pt-baht {
+	color: #ff8b7e;
+}
+.energy-root .ptally .pt-off th,
+.energy-root .ptally .pt-off .pt-baht {
+	color: #3dd6c3;
+}
+.energy-root .ptally .pt-solar {
+	opacity: 0.7;
+}
+.energy-root .ptally .pt-solar th {
+	color: #ffb454;
+}
+.energy-root .ptally .pt-total {
+	border-top: 2px solid var(--line);
+}
+.energy-root .ptally .pt-total th,
+.energy-root .ptally .pt-total td b {
+	font-size: 1.12rem;
+}
+.energy-root .ptally .pt-total .pt-baht {
+	color: var(--ink);
+	font-weight: 600;
+	font-size: 0.96rem;
+}
+.energy-root .pt-note {
+	margin-top: 12px;
+	font-size: 0.82rem;
+	color: var(--ink-dim);
+}
+.energy-root .pt-note .pt-up {
+	color: #ff8b7e;
+}
+.energy-root .pt-note .pt-down {
+	color: var(--good);
+}

@@ -9,6 +9,7 @@ import { InstallGauge } from "~/components/energy/InstallGauge";
 import { LiveNow } from "~/components/energy/LiveNow";
 import { LoadCurve } from "~/components/energy/LoadCurve";
 import { LoadingOverlay, type StepState } from "~/components/energy/LoadingOverlay";
+import { PeriodTally } from "~/components/energy/PeriodTally";
 import { EnergyHeader, ProfileBars } from "~/components/energy/ProfileBars";
 import { SavingsChart } from "~/components/energy/SavingsChart";
 import { ScenarioCards, BaseloadStats } from "~/components/energy/ScenarioCards";
@@ -303,42 +304,45 @@ export default function EnergyPage() {
 							<LiveNow live={live} liveOffline={liveOffline} a={calc.a} updatedAt={liveUpdatedAt} />
 						</div>
 						<div className={sectionCls(2)} style={sectionStyle(2)}>
-							<HouseFlow live={live} liveOffline={liveOffline} a={calc.a} />
+							<PeriodTally a={calc.a} live={live} />
 						</div>
 						<div className={sectionCls(3)} style={sectionStyle(3)}>
-							<SolarForecast a={calc.a} />
+							<HouseFlow live={live} liveOffline={liveOffline} a={calc.a} />
 						</div>
 						<div className={sectionCls(4)} style={sectionStyle(4)}>
-							<DailyEnergyChart a={calc.a} />
+							<SolarForecast a={calc.a} />
 						</div>
 						<div className={sectionCls(5)} style={sectionStyle(5)}>
-							<ProfileBars f={calc.f} barsOn={barsOn} />
+							<DailyEnergyChart a={calc.a} />
 						</div>
 						<div className={sectionCls(6)} style={sectionStyle(6)}>
-							<LoadCurve prof={calc.a.prof} sol={calc.sol} />
+							<ProfileBars f={calc.f} barsOn={barsOn} />
 						</div>
 						<div className={sectionCls(7)} style={sectionStyle(7)}>
-							<Heatmap a={calc.a} />
+							<LoadCurve prof={calc.a.prof} sol={calc.sol} />
 						</div>
 						<div className={sectionCls(8)} style={sectionStyle(8)}>
-							<ForecastChart fc={calc.fc} a={calc.a} />
+							<Heatmap a={calc.a} />
 						</div>
 						<div className={sectionCls(9)} style={sectionStyle(9)}>
-							<SavingsChart sv={calc.sv} fc={calc.fc} />
+							<ForecastChart fc={calc.fc} a={calc.a} />
 						</div>
 						<div className={sectionCls(10)} style={sectionStyle(10)}>
-							<BaseloadStats a={calc.a} />
+							<SavingsChart sv={calc.sv} fc={calc.fc} />
 						</div>
 						<div className={sectionCls(11)} style={sectionStyle(11)}>
-							<ScenarioCards f={calc.f} />
+							<BaseloadStats a={calc.a} />
 						</div>
 						<div className={sectionCls(12)} style={sectionStyle(12)}>
-							<InstallGauge f={calc.f} />
+							<ScenarioCards f={calc.f} />
 						</div>
 						<div className={sectionCls(13)} style={sectionStyle(13)}>
-							<Verdict a={calc.a} f={calc.f} fc={calc.fc} />
+							<InstallGauge f={calc.f} />
 						</div>
 						<div className={sectionCls(14)} style={sectionStyle(14)}>
+							<Verdict a={calc.a} f={calc.f} fc={calc.fc} />
+						</div>
+						<div className={sectionCls(15)} style={sectionStyle(15)}>
 							<Inspector
 								calc={calc}
 								live={live}
