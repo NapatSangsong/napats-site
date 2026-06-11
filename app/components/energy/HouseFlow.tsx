@@ -81,8 +81,14 @@ export function HouseFlow({
 	const rate = isOnPeak ? ENERGY_CONST.TOU_ON : ENERGY_CONST.TOU_OFF;
 	const tariffClass = isEveningPeak ? "peak" : isOnPeak ? "on" : "off";
 	const tariffLabel = isEveningPeak ? "Evening Peak" : isOnPeak ? "TOU On-Peak" : "Off-Peak";
-	// units used so far TODAY in the current TOU class (on vs off), incl. the live tail
-	const periodKwh = (isOnPeak ? (a.dailyOn.get(today) ?? 0) : (a.dailyOff.get(today) ?? 0)) + liveExtra;
+	// units used in the CURRENT TOU block — the contiguous run of same-class hours
+	// today up to now (so it resets at each boundary, e.g. ~0 just after 22:00),
+	// not the whole day's off-peak which would mix in the overnight 00:00–09:00.
+	const classOf = (h: number) => (wd < 5 && h >= 9 && h < 22 ? "on" : "off");
+	let blockStart = hour;
+	while (blockStart > 0 && classOf(blockStart - 1) === classOf(hour)) blockStart--;
+	let periodKwh = liveExtra;
+	for (let h = blockStart; h <= hour; h++) periodKwh += a.dh.get(today * 24 + h) ?? 0;
 
 	// brightness: real load + a boost during the costly peak windows
 	const peakBoost = isEveningPeak ? 0.45 : isOnPeak ? 0.22 : 0;
@@ -122,7 +128,7 @@ export function HouseFlow({
 				<h2>บ้านกับการไหลของไฟ</h2>
 				<div className="house-badges">
 					<span className="house-tod">{isDay ? "☀️ กลางวัน" : "🌙 กลางคืน"}</span>
-					<span className={`house-tariff ${tariffClass}`} title={`ใช้ในช่วง ${tariffLabel} วันนี้`}>
+					<span className={`house-tariff ${tariffClass}`} title={`ใช้ในช่วง ${tariffLabel} ปัจจุบัน (ตั้งแต่เริ่มช่วงราคานี้)`}>
 						⚡ {tariffLabel} · <b>{f2(periodKwh)}</b> หน่วย · ฿{money(rate)}/kWh
 					</span>
 					{liveOffline && <span className="badge-off">live offline</span>}

@@ -286,12 +286,12 @@ export function analyze(pts: Point[]): Analysis {
 
 // ---------------- 2) financial engine ----------------
 
-export function finance(a: Analysis): Finance {
+export function finance(a: Analysis, useMeaBaseline: boolean = C.USE_MEA_BASELINE): Finance {
 	const pct = (v: number) => (a.total ? v / a.total : 0);
 	const onPct = pct(a.on);
 	const offPct = pct(a.off);
 	const measuredMo = a.kwhDay * 30;
-	const monthlyKwh = C.USE_MEA_BASELINE ? C.MEA_MONTHLY_KWH : measuredMo;
+	const monthlyKwh = useMeaBaseline ? C.MEA_MONTHLY_KWH : measuredMo;
 	const m = monthlyKwh;
 	const onKwh = m * onPct;
 	const offKwh = m * offPct;
@@ -465,13 +465,13 @@ export interface CalcResult {
 /** Returns null when there isn't enough data to analyze */
 export function calcAll(
 	raw: Iterable<readonly [number | string, number | string]>,
-	opts: { forecastEnd?: number; nowMs?: number } = {},
+	opts: { forecastEnd?: number; nowMs?: number; useMeaBaseline?: boolean } = {},
 ): CalcResult | null {
 	const pts = toPoints(raw);
 	if (pts.length < 2) return null;
 	const a = analyze(pts);
 	if (a.daily.size === 0) return null;
-	const f = finance(a);
+	const f = finance(a, opts.useMeaBaseline ?? C.USE_MEA_BASELINE);
 	const fc = forecast(a, opts.forecastEnd ?? endOfCurrentMonthBkk(opts.nowMs ?? a.t1));
 	const sv = savingsTrack(f, fc);
 	return { a, f, fc, sv, sol: solarCurve() };

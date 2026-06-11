@@ -5,6 +5,7 @@ import "~/styles/energy.css";
 import { Inspector } from "~/components/energy/Inspector";
 import { DailyEnergyChart } from "~/components/energy/DailyEnergyChart";
 import { HouseFlow } from "~/components/energy/HouseFlow";
+import { InstallGauge } from "~/components/energy/InstallGauge";
 import { LiveNow } from "~/components/energy/LiveNow";
 import { LoadCurve } from "~/components/energy/LoadCurve";
 import { LoadingOverlay, type StepState } from "~/components/energy/LoadingOverlay";
@@ -17,7 +18,7 @@ import { ForecastChart } from "~/components/energy/ForecastChart";
 import { Heatmap } from "~/components/energy/Heatmap";
 import type { ApiStats, LiveData } from "~/components/energy/types";
 import { calcAll, type CalcResult } from "~/lib/energy-calc";
-import { gateCookie, keyHash, requireEnergyAuth, safeEqual } from "~/lib/energy-gate.server";
+import { ENERGY_PUBLIC, gateCookie, keyHash, requireEnergyAuth, safeEqual } from "~/lib/energy-gate.server";
 
 export const meta: Route.MetaFunction = () => [
 	{ title: "Energy Dashboard v10" },
@@ -33,6 +34,7 @@ export const links: Route.LinksFunction = () => [
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const env = context.cloudflare.env;
+	if (ENERGY_PUBLIC) return null; // public mode — anyone can view, no key
 	const key = new URL(request.url).searchParams.get("key");
 	if (key !== null) {
 		// correct key → set cookie and drop ?key= from the URL; wrong key → 404
@@ -76,6 +78,19 @@ export default function EnergyPage() {
 	});
 	const pointsRef = useRef<[number, number][]>([]);
 	const reducedRef = useRef(false);
+	// finance basis: false = MEA bill baseline (default), true = measured/realtime.
+	// Ephemeral (not persisted) — resets to default on reload, by design.
+	const [measured, setMeasured] = useState(false);
+	const measuredRef = useRef(false);
+	const setBasis = useCallback((next: boolean) => {
+		measuredRef.current = next;
+		setMeasured(next);
+		const pts = pointsRef.current;
+		if (pts.length >= 2) {
+			const result = calcAll(pts, { nowMs: Date.now(), useMeaBaseline: !next });
+			if (result) setCalc(result);
+		}
+	}, []);
 
 	const setStep = useCallback((i: number, st: StepState) => {
 		setSteps((prev) => prev.map((s, j) => (j === i ? st : s)));
@@ -177,7 +192,7 @@ export default function EnergyPage() {
 			// yield a frame so the step state is visible before sync calc work
 			await new Promise((r) => setTimeout(r, 30));
 			if (cancelled) return;
-			const result = calcAll(pts, { nowMs: Date.now() });
+			const result = calcAll(pts, { nowMs: Date.now(), useMeaBaseline: !measuredRef.current });
 			if (!result) {
 				setStep(2, "fail");
 				setFatal("empty");
@@ -209,7 +224,7 @@ export default function EnergyPage() {
 			void fetchHistory().then((pts) => {
 				if (!pts) return;
 				pointsRef.current = pts;
-				const result = calcAll(pts, { nowMs: Date.now() });
+				const result = calcAll(pts, { nowMs: Date.now(), useMeaBaseline: !measuredRef.current });
 				if (result) setCalc(result);
 			});
 		}, HISTORY_POLL_MS);
@@ -253,6 +268,34 @@ export default function EnergyPage() {
 				)}
 				{calc && (
 					<>
+						<div className="basis-bar">
+							<span className="basis-label">ฐานข้อมูลการเงิน</span>
+							<div className="basis-seg" role="tablist" aria-label="ฐานข้อมูลการเงิน">
+								<button
+									type="button"
+									role="tab"
+									aria-selected={!measured}
+									className={!measured ? "on" : ""}
+									onClick={() => measured && setBasis(false)}
+								>
+									บิล MEA (1,100)
+								</button>
+								<button
+									type="button"
+									role="tab"
+									aria-selected={measured}
+									className={measured ? "on" : ""}
+									onClick={() => !measured && setBasis(true)}
+								>
+									วัดจริง (realtime)
+								</button>
+							</div>
+							<span className="basis-hint">
+								{measured
+									? "กำลังสเกลค่าเงินด้วยยอดที่วัดได้จริง — เปลี่ยนตามข้อมูล (ไม่บันทึก รีเฟรชแล้วกลับค่าเริ่มต้น)"
+									: "ค่าเริ่มต้น: สเกลค่าเงินด้วยฐานบิล MEA 1,100 kWh/เดือน · กด “วัดจริง” เพื่อดูตามที่ใช้จริง"}
+							</span>
+						</div>
 						<div className={sectionCls(0)} style={sectionStyle(0)}>
 							<EnergyHeader a={calc.a} f={calc.f} liveOffline={liveOffline} />
 						</div>
@@ -290,9 +333,12 @@ export default function EnergyPage() {
 							<ScenarioCards f={calc.f} />
 						</div>
 						<div className={sectionCls(12)} style={sectionStyle(12)}>
-							<Verdict a={calc.a} f={calc.f} fc={calc.fc} />
+							<InstallGauge f={calc.f} />
 						</div>
 						<div className={sectionCls(13)} style={sectionStyle(13)}>
+							<Verdict a={calc.a} f={calc.f} fc={calc.fc} />
+						</div>
+						<div className={sectionCls(14)} style={sectionStyle(14)}>
 							<Inspector
 								calc={calc}
 								live={live}
