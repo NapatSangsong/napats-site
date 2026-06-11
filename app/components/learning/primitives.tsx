@@ -2,7 +2,7 @@
  * Shared primitives matching the napats.dev/learning design vocabulary.
  * Film-dot, tracked-caps labels, underline input, progress bar, etc.
  */
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import type { ThemeTokens } from "~/lib/theme";
 
 const MONO = "JetBrains Mono, ui-monospace, monospace";
@@ -232,7 +232,7 @@ export function TrackedButton({
 	children: ReactNode;
 	primary?: boolean;
 	ghost?: boolean;
-	onClick?: () => void;
+	onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
 	t: ThemeTokens;
 	disabled?: boolean;
 }) {

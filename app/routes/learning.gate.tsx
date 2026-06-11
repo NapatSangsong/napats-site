@@ -84,7 +84,7 @@ export default function GatePage({ loaderData }: Route.ComponentProps) {
 				return;
 			}
 
-			const data = await res.json();
+			const data = (await res.json()) as { retry_after?: number; message?: string };
 
 			if (res.status === 429) {
 				const retryAfter = data.retry_after ?? 60;

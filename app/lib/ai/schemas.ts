@@ -43,7 +43,7 @@ export const CodeBlockSchema = z.object({
 export const InteractiveBlockSchema = z.object({
   type: z.literal("interactive"),
   widget: z.string(),
-  props: z.record(z.unknown()),
+  props: z.record(z.string(), z.unknown()),
   caption: z.string().optional(),
 });
 

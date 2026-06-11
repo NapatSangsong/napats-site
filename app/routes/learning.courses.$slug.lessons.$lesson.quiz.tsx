@@ -74,7 +74,7 @@ export default function QuizPage({ loaderData }: Route.ComponentProps) {
 				body: JSON.stringify({ lessonId: lesson.id, count: 5 }),
 			});
 			if (res.ok) {
-				const data = await res.json();
+				const data = (await res.json()) as { questions?: Question[] };
 				setQuestions(data.questions || []);
 			}
 		} catch {
@@ -103,7 +103,7 @@ export default function QuizPage({ loaderData }: Route.ComponentProps) {
 				body: JSON.stringify({ quizId: existingQuiz?.id, questionId: cur?.id, answer: text }),
 			});
 			if (res.ok) {
-				const data = await res.json();
+				const data = (await res.json()) as { score: number; feedback: string };
 				setFeedback(data);
 			}
 		} catch {

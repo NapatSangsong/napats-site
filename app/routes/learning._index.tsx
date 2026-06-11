@@ -6,6 +6,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
 import type { Route } from "./+types/learning._index";
 import { useTheme } from "./learning";
+import type { ThemeTokens } from "~/lib/theme";
 import { createServiceClient } from "~/lib/supabase.server";
 import { TopBar } from "~/components/learning/TopBar";
 import {
@@ -74,7 +75,17 @@ export async function loader({ context }: Route.LoaderArgs) {
 		// Supabase may not be set up yet
 	}
 
-	let resumeLesson = null;
+	let resumeLesson: {
+		lesson_id: string;
+		scroll_percent: number;
+		last_accessed_at: string;
+		lessons: {
+			title: string;
+			order_index: number;
+			course_id: string;
+			courses: { title: string; slug: string };
+		};
+	} | null = null;
 	try {
 		const supabase2 = createServiceClient(env);
 		const { data: recentProgress } = await supabase2
@@ -86,7 +97,17 @@ export async function loader({ context }: Route.LoaderArgs) {
 			.maybeSingle();
 		if (recentProgress?.last_accessed_at) {
 			const daysSince = (Date.now() - new Date(recentProgress.last_accessed_at).getTime()) / 86400000;
-			if (daysSince < 30) resumeLesson = recentProgress;
+			if (daysSince < 30) resumeLesson = recentProgress as unknown as {
+				lesson_id: string;
+				scroll_percent: number;
+				last_accessed_at: string;
+				lessons: {
+					title: string;
+					order_index: number;
+					course_id: string;
+					courses: { title: string; slug: string };
+				};
+			};
 		}
 	} catch {}
 
@@ -115,9 +136,9 @@ interface CourseDraft {
 export const AI_MODELS = [
 	{ id: "auto", label: "AUTO", desc: "ระบบเลือกให้อัตโนมัติ", badge: "RECOMMENDED", cost: "" },
 	// Premium
-	{ id: "google/gemini-pro-latest", label: "GEMINI PRO", desc: "เก่งสุด · วิเคราะห์ลึก · ไทยดีมาก", badge: "BEST", cost: "$" },
-	{ id: "anthropic/claude-sonnet-4.6", label: "CLAUDE SONNET 4.6", desc: "เก่งภาษา · เนื้อหาดี · โค้ดเก่ง", badge: "PREMIUM", cost: "$$" },
-	{ id: "google/gemini-flash-latest", label: "GEMINI FLASH", desc: "เร็ว · คุณภาพดี · ประหยัด", badge: "FAST", cost: "$" },
+	{ id: "google/gemini-2.5-pro-preview", label: "GEMINI PRO", desc: "เก่งสุด · วิเคราะห์ลึก · ไทยดีมาก", badge: "BEST", cost: "$" },
+	{ id: "anthropic/claude-sonnet-4-5", label: "CLAUDE SONNET 4.5", desc: "เก่งภาษา · เนื้อหาดี · โค้ดเก่ง", badge: "PREMIUM", cost: "$$" },
+	{ id: "google/gemini-2.0-flash-001", label: "GEMINI FLASH", desc: "เร็ว · คุณภาพดี · ประหยัด", badge: "FAST", cost: "$" },
 	// Mid-tier
 	{ id: "qwen/qwen3.5-122b-a10b", label: "QWEN 3.5 122B", desc: "วิเคราะห์เชิงลึก · Multimodal · MoE", badge: "SMART", cost: "$" },
 	{ id: "mistralai/mistral-small-2603", label: "MISTRAL SMALL 4", desc: "เก่งหลายภาษา · 262K context", badge: "MULTILINGUAL", cost: "$" },
@@ -189,7 +210,7 @@ async function streamPlanCourse(
 	});
 
 	if (!res.ok) {
-		const err = await res.json().catch(() => ({ message: "request failed" }));
+		const err = (await res.json().catch(() => ({ message: "request failed" }))) as { message?: string };
 		throw new Error(err.message || `Error ${res.status}`);
 	}
 
@@ -246,7 +267,7 @@ const DIFFICULTY_LABELS: Record<string, string> = {
 };
 
 // ── Course Preview Card ─────────────────────────────────────
-function CoursePreviewCard({ draft, t }: { draft: CourseDraft; t: Record<string, string> }) {
+function CoursePreviewCard({ draft, t }: { draft: CourseDraft; t: ThemeTokens }) {
 	const hours = draft.estimated_minutes ? Math.round(draft.estimated_minutes / 60) : null;
 	const mins = draft.estimated_minutes ? draft.estimated_minutes % 60 : null;
 	const timeLabel = hours && hours > 0
@@ -539,13 +560,13 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 			});
 
 			if (!res.ok) {
-				const err = await res.json().catch(() => ({ message: "failed to create course" }));
+				const err = (await res.json().catch(() => ({ message: "failed to create course" }))) as { message?: string };
 				setComposeError(err.message || `Error ${res.status}`);
 				setApproving(false);
 				return;
 			}
 
-			const { course } = await res.json();
+			const { course } = (await res.json()) as { course: { slug: string } };
 			navigate(`/learning/courses/${course.slug}`);
 		} catch (err) {
 			setComposeError((err as Error).message || "Failed to create course");
@@ -573,7 +594,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 		if (courses.length > 0 && aiSuggestions.length === 0 && !loadingSuggestions) {
 			setLoadingSuggestions(true);
 			fetch("/learning/api/ai/suggest-courses", { method: "POST" })
-				.then((r) => r.json())
+				.then((r) => r.json() as Promise<{ suggestions?: { title: string; reason: string; prompt: string }[] }>)
 				.then((data) => {
 					if (data.suggestions) setAiSuggestions(data.suggestions);
 				})
@@ -737,6 +758,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 						{loaderData.resumeLesson && (
 							<div onClick={() => {
 								const r = loaderData.resumeLesson;
+								if (!r) return;
 								const course = r.lessons?.courses;
 								const lessonData = r.lessons;
 								if (course && lessonData) navigate(`/learning/courses/${course.slug}/lessons/${lessonData.order_index}`);

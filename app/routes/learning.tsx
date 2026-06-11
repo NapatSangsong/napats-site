@@ -58,10 +58,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 		// Update last_seen_at (fire-and-forget)
 		context.cloudflare.ctx.waitUntil(
-			supabase
-				.from("sessions")
-				.update({ last_seen_at: new Date().toISOString() })
-				.eq("dev_id", session.dev),
+			Promise.resolve(
+				supabase
+					.from("sessions")
+					.update({ last_seen_at: new Date().toISOString() })
+					.eq("dev_id", session.dev),
+			),
 		);
 	} catch {
 		// Supabase down — degrade open

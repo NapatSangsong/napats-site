@@ -97,7 +97,7 @@ export default function LibraryPage({ loaderData }: Route.ComponentProps) {
 				body: JSON.stringify(data),
 			});
 			if (res.ok) {
-				const result = await res.json();
+				const result = (await res.json()) as { course: { slug: string } };
 				navigate(`/learning/courses/${result.course.slug}`);
 			}
 		} catch {
