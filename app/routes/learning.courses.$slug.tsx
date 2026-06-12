@@ -7,17 +7,9 @@ import type { Route } from "./+types/learning.courses.$slug";
 import { useTheme } from "./learning";
 import type { ThemeTokens } from "~/lib/theme";
 import { createServiceClient } from "~/lib/supabase.server";
+import { COMPACT_MODELS as AI_MODELS } from "~/lib/ai/models";
 import { TopBar } from "~/components/learning/TopBar";
 import { Tracked, FilmDot, Rule, ProgressBar, TrackedButton } from "~/components/learning/primitives";
-
-const AI_MODELS = [
-	{ id: "auto", label: "AUTO", badge: "RECOMMENDED" },
-	{ id: "google/gemini-2.5-pro-preview", label: "GEMINI PRO", badge: "BEST" },
-	{ id: "google/gemini-2.0-flash-001", label: "GEMINI FLASH", badge: "FAST" },
-	{ id: "anthropic/claude-sonnet-4-5", label: "CLAUDE SONNET", badge: "PREMIUM" },
-	{ id: "google/gemma-4-31b-it:free", label: "GEMMA 31B", badge: "FREE" },
-	{ id: "google/gemma-4-26b-a4b-it:free", label: "GEMMA 26B", badge: "FREE" },
-];
 
 export function meta({ data }: Route.MetaArgs) {
 	const title = data?.course?.title ?? "Course";

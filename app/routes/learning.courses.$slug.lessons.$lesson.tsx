@@ -4,9 +4,11 @@
  * Includes Socratic Active Recall checkpoint before navigation.
  */
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate, useRevalidator } from "react-router";
 import type { Route } from "./+types/learning.courses.$slug.lessons.$lesson";
 import { useTheme } from "./learning";
 import { createServiceClient } from "~/lib/supabase.server";
+import { COMPACT_MODELS } from "~/lib/ai/models";
 import { Chip, Rule, Tracked } from "~/components/learning/primitives";
 
 // ── Deep-dive types ───────────────────────────────────────
@@ -114,10 +116,23 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 	}
 }
 
-export default function LessonReader({ loaderData }: Route.ComponentProps) {
+export default function LessonPage(props: Route.ComponentProps) {
+	// Per-lesson state (blocks, recall, translation, deep-dives) must reset when
+	// navigating between lessons client-side, so remount the reader per lesson id.
+	return <LessonReader key={props.loaderData.lesson.id} {...props} />;
+}
+
+function LessonReader({ loaderData }: Route.ComponentProps) {
 	const { theme, t, toggleTheme } = useTheme();
 	const { course, lesson, lessons, blocks: initialBlocks, progress } = loaderData;
+	const navigate = useNavigate();
+	const revalidator = useRevalidator();
 	const [blocks, setBlocks] = useState<unknown[]>(initialBlocks);
+
+	// Pick up fresh blocks after revalidation (e.g. when generation completes)
+	useEffect(() => {
+		setBlocks(initialBlocks);
+	}, [initialBlocks]);
 	const [chatOpen, setChatOpen] = useState(true);
 
 	// Mobile responsiveness
@@ -243,13 +258,7 @@ export default function LessonReader({ loaderData }: Route.ComponentProps) {
 	const [lessonModel, setLessonModel] = useState(lesson.generated_by_model || "auto");
 	const [lessonModelPickerOpen, setLessonModelPickerOpen] = useState(false);
 	const [mermaidPopup, setMermaidPopup] = useState<string | null>(null); // mermaid code for popup
-	const LESSON_MODELS = [
-		{ id: "auto", label: "AUTO", desc: "ระบบเลือกให้", badge: "RECOMMENDED" },
-		{ id: "google/gemini-2.5-pro-preview", label: "GEMINI PRO", desc: "เก่งสุด · ไทยดี", badge: "BEST" },
-		{ id: "google/gemini-2.0-flash-001", label: "GEMINI FLASH", desc: "เร็ว · ดี", badge: "FAST" },
-		{ id: "anthropic/claude-sonnet-4-5", label: "CLAUDE SONNET", desc: "เก่งภาษา", badge: "PREMIUM" },
-		{ id: "google/gemma-4-31b-it:free", label: "GEMMA 31B", desc: "ฟรี", badge: "FREE" },
-	];
+	const LESSON_MODELS = COMPACT_MODELS;
 
 	// Inject hyper-node CSS styles
 	useEffect(() => {
@@ -353,11 +362,10 @@ hyper:hover {
 
 			if (!hasError) {
 				setGenStage("saving to library…");
-				// Wait for DB writes to settle, then navigate (not reload) to avoid race condition
+				// Wait for DB writes to settle, then re-fetch loader data (no full reload)
 				await new Promise((r) => setTimeout(r, 1500));
 				setGenStage("loading content…");
-				// Use navigate to re-fetch loader data instead of full page reload
-				window.location.href = window.location.href;
+				revalidator.revalidate();
 				return;
 			}
 		} catch {
@@ -365,7 +373,7 @@ hyper:hover {
 		} finally {
 			setGenerating(false);
 		}
-	}, [lesson.id, generating]);
+	}, [lesson.id, generating, revalidator]);
 
 	// Fetch perspective-shifted lesson content
 	const fetchPerspective = useCallback(async (perspective: "evolutionary" | "neuro" | "philosopher" | "architect") => {
@@ -520,18 +528,19 @@ hyper:hover {
 			const pct = Math.round((el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100);
 			setScrollPercent(Math.min(pct, 100));
 
-			// Activate recall checkpoint at 90% scroll
-			if (pct >= 90 && blocks.length > 0 && !recallActive && !recallConfirmed) {
-				setRecallActive(true);
-			}
-
 			clearTimeout(timeout);
 			timeout = setTimeout(() => {
+				// "completed" is only ever set by passing the recall checkpoint —
+				// scroll depth alone never completes (or un-completes) a lesson.
 				fetch(`/learning/api/progress/${lesson.id}`, {
 					method: "PUT",
 					headers: { "Content-Type": "application/json", Origin: window.location.origin },
-					body: JSON.stringify({ scroll_percent: pct, status: pct >= 90 ? "completed" : "in_progress" }),
-				}).catch(() => {});
+					body: JSON.stringify(
+						recallConfirmed
+							? { scroll_percent: pct }
+							: { scroll_percent: pct, status: "in_progress" },
+					),
+				}).catch((err) => console.error("progress save failed", err));
 			}, 2000);
 		};
 
@@ -540,7 +549,7 @@ hyper:hover {
 			el.removeEventListener("scroll", handleScroll);
 			clearTimeout(timeout);
 		};
-	}, [lesson.id, blocks.length, recallActive, recallConfirmed]);
+	}, [lesson.id, recallConfirmed]);
 
 	// Auto-scroll recall messages
 	useEffect(() => {
@@ -682,9 +691,10 @@ hyper:hover {
 				const errBody = (await res.json().catch(() => ({ message: "connection failed" }))) as { message?: string };
 				setRecallMessages((m) => {
 					const next = [...m];
-					next[next.length - 1] = { role: "assistant", content: errBody.message || "connection failed — click retry" };
+					next[next.length - 1] = { role: "assistant", content: errBody.message || "connection failed — your answer was kept, press send to retry" };
 					return next;
 				});
+				setRecallInput(text);
 				setRecallStreaming(false);
 				return;
 			}
@@ -749,9 +759,10 @@ hyper:hover {
 		} catch {
 			setRecallMessages((m) => {
 				const next = [...m];
-				next[next.length - 1] = { role: "assistant", content: "something went wrong. try again in a moment." };
+				next[next.length - 1] = { role: "assistant", content: "something went wrong. your answer was kept — press send to retry." };
 				return next;
 			});
+			setRecallInput(text);
 		} finally {
 			setRecallStreaming(false);
 		}
@@ -846,9 +857,10 @@ hyper:hover {
 		} catch {
 			setMessages((m) => {
 				const next = [...m];
-				next[next.length - 1] = { who: "MINSU", text: "the oracle is silent. try again in a moment." };
+				next[next.length - 1] = { who: "MINSU", text: "the oracle is silent. your message was kept — press send to retry." };
 				return next;
 			});
+			setChatInput(text);
 		} finally {
 			setSending(false);
 		}
@@ -1406,9 +1418,6 @@ hyper:hover {
 	);
 	const currentIdx = sortedLessons.findIndex((l: { order_index: number }) => l.order_index === lesson.order_index);
 
-	// Navigation is disabled until recall is confirmed (unless already confirmed from progress)
-	const canNavigate = recallConfirmed;
-
 	// Render sidebar lesson list (shared between desktop sidebar and mobile overlay)
 	const renderLessonList = (onNavigate?: () => void) => (
 		<>
@@ -1422,7 +1431,7 @@ hyper:hover {
 						onClick={() => {
 							if (!locked) {
 								if (onNavigate) onNavigate();
-								window.location.href = `/learning/courses/${course.slug}/lessons/${l.order_index}`;
+								navigate(`/learning/courses/${course.slug}/lessons/${l.order_index}`);
 							}
 						}}
 						style={{
@@ -2374,7 +2383,17 @@ window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelecto
 								fontSize: 12, color: t.accent, marginTop: 12, textAlign: "center",
 								fontFamily: "JetBrains Mono, monospace", letterSpacing: "0.1em",
 							}}>
-								You rated yourself highly — consider jumping straight to the quiz!
+								You rated yourself highly —{" "}
+								<button
+									onClick={() => navigate(`/learning/courses/${course.slug}/lessons/${lesson.order_index}/quiz`)}
+									style={{
+										background: "transparent", border: "none", padding: 0,
+										color: t.accent, cursor: "pointer", font: "inherit",
+										letterSpacing: "inherit", textDecoration: "underline", textUnderlineOffset: 3,
+									}}
+								>
+									jump straight to the quiz
+								</button>
 							</p>
 						)}
 					</div>
@@ -2900,7 +2919,7 @@ window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelecto
 					}}>
 						{currentIdx > 0 ? (
 							<button
-								onClick={() => { window.location.href = `/learning/courses/${course.slug}/lessons/${sortedLessons[currentIdx - 1].order_index}`; }}
+								onClick={() => { navigate(`/learning/courses/${course.slug}/lessons/${sortedLessons[currentIdx - 1].order_index}`); }}
 								style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.25em", background: "transparent", border: "none", color: t.inkMuted, cursor: "pointer", padding: "12px 0" }}
 							>
 								← PREVIOUS LESSON
@@ -2909,8 +2928,7 @@ window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelecto
 						{currentIdx < sortedLessons.length - 1 ? (
 							<button
 								onClick={() => {
-									if (!canNavigate) return;
-									window.location.href = `/learning/courses/${course.slug}/lessons/${sortedLessons[currentIdx + 1].order_index}`;
+									navigate(`/learning/courses/${course.slug}/lessons/${sortedLessons[currentIdx + 1].order_index}`);
 								}}
 								style={{
 									fontFamily: "JetBrains Mono, monospace",
@@ -2918,22 +2936,21 @@ window.addEventListener('load',()=>setTimeout(()=>{const s=document.querySelecto
 									textTransform: "uppercase",
 									letterSpacing: "0.25em",
 									background: "transparent",
-									border: `1px solid ${canNavigate ? t.accent : t.divider}`,
-									color: canNavigate ? t.inkStrong : t.inkGhost,
-									cursor: canNavigate ? "pointer" : "not-allowed",
+									border: `1px solid ${recallConfirmed ? t.accent : t.divider}`,
+									color: recallConfirmed ? t.inkStrong : t.ink,
+									cursor: "pointer",
 									padding: "12px 22px",
 									display: "inline-flex",
 									alignItems: "center",
 									gap: 10,
-									opacity: canNavigate ? 1 : 0.5,
 									transition: "all .3s ease",
 								}}
 							>
-								{canNavigate ? "NEXT LESSON" : "COMPLETE RECALL TO CONTINUE"}
+								NEXT LESSON
 								<span style={{
 									width: 5, height: 5, borderRadius: "50%",
-									background: canNavigate ? t.accent : "#cc0000",
-									opacity: canNavigate ? 1 : 0.3,
+									background: recallConfirmed ? t.accent : "#cc0000",
+									opacity: recallConfirmed ? 1 : 0.3,
 								}} />
 							</button>
 						) : null}

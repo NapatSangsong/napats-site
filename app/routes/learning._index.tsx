@@ -8,6 +8,7 @@ import type { Route } from "./+types/learning._index";
 import { useTheme } from "./learning";
 import type { ThemeTokens } from "~/lib/theme";
 import { createServiceClient } from "~/lib/supabase.server";
+import { AI_MODELS } from "~/lib/ai/models";
 import { TopBar } from "~/components/learning/TopBar";
 import {
 	Tracked,
@@ -109,7 +110,10 @@ export async function loader({ context }: Route.LoaderArgs) {
 				};
 			};
 		}
-	} catch {}
+	} catch (err) {
+		// Resume card is non-critical — log and render without it
+		console.error("resume-lesson lookup failed", err);
+	}
 
 	return { courses, totalLessons, reviewsDue, resumeLesson };
 }
@@ -133,23 +137,6 @@ interface CourseDraft {
 }
 
 // ── Helpers ─────────────────────────────────────────────────
-export const AI_MODELS = [
-	{ id: "auto", label: "AUTO", desc: "ระบบเลือกให้อัตโนมัติ", badge: "RECOMMENDED", cost: "" },
-	// Premium
-	{ id: "google/gemini-2.5-pro-preview", label: "GEMINI PRO", desc: "เก่งสุด · วิเคราะห์ลึก · ไทยดีมาก", badge: "BEST", cost: "$" },
-	{ id: "anthropic/claude-sonnet-4-5", label: "CLAUDE SONNET 4.5", desc: "เก่งภาษา · เนื้อหาดี · โค้ดเก่ง", badge: "PREMIUM", cost: "$$" },
-	{ id: "google/gemini-2.0-flash-001", label: "GEMINI FLASH", desc: "เร็ว · คุณภาพดี · ประหยัด", badge: "FAST", cost: "$" },
-	// Mid-tier
-	{ id: "qwen/qwen3.5-122b-a10b", label: "QWEN 3.5 122B", desc: "วิเคราะห์เชิงลึก · Multimodal · MoE", badge: "SMART", cost: "$" },
-	{ id: "mistralai/mistral-small-2603", label: "MISTRAL SMALL 4", desc: "เก่งหลายภาษา · 262K context", badge: "MULTILINGUAL", cost: "$" },
-	{ id: "google/gemini-3-flash-preview", label: "GEMINI 3 FLASH", desc: "ใหม่สุด · เร็ว · Agent-ready", badge: "NEW", cost: "$" },
-	// Free
-	{ id: "google/gemma-4-31b-it:free", label: "GEMMA 4 31B", desc: "ฟรี · วิเคราะห์ได้ · ไทยพอใช้", badge: "FREE", cost: "" },
-	{ id: "google/gemma-4-26b-a4b-it:free", label: "GEMMA 4 26B", desc: "ฟรี · เร็ว · MoE", badge: "FREE", cost: "" },
-	{ id: "nvidia/nemotron-3-super-120b-a12b:free", label: "NEMOTRON 120B", desc: "ฟรี · 120B params · Hybrid MoE", badge: "FREE", cost: "" },
-	{ id: "inclusionai/ling-2.6-flash:free", label: "LING 2.6 FLASH", desc: "ฟรี · 104B · เร็ว", badge: "FREE", cost: "" },
-] as const;
-
 function getModelId(selected: string): string | undefined {
 	if (selected === "auto") return undefined;
 	return selected;
@@ -547,6 +534,13 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 		sendMessage(suggestion, chatMessages);
 	}, [chatMessages, sendMessage]);
 
+	// After a failed stream the trailing message is the user's — resend it as-is
+	const handleRetry = useCallback(() => {
+		const last = chatMessages[chatMessages.length - 1];
+		if (!last || last.role !== "user") return;
+		sendMessage(last.content, chatMessages.slice(0, -1));
+	}, [chatMessages, sendMessage]);
+
 	const handleApprove = useCallback(async () => {
 		if (!currentDraft || approving) return;
 		setApproving(true);
@@ -598,7 +592,7 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 				.then((data) => {
 					if (data.suggestions) setAiSuggestions(data.suggestions);
 				})
-				.catch(() => {})
+				.catch((err) => console.error("suggest-courses failed", err))
 				.finally(() => setLoadingSuggestions(false));
 		}
 	}, [courses.length]);
@@ -1056,8 +1050,13 @@ export default function CommandCenter({ loaderData }: Route.ComponentProps) {
 
 						{/* Error */}
 						{composeError && (
-							<div style={{ marginBottom: 16, color: t.accent, fontFamily: "JetBrains Mono, monospace", fontSize: 12 }}>
-								{composeError}
+							<div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
+								<span style={{ color: t.accent, fontFamily: "JetBrains Mono, monospace", fontSize: 12 }}>
+									{composeError}
+								</span>
+								{chatMessages[chatMessages.length - 1]?.role === "user" && (
+									<TrackedButton t={t} onClick={handleRetry}>RETRY</TrackedButton>
+								)}
 							</div>
 						)}
 

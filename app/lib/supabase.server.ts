@@ -2,8 +2,9 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Create a Supabase client for server-side use.
- * Uses SUPABASE_SERVICE_ROLE_KEY if available, falls back to anon key.
- * RLS is disabled on learning tables, so the anon key works too.
+ * Requires SUPABASE_SERVICE_ROLE_KEY — all tables have RLS enabled with no
+ * policies (see docs/migrations/009_learning_rls.sql), so only the service
+ * role (which bypasses RLS) can read or write.
  */
 export function createServiceClient(env: {
 	SUPABASE_URL: string;

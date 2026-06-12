@@ -9,7 +9,7 @@
 - 14 database tables, 20 API endpoints, 13 AI prompts
 - AI: OpenRouter (Gemini Flash/Pro + free fallbacks) + Claude Haiku fallback
 - Budget: ~$10/month via OpenRouter
-- Latest migration: 006_lesson_notes.sql
+- Latest migrations: 008_learning_schema_sync.sql, 009_learning_rls.sql (006 was reused by energy; lesson_notes now lives in 008)
 
 ---
 
