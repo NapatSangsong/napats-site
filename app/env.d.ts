@@ -13,6 +13,9 @@ declare namespace Cloudflare {
 		// LINE Bot secrets
 		LINE_CHANNEL_ACCESS_TOKEN: string;
 		LINE_CHANNEL_SECRET: string;
+		/** Owner's LINE userId for proactive energy alerts (push API).
+		 *  Optional — alerts are logged no-ops until this is set. */
+		LINE_USER_ID: string;
 		// Energy dashboard secrets (TUYA_ENDPOINT is a var in wrangler.json)
 		TUYA_ACCESS_ID: string;
 		TUYA_ACCESS_SECRET: string;

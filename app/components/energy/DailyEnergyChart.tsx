@@ -29,6 +29,9 @@ interface Series {
 	currentIdx: number | null; // pulsing live bucket, else null
 	start: number; // period start dayNum (for nav bounds)
 	end: number; // period end dayNum
+	/** trend overlay (dashed): null entries = no data for that bucket */
+	overlay: (number | null)[] | null;
+	overlayLabel: string | null;
 }
 
 /** Catmull-Rom → cubic bézier: smooth curve through every point. */
@@ -62,6 +65,9 @@ export function DailyEnergyChart({ a }: { a: Analysis }) {
 		if (mode === "day") {
 			const values = Array.from({ length: 24 }, (_, h) => a.dh.get(anchor * 24 + h) ?? 0);
 			const { y, m, d } = partsOfDay(anchor);
+			// week-over-week ghost: same weekday last week, when we have that day
+			const lastWeek = anchor - 7;
+			const hasLastWeek = a.daily.has(lastWeek);
 			return {
 				values,
 				xLabels: [0, 6, 12, 18, 23].map((i) => ({ i, text: `${String(i).padStart(2, "0")}:00` })),
@@ -70,6 +76,10 @@ export function DailyEnergyChart({ a }: { a: Analysis }) {
 				currentIdx: anchor === maxDay ? latestHour : null,
 				start: anchor,
 				end: anchor,
+				overlay: hasLastWeek
+					? Array.from({ length: 24 }, (_, h) => a.dh.get(lastWeek * 24 + h) ?? 0)
+					: null,
+				overlayLabel: hasLastWeek ? "สัปดาห์ก่อน (วันเดียวกัน)" : null,
 			};
 		}
 		if (mode === "month") {
@@ -78,6 +88,22 @@ export function DailyEnergyChart({ a }: { a: Analysis }) {
 			const n = daysInMonth(y, m);
 			const values = Array.from({ length: n }, (_, i) => a.daily.get(first + i) ?? 0);
 			const ticks = [0, Math.floor(n / 3), Math.floor((2 * n) / 3), n - 1];
+			// 7-day moving average over days that actually have data (≤ today)
+			const ma7: (number | null)[] = Array.from({ length: n }, (_, i) => {
+				const day = first + i;
+				if (day > maxDay) return null;
+				let sum = 0;
+				let cnt = 0;
+				for (let dd = day - 6; dd <= day; dd++) {
+					const v = a.daily.get(dd);
+					if (v != null) {
+						sum += v;
+						cnt++;
+					}
+				}
+				return cnt > 0 ? sum / cnt : null;
+			});
+			const hasMa = ma7.some((v) => v != null);
 			return {
 				values,
 				xLabels: [...new Set(ticks)].map((i) => ({ i, text: String(i + 1) })),
@@ -86,6 +112,8 @@ export function DailyEnergyChart({ a }: { a: Analysis }) {
 				currentIdx: maxDay >= first && maxDay < first + n ? maxDay - first : null,
 				start: first,
 				end: first + n - 1,
+				overlay: hasMa ? ma7 : null,
+				overlayLabel: hasMa ? "ค่าเฉลี่ยเคลื่อนที่ 7 วัน" : null,
 			};
 		}
 		// year: 12 monthly totals
@@ -106,6 +134,8 @@ export function DailyEnergyChart({ a }: { a: Analysis }) {
 			currentIdx: partsOfDay(maxDay).y === y ? curM : null,
 			start: dayNumFromYmd(y, 1, 1),
 			end: dayNumFromYmd(y, 12, 31),
+			overlay: null,
+			overlayLabel: null,
 		};
 	}, [mode, anchor, a, maxDay, latestHour]);
 
@@ -130,7 +160,8 @@ export function DailyEnergyChart({ a }: { a: Analysis }) {
 	const PB = 26;
 	const PT = 12;
 	const n = s.values.length;
-	const mx = Math.max(...s.values, 0) * 1.2 || 1;
+	const overlayMax = s.overlay ? Math.max(...s.overlay.map((v) => v ?? 0)) : 0;
+	const mx = Math.max(...s.values, overlayMax, 0) * 1.2 || 1;
 	const X = (i: number) => PL + (i * (W - PL - PR)) / Math.max(1, n - 1);
 	const Y = (v: number) => H - PB - (v / mx) * (H - PB - PT);
 	const baseY = Y(0);
@@ -139,6 +170,14 @@ export function DailyEnergyChart({ a }: { a: Analysis }) {
 	const linePath = smoothPath(pts);
 	const areaPath = pts.length
 		? `${linePath} L ${X(n - 1).toFixed(1)},${baseY.toFixed(1)} L ${X(0).toFixed(1)},${baseY.toFixed(1)} Z`
+		: "";
+	// trend overlay path — only over the contiguous non-null prefix/segments
+	const overlayPath = s.overlay
+		? smoothPath(
+				s.overlay
+					.map((v, i) => (v == null ? null : { x: X(i), y: Y(v) }))
+					.filter((p): p is { x: number; y: number } => p != null),
+			)
 		: "";
 	const gridVals = [mx * 0.25, mx * 0.5, mx * 0.75];
 	const cur = s.currentIdx != null ? pts[s.currentIdx] : null;
@@ -211,6 +250,10 @@ export function DailyEnergyChart({ a }: { a: Analysis }) {
 				))}
 
 				{areaPath && <path d={areaPath} fill="url(#de-fill)" />}
+				{/* trend overlay (ghost) — drawn under the main line */}
+				{overlayPath && (
+					<path d={overlayPath} fill="none" stroke="#3DD6C3" strokeWidth="2" strokeDasharray="6 5" opacity="0.75" />
+				)}
 				{/* Reverse Energy — flat baseline (no solar export) */}
 				<line x1={PL} y1={baseY} x2={W - PR} y2={baseY} stroke="#E0529C" strokeWidth="2" />
 				{linePath && <path d={linePath} fill="none" stroke="#4DA3FF" strokeWidth="2.5" />}
@@ -236,6 +279,19 @@ export function DailyEnergyChart({ a }: { a: Analysis }) {
 					</text>
 				))}
 			</svg>
+
+			{s.overlayLabel && (
+				<div className="chart-legend">
+					<span>
+						<i style={{ background: "#4DA3FF" }} />
+						{mode === "day" ? "วันที่เลือก" : "รายวัน"}
+					</span>
+					<span>
+						<i style={{ background: "repeating-linear-gradient(90deg,#3DD6C3 0 6px,transparent 6px 11px)" }} />
+						{s.overlayLabel}
+					</span>
+				</div>
+			)}
 
 			<div className="de-nav">
 				<button type="button" onClick={() => step(-1)} disabled={!canPrev} aria-label="ก่อนหน้า">

@@ -1,16 +1,19 @@
+import { useState } from "react";
 import type { Analysis } from "~/lib/energy-calc";
-import { ENERGY_CONST as C, dayNum, hourOf, weekdayOf } from "~/lib/energy-calc";
+import { ENERGY_CONST as C, dayNum, hourOf, isOnPeakHour, minuteOf, weekdayOf } from "~/lib/energy-calc";
 import { f2, money } from "~/lib/energy-format";
 import type { LiveData } from "./types";
 
 /** Sum a day's per-hour kWh into TOU on/off buckets, up to (and including)
- *  `upToHour`. On-peak = weekday 09:00–21:59; everything else off-peak. */
-function splitDay(a: Analysis, day: number, wd: number, upToHour: number) {
+ *  `upToHour`. `lastHourFrac` scales the final bucket — used to compare
+ *  yesterday fairly against today's partially-elapsed current hour. */
+function splitDay(a: Analysis, day: number, wd: number, upToHour: number, lastHourFrac = 1) {
 	let on = 0;
 	let off = 0;
 	for (let h = 0; h <= upToHour; h++) {
-		const v = a.dh.get(day * 24 + h) ?? 0;
-		if (wd < 5 && h >= 9 && h < 22) on += v;
+		let v = a.dh.get(day * 24 + h) ?? 0;
+		if (h === upToHour) v *= lastHourFrac;
+		if (isOnPeakHour(wd, h)) on += v;
 		else off += v;
 	}
 	return { on, off };
@@ -23,19 +26,29 @@ export function PeriodTally({ a, live }: { a: Analysis; live: LiveData | null })
 	const now = Date.now();
 	const today = dayNum(now);
 	const yest = today - 1;
-	const hour = hourOf(now);
+	const curHour = hourOf(now);
 	const wdT = weekdayOf(today);
 	const wdY = weekdayOf(yest);
 
-	// live tail beyond the last synced point, attributed to the current TOU class
+	// scrub hour — null = follow the current hour live; once dragged, it pins
+	const [selHour, setSelHour] = useState<number | null>(null);
+	const hour = selHour == null ? curHour : Math.min(selHour, curHour);
+	const isLive = hour === curHour;
+
+	// live tail beyond the last synced point — only when viewing the current hour
 	const liveExtra =
-		live && live.ts - a.t1 <= C.MAX_GAP_MS ? Math.max(0, live.meter_kwh - a.lastMeter) : 0;
-	const liveIsOn = wdT < 5 && hour >= 9 && hour < 22;
+		isLive && live && live.ts - a.t1 <= C.MAX_GAP_MS
+			? Math.max(0, live.meter_kwh - a.lastMeter)
+			: 0;
+	const liveIsOn = isOnPeakHour(wdT, hour);
 
 	const t = splitDay(a, today, wdT, hour);
 	const onT = t.on + (liveIsOn ? liveExtra : 0);
 	const offT = t.off + (liveIsOn ? 0 : liveExtra);
-	const y = splitDay(a, yest, wdY, hour);
+	// fair compare: while live, today's current hour is only partially elapsed,
+	// so scale yesterday's same bucket by the elapsed-minute fraction
+	const minFrac = isLive ? minuteOf(now) / 60 : 1;
+	const y = splitDay(a, yest, wdY, hour, minFrac);
 
 	// solar offset — NOT installed yet → produces 0, offsets ฿0 (placeholder)
 	const solarT = 0;
@@ -58,6 +71,8 @@ export function PeriodTally({ a, live }: { a: Analysis; live: LiveData | null })
 
 	const deltaPct = totCostY > 0 ? ((totCostT - totCostY) / totCostY) * 100 : 0;
 	const hh = `${String(hour).padStart(2, "0")}:00`;
+	// while live, the yesterday column is scaled to the same minute → show HH:MM
+	const hhY = isLive ? `${String(hour).padStart(2, "0")}:${String(minuteOf(now)).padStart(2, "0")}` : hh;
 
 	const cell = (kwh: number, cost: number) => (
 		<>
@@ -74,15 +89,47 @@ export function PeriodTally({ a, live }: { a: Analysis; live: LiveData | null })
 				<h2>สรุปรายช่วง เรียลไทม์ — วันนี้ vs เมื่อวาน</h2>
 			</div>
 
+			<div className="pt-slider">
+				<span className="pt-slider-cap">
+					เทียบสะสมถึง <b className="mono">{hh}</b>
+					{isLive ? <span className="pt-now"> · ตอนนี้</span> : null}
+				</span>
+				<input
+					type="range"
+					min={0}
+					max={curHour}
+					step={1}
+					value={hour}
+					onChange={(e) => {
+						// dragging to the right edge = back to live (otherwise it would
+						// silently pin and stop following at the next hour boundary)
+						const v = Number(e.target.value);
+						setSelHour(v >= curHour ? null : v);
+					}}
+					aria-label="เลือกชั่วโมงที่จะเทียบ"
+				/>
+				<div className="pt-slider-ends">
+					<span>00:00</span>
+					<button
+						type="button"
+						className={`pt-reset${isLive ? " hidden" : ""}`}
+						onClick={() => setSelHour(null)}
+					>
+						↺ ตอนนี้
+					</button>
+					<span>{String(curHour).padStart(2, "0")}:00</span>
+				</div>
+			</div>
+
 			<table className="ptally">
 				<thead>
 					<tr>
 						<th />
 						<th>
-							เมื่อวาน<small>~{hh}</small>
+							เมื่อวาน<small>~{hhY}</small>
 						</th>
 						<th>
-							วันนี้<small>ณ ตอนนี้</small>
+							วันนี้<small>{isLive ? "ณ ตอนนี้" : `~${hh}`}</small>
 						</th>
 					</tr>
 				</thead>

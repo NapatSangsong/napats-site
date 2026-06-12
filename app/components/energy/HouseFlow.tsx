@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Analysis } from "~/lib/energy-calc";
-import { ENERGY_CONST, dayNum, hourOf, weekdayOf } from "~/lib/energy-calc";
+import { ENERGY_CONST, dayNum, hourOf, isOnPeakHour, weekdayOf } from "~/lib/energy-calc";
 import { f1, f2, money } from "~/lib/energy-format";
 import type { LiveData } from "./types";
 
@@ -76,7 +76,7 @@ export function HouseFlow({
 	// TOU tariff state (MEA Type 1.2): on-peak = weekday 09:00–21:59, else off-peak.
 	// Evening peak (17:00–21:59) is the demand window the house lights up hardest.
 	const wd = weekdayOf(dayNum(Date.now()));
-	const isOnPeak = wd < 5 && hour >= 9 && hour < 22;
+	const isOnPeak = isOnPeakHour(wd, hour);
 	const isEveningPeak = hour >= 17 && hour < 22;
 	const rate = isOnPeak ? ENERGY_CONST.TOU_ON : ENERGY_CONST.TOU_OFF;
 	const tariffClass = isEveningPeak ? "peak" : isOnPeak ? "on" : "off";
@@ -84,7 +84,7 @@ export function HouseFlow({
 	// units used in the CURRENT TOU block — the contiguous run of same-class hours
 	// today up to now (so it resets at each boundary, e.g. ~0 just after 22:00),
 	// not the whole day's off-peak which would mix in the overnight 00:00–09:00.
-	const classOf = (h: number) => (wd < 5 && h >= 9 && h < 22 ? "on" : "off");
+	const classOf = (h: number) => (isOnPeakHour(wd, h) ? "on" : "off");
 	let blockStart = hour;
 	while (blockStart > 0 && classOf(blockStart - 1) === classOf(hour)) blockStart--;
 	let periodKwh = liveExtra;

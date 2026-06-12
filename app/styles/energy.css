@@ -1614,3 +1614,163 @@
 .energy-root .pt-note .pt-down {
 	color: var(--good);
 }
+
+/* ── PeriodTally hour scrubber ────────────────────────────────────── */
+.energy-root .pt-slider {
+	margin: 2px 0 18px;
+}
+.energy-root .pt-slider-cap {
+	font-size: 0.86rem;
+	color: var(--ink);
+}
+.energy-root .pt-slider-cap b {
+	color: #4da3ff;
+}
+.energy-root .pt-now {
+	color: var(--good);
+	font-size: 0.8rem;
+}
+.energy-root .pt-slider input[type="range"] {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 100%;
+	height: 7px;
+	margin: 13px 0 7px;
+	background: var(--night-2);
+	border: 1px solid var(--line);
+	border-radius: 99px;
+	outline: none;
+	cursor: pointer;
+}
+.energy-root .pt-slider input[type="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 19px;
+	height: 19px;
+	border-radius: 50%;
+	background: #4da3ff;
+	border: 3px solid #0b1224;
+	box-shadow: 0 0 0 1px #4da3ff;
+	cursor: pointer;
+}
+.energy-root .pt-slider input[type="range"]::-moz-range-thumb {
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: #4da3ff;
+	border: 3px solid #0b1224;
+	box-shadow: 0 0 0 1px #4da3ff;
+	cursor: pointer;
+}
+.energy-root .pt-slider-ends {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-family: "IBM Plex Mono", monospace;
+	font-size: 0.72rem;
+	color: var(--ink-dim);
+}
+.energy-root .pt-reset {
+	appearance: none;
+	border: 1px solid var(--line);
+	background: var(--night-2);
+	color: var(--ink-dim);
+	font: inherit;
+	font-size: 0.72rem;
+	padding: 3px 11px;
+	border-radius: 99px;
+	cursor: pointer;
+	transition: color 0.18s, border-color 0.18s;
+}
+.energy-root .pt-reset:hover {
+	color: #4da3ff;
+	border-color: #4da3ff;
+}
+.energy-root .pt-reset.hidden {
+	visibility: hidden;
+}
+
+/* ── Grid quality status colors ──────────────────────────────────── */
+.energy-root .gq-good {
+	color: var(--good);
+}
+.energy-root .gq-warn {
+	color: var(--sun);
+}
+.energy-root .gq-bad {
+	color: var(--bad);
+}
+
+/* ── Battery what-if sliders ─────────────────────────────────────── */
+.energy-root .bw-sliders {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-bottom: 14px;
+}
+.energy-root .bw-row {
+	display: grid;
+	grid-template-columns: 84px 1fr 110px;
+	align-items: center;
+	gap: 12px;
+}
+.energy-root .bw-row .bw-label {
+	font-size: 0.84rem;
+	color: var(--ink-dim);
+}
+.energy-root .bw-row b {
+	text-align: right;
+	color: var(--ink);
+	font-size: 0.95rem;
+}
+.energy-root .bw-row b small {
+	color: var(--ink-dim);
+	font-size: 0.7em;
+}
+.energy-root .bw-row input[type="range"] {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 100%;
+	height: 6px;
+	background: var(--night-2);
+	border: 1px solid var(--line);
+	border-radius: 99px;
+	outline: none;
+	cursor: pointer;
+}
+.energy-root .bw-row input[type="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 17px;
+	height: 17px;
+	border-radius: 50%;
+	background: #5ae08f;
+	border: 3px solid #0b1224;
+	box-shadow: 0 0 0 1px #5ae08f;
+	cursor: pointer;
+}
+.energy-root .bw-row input[type="range"]::-moz-range-thumb {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: #5ae08f;
+	border: 3px solid #0b1224;
+	box-shadow: 0 0 0 1px #5ae08f;
+	cursor: pointer;
+}
+.energy-root .bw-flow {
+	font-size: 0.78rem;
+	color: var(--ink-dim);
+	background: rgba(90, 224, 143, 0.06);
+	border: 1px solid rgba(90, 224, 143, 0.22);
+	border-radius: 10px;
+	padding: 8px 12px;
+	overflow-x: auto;
+	white-space: nowrap;
+}
+@media (max-width: 480px) {
+	.energy-root .bw-row {
+		grid-template-columns: 70px 1fr 92px;
+		gap: 8px;
+	}
+}

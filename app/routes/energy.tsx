@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { data, redirect } from "react-router";
 import type { Route } from "./+types/energy";
 import "~/styles/energy.css";
+import { BatteryWhatIf } from "~/components/energy/BatteryWhatIf";
 import { Inspector } from "~/components/energy/Inspector";
 import { DailyEnergyChart } from "~/components/energy/DailyEnergyChart";
 import { HouseFlow } from "~/components/energy/HouseFlow";
@@ -16,6 +17,7 @@ import { ScenarioCards, BaseloadStats } from "~/components/energy/ScenarioCards"
 import { SolarForecast } from "~/components/energy/SolarForecast";
 import { Verdict } from "~/components/energy/Verdict";
 import { ForecastChart } from "~/components/energy/ForecastChart";
+import { GridQuality } from "~/components/energy/GridQuality";
 import { Heatmap } from "~/components/energy/Heatmap";
 import type { ApiStats, LiveData } from "~/components/energy/types";
 import { calcAll, type CalcResult } from "~/lib/energy-calc";
@@ -316,33 +318,39 @@ export default function EnergyPage() {
 							<DailyEnergyChart a={calc.a} />
 						</div>
 						<div className={sectionCls(6)} style={sectionStyle(6)}>
-							<ProfileBars f={calc.f} barsOn={barsOn} />
+							<GridQuality />
 						</div>
 						<div className={sectionCls(7)} style={sectionStyle(7)}>
-							<LoadCurve prof={calc.a.prof} sol={calc.sol} />
+							<ProfileBars f={calc.f} barsOn={barsOn} />
 						</div>
 						<div className={sectionCls(8)} style={sectionStyle(8)}>
-							<Heatmap a={calc.a} />
+							<LoadCurve prof={calc.a.prof} sol={calc.sol} />
 						</div>
 						<div className={sectionCls(9)} style={sectionStyle(9)}>
-							<ForecastChart fc={calc.fc} a={calc.a} />
+							<Heatmap a={calc.a} />
 						</div>
 						<div className={sectionCls(10)} style={sectionStyle(10)}>
-							<SavingsChart sv={calc.sv} fc={calc.fc} />
+							<ForecastChart fc={calc.fc} a={calc.a} />
 						</div>
 						<div className={sectionCls(11)} style={sectionStyle(11)}>
-							<BaseloadStats a={calc.a} />
+							<SavingsChart sv={calc.sv} fc={calc.fc} />
 						</div>
 						<div className={sectionCls(12)} style={sectionStyle(12)}>
-							<ScenarioCards f={calc.f} />
+							<BaseloadStats a={calc.a} />
 						</div>
 						<div className={sectionCls(13)} style={sectionStyle(13)}>
-							<InstallGauge f={calc.f} />
+							<ScenarioCards f={calc.f} />
 						</div>
 						<div className={sectionCls(14)} style={sectionStyle(14)}>
-							<Verdict a={calc.a} f={calc.f} fc={calc.fc} />
+							<InstallGauge f={calc.f} />
 						</div>
 						<div className={sectionCls(15)} style={sectionStyle(15)}>
+							<BatteryWhatIf a={calc.a} />
+						</div>
+						<div className={sectionCls(16)} style={sectionStyle(16)}>
+							<Verdict a={calc.a} f={calc.f} fc={calc.fc} />
+						</div>
+						<div className={sectionCls(17)} style={sectionStyle(17)}>
 							<Inspector
 								calc={calc}
 								live={live}
