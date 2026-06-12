@@ -1,5 +1,5 @@
 import type { Analysis, Finance } from "~/lib/energy-calc";
-import { ENERGY_CONST as C } from "~/lib/energy-calc";
+import { ENERGY_CONST as C, flatAvgRate } from "~/lib/energy-calc";
 import { f0, f1, f2, money } from "~/lib/energy-format";
 
 /** Section 06 — Baseload & Evening Peak */
@@ -44,7 +44,7 @@ export function ScenarioCards({ f }: { f: Finance }) {
 			<div className="cards">
 				<div className="card">
 					<div className="tag">Scenario 1 · Before</div>
-					<h3>มิเตอร์ปกติ (Flat {f2(C.FLAT_RATE)}฿)</h3>
+					<h3>มิเตอร์ปกติ (Flat ขั้นบันได)</h3>
 					<div className="cost mono">
 						{money(f.cost1)}
 						<small>฿/เดือน</small>
@@ -52,7 +52,7 @@ export function ScenarioCards({ f }: { f: Finance }) {
 					<div className="delta minus">+{money(f.saveTou)} ฿ แพงกว่า baseline</div>
 					<div className="kv">
 						<div>
-							<span>คิดทุกหน่วยเท่ากัน</span>
+							<span>ขั้นบันได + Ft เฉลี่ย {f2(flatAvgRate(f.monthlyKwh))}฿/kWh</span>
 							<span className="mono">{f0(f.monthlyKwh)} kWh</span>
 						</div>
 					</div>

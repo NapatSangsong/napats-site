@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CalcResult } from "~/lib/energy-calc";
-import { ENERGY_CONST as C, traceLines, weekdayOf, dayNum } from "~/lib/energy-calc";
+import { ENERGY_CONST as C, FLAT_TIERS, traceLines, weekdayOf, dayNum } from "~/lib/energy-calc";
 import { f1, f2, money, timeLabel } from "~/lib/energy-format";
 import type { ApiStats, LiveData } from "./types";
 
@@ -30,7 +30,13 @@ interface Gap {
 }
 
 const CONSTANT_ROWS: Array<[string, string, string]> = [
-	["FLAT_RATE", `${C.FLAT_RATE} ฿/kWh`, "MEA อัตราเหมารวม (เฉลี่ยรวม Ft + VAT)"],
+	[
+		"FLAT_TIERS",
+		FLAT_TIERS.map(([, r]) => r).join(" / ") + " ฿/kWh",
+		"MEA ขั้นบันได 1.1.2: ≤150 / 151–400 / >400 หน่วย (ก่อน Ft + VAT)",
+	],
+	["FT_RATE", `${C.FT_RATE} ฿/kWh`, "ค่า Ft งวด พ.ค.–ส.ค. 2569 — กกพ. ปรับทุก 4 เดือน"],
+	["FLAT_FIXED", `${C.FLAT_FIXED} ฿/เดือน`, "ค่าบริการ Type 1.1.2: 38.22 + VAT 7%"],
 	["TOU_ON", `${C.TOU_ON} ฿/kWh`, "MEA TOU จ–ศ 09:00–22:00"],
 	["TOU_OFF", `${C.TOU_OFF} ฿/kWh`, "MEA TOU นอกเวลา + ส–อา ทั้งวัน"],
 	["TOU_FIXED", `${C.TOU_FIXED} ฿/เดือน`, "ค่าบริการ Type 1.2: 38.22 + VAT 7%"],
