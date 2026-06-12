@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 Generate expected values for app/lib/__tests__/energy-calc.test.ts by running
-the ORIGINAL dashboard.py v10 formulas (copied verbatim below) on the real
-fixture. Run once and commit the output:
+the dashboard.py v10 formulas (flat tariff upgraded to the MEA tiered ladder
++ Ft + VAT, mirroring energy-calc.ts) on the real fixture. Run once and
+commit the output:
 
     python3 scripts/gen_energy_expected.py
 
@@ -26,7 +27,11 @@ FORECAST_END = datetime.date(2026, 6, 27)  # pinned
 
 USE_MEA_BASELINE = True
 MEA_MONTHLY_KWH = 1100.0
-FLAT_RATE = 4.91
+# flat tariff = MEA Type 1.1.2 tiered ladder + Ft + VAT (must mirror energy-calc.ts)
+FT_RATE = 0.1623   # ฿/kWh Ft งวด พ.ค.–ส.ค. 2569
+VAT = 1.07
+FLAT_FIXED = 40.90  # ฿/mo service 38.22 + VAT
+FLAT_TIERS = [(150.0, 3.2484), (400.0, 4.2218), (float("inf"), 4.4217)]
 TOU_ON = 5.81
 TOU_OFF = 2.99
 TOU_FIXED = 40.90
@@ -36,7 +41,23 @@ WEEKDAYS_MO, WEEKENDS_MO = 22, 8
 METER_COST = 3350.00
 
 
-# ---- verbatim from dashboard.py v10 (dashboard_2.py) ----
+def flat_energy_baht(kwh):
+    """Tiered ladder + Ft per unit, incl VAT — excl service charge (mirrors flatEnergyBaht)."""
+    cost, prev = 0.0, 0.0
+    for upto, rate in FLAT_TIERS:
+        units = min(kwh, upto) - prev
+        if units <= 0:
+            break
+        cost += units * rate
+        prev = upto
+    return (cost + kwh * FT_RATE) * VAT
+
+
+def flat_avg_rate(kwh):
+    return flat_energy_baht(kwh) / kwh if kwh > 0 else (FLAT_TIERS[0][1] + FT_RATE) * VAT
+
+
+# ---- from dashboard.py v10 (dashboard_2.py); flat tariff upgraded to tiered ladder ----
 def load_points():
     hist = json.load(open(HISTORY_FILE, encoding="utf-8"))
     return sorted(set((int(h["event_time"]), float(h["value"]))
@@ -103,7 +124,7 @@ def finance(a):
     f["monthly_kwh"] = MEA_MONTHLY_KWH if USE_MEA_BASELINE else f["measured_mo"]
     m = f["monthly_kwh"]
     f["on_kwh"], f["off_kwh"] = m * f["on_pct"], m * f["off_pct"]
-    f["cost1"] = m * FLAT_RATE
+    f["cost1"] = flat_energy_baht(m) + FLAT_FIXED
     f["cost2"] = f["on_kwh"] * TOU_ON + f["off_kwh"] * TOU_OFF + TOU_FIXED
     scale_up = m / f["measured_mo"] if f["measured_mo"] else 1.0
     f["daytime_load_d"] = a["daytime_kwh_d"] * scale_up
@@ -158,22 +179,27 @@ def forecast(a):
                      "on": on, "off": off})
         d += datetime.timedelta(days=1)
     n_days = len(days)
+    total_kwh = sum(x["kwh"] for x in days)
+    # ladder position from the period's month-equivalent volume; service prorated like TOU
+    month_eq_kwh = (total_kwh * 30) / n_days if n_days > 0 else 0.0
     return {"days": days, "wd_avg": wd_avg, "we_avg": we_avg,
-            "total_kwh": sum(x["kwh"] for x in days),
+            "total_kwh": total_kwh,
             "future_kwh": total_fc,
             "meter_end": a["last_meter"] + total_fc,
             "tou_cost": cost_fc + TOU_FIXED * (n_days / 30),
-            "flat_cost": sum(x["kwh"] for x in days) * FLAT_RATE,
+            "flat_cost": total_kwh * flat_avg_rate(month_eq_kwh) + FLAT_FIXED * (n_days / 30),
             "n_days": n_days}
 
 
 def savings_track(f, fc):
     scale_up = f["monthly_kwh"] / f["measured_mo"] if f["measured_mo"] else 1.0
+    # avg tiered rate at the monthly volume; service charges equal on both tariffs → cancel
+    flat_rate_m = flat_avg_rate(f["monthly_kwh"])
     cum, series = 0.0, []
     for x in fc["days"]:
-        flat_d = x["kwh"] * FLAT_RATE
+        flat_d = x["kwh"] * flat_rate_m
         tou_energy_d = x["on"] * TOU_ON + x["off"] * TOU_OFF
-        save_d = max((flat_d - tou_energy_d) * scale_up - TOU_FIXED / 30, 0.0)
+        save_d = max((flat_d - tou_energy_d) * scale_up, 0.0)
         cum += save_d
         series.append({"date": x["date"], "cum": cum, "kind": x["kind"]})
     avg_d = cum / len(series) if series else 0.0
