@@ -241,3 +241,28 @@ describe("synthetic edge cases", () => {
 		expect(series.length).toBe(2);
 	});
 });
+
+describe("isOnPeakHour / minuteOf (TOU helpers)", () => {
+	it("on-peak = weekday 09:00–21:59 only", async () => {
+		const { isOnPeakHour } = await import("../energy-calc");
+		// Monday (wd=0)
+		expect(isOnPeakHour(0, 8)).toBe(false);
+		expect(isOnPeakHour(0, 9)).toBe(true);
+		expect(isOnPeakHour(0, 21)).toBe(true);
+		expect(isOnPeakHour(0, 22)).toBe(false);
+		// Friday (wd=4) midday
+		expect(isOnPeakHour(4, 12)).toBe(true);
+		// Saturday/Sunday (wd=5,6) — always off-peak
+		expect(isOnPeakHour(5, 12)).toBe(false);
+		expect(isOnPeakHour(6, 12)).toBe(false);
+	});
+
+	it("minuteOf returns Bangkok minute-of-hour", async () => {
+		const { minuteOf } = await import("../energy-calc");
+		// 2026-06-11 17:30:00 UTC = 2026-06-12 00:30 BKK
+		const ms = Date.UTC(2026, 5, 11, 17, 30, 0);
+		expect(minuteOf(ms)).toBe(30);
+		expect(minuteOf(ms + 29 * 60_000)).toBe(59);
+		expect(minuteOf(ms + 30 * 60_000)).toBe(0);
+	});
+});

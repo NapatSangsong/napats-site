@@ -39,6 +39,11 @@ export const dayNum = (ms: number): number => Math.floor((ms + BKK_MS) / DAY_MS)
 export const hourOf = (ms: number): number => Math.floor((ms + BKK_MS) / 3600_000) % 24;
 /** Python datetime.weekday(): Mon=0 … Sun=6 (epoch day 0 = Thu = 3) */
 export const weekdayOf = (day: number): number => (((day + 3) % 7) + 7) % 7;
+/** Bangkok minute-of-hour 0–59 */
+export const minuteOf = (ms: number): number => Math.floor((ms + BKK_MS) / 60_000) % 60;
+/** MEA TOU Type 1.2: on-peak = weekday (Mon–Fri) 09:00–21:59 BKK. Single
+ *  source of truth — UI components must use this, not re-derive the window. */
+export const isOnPeakHour = (wd: number, h: number): boolean => wd < 5 && h >= 9 && h < 22;
 /** dayNum for a BKK calendar date */
 export const dayNumFromYmd = (y: number, m1: number, d: number): number =>
 	Math.floor(Date.UTC(y, m1 - 1, d) / DAY_MS);
@@ -222,7 +227,7 @@ export function analyze(pts: Point[]): Analysis {
 		else if (h >= 17 && h < 22) evening += d;
 		else night += d;
 		if (h >= 8 && h < 16) day0816 += d;
-		if (wd < 5 && h >= 9 && h < 22) {
+		if (isOnPeakHour(wd, h)) {
 			on += d;
 			dailyOn.set(day, (dailyOn.get(day) ?? 0) + d);
 		} else {

@@ -24,3 +24,10 @@ TUYA_DEVICE_ID=your-tuya-device-id
 
 # Energy page gate key (any string; SHA-256 of this is stored in the cookie)
 ENERGY_PAGE_KEY=your-energy-page-key
+
+# LINE Messaging API — proactive energy alerts (push to the owner)
+# LINE_USER_ID = your userId from the LINE Developers console (or webhook events).
+# Optional: alerts are skipped (logged) until set.
+LINE_CHANNEL_ACCESS_TOKEN=your-line-channel-access-token
+LINE_CHANNEL_SECRET=your-line-channel-secret
+LINE_USER_ID=Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

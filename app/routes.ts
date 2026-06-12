@@ -15,6 +15,7 @@ export default [
 	route("api/energy/history", "routes/api/energy.history.ts"),
 	route("api/energy/weather", "routes/api/energy.weather.ts"),
 	route("api/energy/solar", "routes/api/energy.solar.ts"),
+	route("api/energy/grid", "routes/api/energy.grid.ts"),
 
 	// Learning platform — API routes
 	route("learning/gate", "routes/learning.gate.tsx"),
