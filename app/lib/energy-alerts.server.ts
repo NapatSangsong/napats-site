@@ -1,5 +1,7 @@
 /**
- * Proactive LINE alerts, run from the same every-15-min cron after sync + rollup:
+ * Proactive LINE alerts, run from the same every-15-min cron after
+ * sync + rollup. (The old LINE approve/deny "Claude noti" webhook flow was
+ * removed — this push-only path is the sole remaining LINE integration.)
  *
  *  1. Voltage out-of-range — latest grid sample beyond 220V ±10% (198–242V).
  *     Throttled to one alert per 6 h via KV so a long sag doesn't spam.
@@ -8,8 +10,9 @@
  *     minimum jumped ≥1.5× above the prior-week average (fridge dying,
  *     something left on, …). Sent once per day via KV marker.
  *
- * Requires the LINE_USER_ID secret (the owner's LINE userId) — without it
- * every push is a logged no-op, so the cron stays healthy before setup:
+ * LINE_CHANNEL_ACCESS_TOKEN already exists on the worker; pushes also need
+ * LINE_USER_ID (the owner's userId) — until it's set every push is a logged
+ * no-op, so the cron stays healthy before setup:
  *   npx wrangler secret put LINE_USER_ID
  */
 import { ENERGY_CONST as C, dayNum, hourOf } from "./energy-calc";
@@ -21,7 +24,7 @@ const VOLT_THROTTLE_S = 6 * 3600;
 const DIGEST_HOUR = 22; // BKK
 
 async function pushLine(env: Env, text: string): Promise<void> {
-	const to = (env as { LINE_USER_ID?: string }).LINE_USER_ID;
+	const to = env.LINE_USER_ID;
 	if (!to || !env.LINE_CHANNEL_ACCESS_TOKEN) {
 		console.log("[alerts] LINE_USER_ID not set — skipping push:", text.slice(0, 80));
 		return;
