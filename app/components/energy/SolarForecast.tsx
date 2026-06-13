@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Analysis } from "~/lib/energy-calc";
 import { ENERGY_CONST, dayNumFromYmd, weekdayOf } from "~/lib/energy-calc";
 import { f1, f2, money } from "~/lib/energy-format";
+import { ChartTip, useChartTip } from "./useChartTip";
 
 interface SolarHour {
 	hour: number;
@@ -39,6 +40,7 @@ function dayLabel(date: string, idx: number): string {
 export function SolarForecast({ a }: { a: Analysis }) {
 	const [data, setData] = useState<SolarResp | null>(null);
 	const [sel, setSel] = useState(1); // default พรุ่งนี้
+	const { tip, point, surface, wrapRef } = useChartTip();
 
 	useEffect(() => {
 		let alive = true;
@@ -151,6 +153,7 @@ export function SolarForecast({ a }: { a: Analysis }) {
 				</span>
 			</div>
 
+			<div ref={wrapRef} style={{ position: "relative" }} {...surface}>
 			<svg viewBox={`0 0 ${W} ${Hh}`} style={{ width: "100%", height: "auto" }} role="img" aria-label="Solar hourly forecast">
 				<defs>
 					<linearGradient id="solar-bar" x1="0" y1="0" x2="0" y2="1">
@@ -185,9 +188,9 @@ export function SolarForecast({ a }: { a: Analysis }) {
 								rx="2"
 								fill={isPeak ? "#ffb454" : "url(#solar-bar)"}
 								opacity={h.kwh > 0 ? 1 : 0.15}
-							>
-								<title>{`${String(h.hour).padStart(2, "0")}:00 · ผลิต ${f2(h.kwh)} kWh · เมฆ ${h.cloud}%`}</title>
-							</rect>
+								style={{ cursor: "pointer" }}
+								{...point(`${String(h.hour).padStart(2, "0")}:00 · ผลิต ${f2(h.kwh)} kWh · เมฆ ${h.cloud}%`)}
+							/>
 							<rect
 								x={Xload(i)}
 								y={lTop}
@@ -196,9 +199,9 @@ export function SolarForecast({ a }: { a: Analysis }) {
 								rx="2"
 								fill="url(#load-bar)"
 								opacity={ld > 0 ? 0.92 : 0.12}
-							>
-								<title>{`${String(h.hour).padStart(2, "0")}:00 · ใช้จริง ${f2(ld)} kWh`}</title>
-							</rect>
+								style={{ cursor: "pointer" }}
+								{...point(`${String(h.hour).padStart(2, "0")}:00 · ใช้จริง ${f2(ld)} kWh`)}
+							/>
 						</g>
 					);
 				})}
@@ -218,6 +221,8 @@ export function SolarForecast({ a }: { a: Analysis }) {
 					) : null,
 				)}
 			</svg>
+			<ChartTip tip={tip} />
+			</div>
 
 			<div className="chart-legend">
 				<span>

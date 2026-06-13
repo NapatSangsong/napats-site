@@ -1,5 +1,6 @@
 import { ENERGY_CONST as C } from "~/lib/energy-calc";
-import { f0 } from "~/lib/energy-format";
+import { f0, f2 } from "~/lib/energy-format";
+import { ChartTip, useChartTip } from "./useChartTip";
 
 /** Section 02 — Load Curve 24h + solar production overlay.
  *  Exact coordinate port of svg_load_curve() in dashboard.py v10. */
@@ -12,6 +13,8 @@ export function LoadCurve({ prof, sol }: { prof: number[]; sol: number[] }) {
 	const mx = Math.max(...prof, ...sol) * 1.15 || 1;
 	const X = (h: number) => PL + (h * (W - PL - 10)) / 23;
 	const Y = (v: number) => H - PB - (v / mx) * (H - PB - PT);
+	const { tip, point, surface, wrapRef } = useChartTip();
+	const slot = (W - PL - 10) / 23;
 	const zones: Array<[number, number, string]> = [
 		[0, 9, "#2D5DB0"],
 		[9, 17, "#FFB454"],
@@ -32,6 +35,7 @@ export function LoadCurve({ prof, sol }: { prof: number[]; sol: number[] }) {
 				<b>kWh เฉลี่ยรายชั่วโมง (เส้นทึบ) vs ผลิตโซลาร์ 2kW (เส้นประ)</b>
 				<span className="mono">พื้นหลัง = โซน TOU</span>
 			</div>
+			<div ref={wrapRef} style={{ position: "relative" }} {...surface}>
 			<svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto" }} role="img" aria-label="Load curve">
 				<defs>
 					<linearGradient id="energy-lg" x1="0" y1="0" x2="0" y2="1">
@@ -93,7 +97,22 @@ export function LoadCurve({ prof, sol }: { prof: number[]; sol: number[] }) {
 							{String(h).padStart(2, "0")}
 						</text>
 					))}
+				{/* invisible per-hour hit columns for hover/tap labels */}
+				{hours.map((h) => (
+					<rect
+						key={`hit-${h}`}
+						x={X(h) - slot / 2}
+						y={PT}
+						width={slot}
+						height={H - PB - PT}
+						fill="transparent"
+						style={{ pointerEvents: "all", cursor: "pointer" }}
+						{...point(`${String(h).padStart(2, "0")}:00 · ใช้ ${f2(prof[h])} · โซลาร์ ${f2(sol[h])} kWh`)}
+					/>
+				))}
 			</svg>
+			<ChartTip tip={tip} />
+			</div>
 			<div className="chart-legend">
 				<span>
 					<i style={{ background: "#3DD6C3" }} />

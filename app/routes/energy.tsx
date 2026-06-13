@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { data, redirect } from "react-router";
 import type { Route } from "./+types/energy";
 import "~/styles/energy.css";
 import { BatteryWhatIf } from "~/components/energy/BatteryWhatIf";
+import { BillToDate } from "~/components/energy/BillToDate";
+import { EnergyChat } from "~/components/energy/EnergyChat";
 import { Inspector } from "~/components/energy/Inspector";
 import { DailyEnergyChart } from "~/components/energy/DailyEnergyChart";
 import { HouseFlow } from "~/components/energy/HouseFlow";
@@ -20,12 +22,52 @@ import { ForecastChart } from "~/components/energy/ForecastChart";
 import { GridQuality } from "~/components/energy/GridQuality";
 import { Heatmap } from "~/components/energy/Heatmap";
 import type { ApiStats, LiveData } from "~/components/energy/types";
-import { calcAll, type CalcResult } from "~/lib/energy-calc";
+import { calcAll, type CalcResult, ENERGY_CONST as C } from "~/lib/energy-calc";
+import { f0, f1, f2, pc, money } from "~/lib/energy-format";
 import { ENERGY_PUBLIC, gateCookie, keyHash, requireEnergyAuth, safeEqual } from "~/lib/energy-gate.server";
+
+/** Compact, human-readable snapshot of the dashboard for the AI chat context. */
+function buildEnergyContext(calc: CalcResult, live: LiveData | null, measured: boolean): string {
+	const { a, f, fc } = calc;
+	const lines = [
+		"# สรุปข้อมูลพลังงานบ้าน (ณ ตอนนี้)",
+		`ฐานการเงิน: ${measured ? "วัดจริง (realtime)" : `บิล MEA ${f0(f.monthlyKwh)} kWh/เดือน`}`,
+		`ใช้ไฟเฉลี่ย ${f2(a.kwhDay)} kWh/วัน · เก็บข้อมูล ${f1(a.spanDays)} วัน (${a.n} จุด) · รวม ${f1(a.total)} kWh`,
+		"",
+		"## สัดส่วนตามช่วงเวลา (TOU)",
+		`Off-peak กลางคืน 22:00–09:00: ${pc(f.nightPct)}% (${f1(a.night)} kWh) @ ${C.TOU_OFF}฿`,
+		`Daytime 09:00–17:00 (ช่วงโซลาร์): ${pc(f.daytimePct)}% (${f1(a.daytime)} kWh)`,
+		`Evening peak 17:00–22:00: ${pc(f.eveningPct)}% (${f1(a.evening)} kWh)`,
+		`On-peak รวม ${f1(f.onKwh)} kWh @ ${C.TOU_ON}฿ · Off-peak รวม ${f1(f.offKwh)} kWh @ ${C.TOU_OFF}฿`,
+		"",
+		`## ค่าไฟต่อเดือน (ประมาณ ${f0(f.monthlyKwh)} kWh)`,
+		`Flat (ขั้นบันได MEA + Ft + VAT): ${money(f.cost1)}`,
+		`TOU: ${money(f.cost2)} · TOU + Solar: ${money(f.cost3)}`,
+		`ประหยัดจาก TOU ${money(f.saveTou)}/เดือน · จาก Solar ${money(f.saveSolar)}/เดือน`,
+		"",
+		"## โหลด & โซลาร์",
+		`Baseload ${f2(a.baseloadKw)} kW · โหลดกลางวัน(08–16) ${f2(a.daytimeKwhD)} kWh/วัน · โหลดเย็น ${f2(a.eveningKwhD)} kWh/วัน`,
+		`โซลาร์ใช้ได้ ${f2(f.usableD)} kWh/วัน · คุ้มค่า: ${f.viable ? "ใช่" : "ยังไม่คุ้ม"} · คืนทุน ~${f1(f.beMonths)} เดือน`,
+		"",
+		"## พยากรณ์สิ้นเดือน",
+		`คาดใช้ทั้งเดือน ${f0(fc.totalKwh)} kWh (เหลืออีก ${f0(fc.futureKwh)} kWh) · ค่าไฟคาด TOU ${money(fc.touCost)} / Flat ${money(fc.flatCost)}`,
+	];
+	if (live) {
+		lines.push(
+			"",
+			"## สถานะสด (live)",
+			`กำลังไฟตอนนี้ ${f0(live.power_w)} W · แรงดัน ${f1(live.voltage_v)}V · PF ${f2(live.power_factor)} · มิเตอร์สะสม ${f1(live.meter_kwh)} kWh`,
+		);
+	}
+	return lines.join("\n");
+}
 
 export const meta: Route.MetaFunction = () => [
 	{ title: "Energy Dashboard v10" },
 	{ name: "robots", content: "noindex, nofollow" },
+	// Match the iOS Safari status/URL bar to the dashboard's darkest navy so the
+	// browser chrome blends into the page instead of showing a black band on top.
+	{ name: "theme-color", content: "#10172a" },
 ];
 
 export const links: Route.LinksFunction = () => [
@@ -99,6 +141,16 @@ export default function EnergyPage() {
 		setSteps((prev) => prev.map((s, j) => (j === i ? st : s)));
 	}, []);
 
+	// Snapshot of the current numbers handed to the AI chat as context.
+	const aiContext = useMemo(
+		() => (calc ? buildEnergyContext(calc, live, measured) : ""),
+		[calc, live, measured],
+	);
+
+	// Manual "Sync now": pull latest Tuya logs into the DB on demand
+	const [syncing, setSyncing] = useState(false);
+	const [syncedAt, setSyncedAt] = useState<number | null>(null);
+
 	const fetchLive = useCallback(async (timeoutMs: number): Promise<boolean> => {
 		const started = Date.now();
 		try {
@@ -153,6 +205,30 @@ export default function EnergyPage() {
 			return null;
 		}
 	}, []);
+
+	// Manual sync: hit the cron's Tuya→DB pull + rollup, then re-fetch everything
+	const syncNow = useCallback(async () => {
+		if (syncing) return;
+		setSyncing(true);
+		try {
+			const res = await fetch("/api/energy/sync", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Origin: window.location.origin },
+			});
+			const body = (await res.json().catch(() => ({ ok: false }))) as { ok: boolean };
+			// refresh live + history regardless (sync may have written new rows)
+			await fetchLive(LIVE_TIMEOUT_MS);
+			const pts = await fetchHistory();
+			if (pts) {
+				pointsRef.current = pts;
+				const result = calcAll(pts, { nowMs: Date.now(), useMeaBaseline: !measuredRef.current });
+				if (result) setCalc(result);
+			}
+			if (body.ok) setSyncedAt(Date.now());
+		} finally {
+			setSyncing(false);
+		}
+	}, [syncing, fetchLive, fetchHistory]);
 
 	// initial loading sequence — steps tick with the real pipeline
 	useEffect(() => {
@@ -293,6 +369,35 @@ export default function EnergyPage() {
 									วัดจริง (realtime)
 								</button>
 							</div>
+							<button
+								type="button"
+								onClick={syncNow}
+								disabled={syncing}
+								title="ดึงข้อมูลล่าสุดจากมิเตอร์เข้าระบบทันที (ปกติ cron ทุก 15 นาที)"
+								style={{
+									appearance: "none",
+									border: "1px solid var(--line)",
+									background: "var(--night-2)",
+									color: syncing ? "var(--ink-dim)" : "var(--ink)",
+									borderRadius: 99,
+									padding: "5px 14px",
+									font: "inherit",
+									fontSize: "0.8rem",
+									fontWeight: 600,
+									cursor: syncing ? "wait" : "pointer",
+									display: "inline-flex",
+									alignItems: "center",
+									gap: 6,
+								}}
+							>
+								<span style={{ display: "inline-block", animation: syncing ? "energy-spin 0.8s linear infinite" : "none" }}>↻</span>
+								{syncing ? "กำลังซิงค์…" : "Sync now"}
+							</button>
+							{syncedAt && !syncing && (
+								<span className="mono" style={{ fontSize: "0.72rem", color: "var(--ink-dim)" }}>
+									ซิงค์ล่าสุด {new Date(syncedAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+								</span>
+							)}
 							<span className="basis-hint">
 								{measured
 									? "กำลังสเกลค่าเงินด้วยยอดที่วัดได้จริง — เปลี่ยนตามข้อมูล (ไม่บันทึก รีเฟรชแล้วกลับค่าเริ่มต้น)"
@@ -301,6 +406,9 @@ export default function EnergyPage() {
 						</div>
 						<div className={sectionCls(0)} style={sectionStyle(0)}>
 							<EnergyHeader a={calc.a} f={calc.f} liveOffline={liveOffline} />
+						</div>
+						<div className={sectionCls(1)} style={sectionStyle(1)}>
+							<BillToDate a={calc.a} />
 						</div>
 						<div className={sectionCls(1)} style={sectionStyle(1)}>
 							<LiveNow live={live} liveOffline={liveOffline} a={calc.a} updatedAt={liveUpdatedAt} />
@@ -361,6 +469,7 @@ export default function EnergyPage() {
 					</>
 				)}
 			</div>
+			{calc && overlayGone && <EnergyChat context={aiContext} />}
 		</div>
 	);
 }

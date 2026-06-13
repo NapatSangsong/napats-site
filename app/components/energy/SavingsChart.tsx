@@ -1,6 +1,7 @@
 import type { Forecast, Savings } from "~/lib/energy-calc";
 import { ENERGY_CONST as C } from "~/lib/energy-calc";
 import { dayMonth, dayMonthYear, dayOnly, f0, f1, f2, money } from "~/lib/energy-format";
+import { ChartTip, useChartTip } from "./useChartTip";
 
 /** Section 05 — cumulative TOU savings vs the 3,350฿ meter cost.
  *  Exact coordinate port of svg_savings() in dashboard.py v10. */
@@ -15,6 +16,8 @@ export function SavingsChart({ sv, fc }: { sv: Savings; fc: Forecast }) {
 	const n = ser.length;
 	const X = (i: number) => PL + (i * (W - PL - 10)) / Math.max(n - 1, 1);
 	const Y = (v: number) => H - PB - (v / mx) * (H - PB - PT);
+	const { tip, point, surface, wrapRef } = useChartTip();
+	const hitW = (W - PL - 10) / Math.max(n - 1, 1);
 	const ptsActual = ser
 		.map((s, i) => ({ s, i }))
 		.filter(({ s }) => s.kind !== "fc")
@@ -36,6 +39,7 @@ export function SavingsChart({ sv, fc }: { sv: Savings; fc: Forecast }) {
 				<b>TOU ประหยัดกว่า Flat สะสม (ฐานบิลทั้งบ้าน)</b>
 				<span className="mono">เส้นทึบ = วัดจริง · เส้นประ = forecast</span>
 			</div>
+			<div ref={wrapRef} style={{ position: "relative" }} {...surface}>
 			<svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto" }} role="img" aria-label="Cumulative savings">
 				<text
 					x={PL - 8}
@@ -94,7 +98,22 @@ export function SavingsChart({ sv, fc }: { sv: Savings; fc: Forecast }) {
 						</text>
 					) : null,
 				)}
+				{/* invisible per-day hit columns for hover/tap labels */}
+				{ser.map((s, i) => (
+					<rect
+						key={`hit-${s.day}`}
+						x={X(i) - hitW / 2}
+						y={PT}
+						width={hitW}
+						height={H - PB - PT}
+						fill="transparent"
+						style={{ pointerEvents: "all", cursor: "pointer" }}
+						{...point(`${dayMonth(s.day)} · สะสม ${money(s.cum)}฿${s.kind === "fc" ? " (คาด)" : ""}`)}
+					/>
+				))}
 			</svg>
+			<ChartTip tip={tip} />
+			</div>
 			<div className="vstats" style={{ marginTop: 24 }}>
 				<div className="vstat">
 					<span className="mono">
