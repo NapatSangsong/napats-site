@@ -10,13 +10,13 @@ import type { ChatMessage } from "~/lib/ai/client";
 import { sseResponse, createSSEStream } from "~/lib/ai/helpers.server";
 import { requireEnergyAuth } from "~/lib/energy-gate.server";
 
-// Models the picker is allowed to request (must match openrouter ids).
+// Models the picker is allowed to request (must match current openrouter ids).
 const ALLOWED_MODELS = new Set([
-	"google/gemini-2.0-flash-001",
-	"google/gemini-2.5-pro-preview",
-	"anthropic/claude-sonnet-4-5",
+	"google/gemini-2.5-flash",
+	"google/gemini-2.5-pro",
+	"anthropic/claude-sonnet-4.5",
 ]);
-const DEFAULT_MODEL = "google/gemini-2.0-flash-001";
+const DEFAULT_MODEL = "google/gemini-2.5-flash";
 
 interface ChatRequestBody {
 	messages?: { role?: string; content?: string }[];

@@ -32,6 +32,12 @@
 	line-height: 1.55;
 	padding: 0 20px 72px;
 	min-height: 100vh;
+	/* Establish a block formatting context so the first child's top margin
+	   (e.g. .basis-bar margin-top:70px) stays INSIDE this navy box instead of
+	   collapsing through and revealing the dark site <body> as a black band.
+	   The original dashboard.html painted this background on <body>, so margin
+	   collapse was invisible; scoping under .energy-root re-exposed it. */
+	display: flow-root;
 	background:
 		radial-gradient(1100px 500px at 85% -10%, #233059 0%, transparent 60%),
 		radial-gradient(900px 480px at -10% 30%, #1b2547 0%, transparent 55%),

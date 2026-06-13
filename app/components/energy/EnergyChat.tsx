@@ -11,9 +11,9 @@ interface Msg {
 }
 
 const MODELS = [
-	{ id: "google/gemini-2.0-flash-001", label: "Gemini Flash", note: "เร็ว" },
-	{ id: "google/gemini-2.5-pro-preview", label: "Gemini Pro", note: "ลึก" },
-	{ id: "anthropic/claude-sonnet-4-5", label: "Claude Sonnet", note: "ภาษา" },
+	{ id: "google/gemini-2.5-flash", label: "Gemini Flash", note: "เร็ว" },
+	{ id: "google/gemini-2.5-pro", label: "Gemini Pro", note: "ลึก" },
+	{ id: "anthropic/claude-sonnet-4.5", label: "Claude Sonnet", note: "ภาษา" },
 ];
 
 const GREETING =
