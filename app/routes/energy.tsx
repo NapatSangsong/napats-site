@@ -3,6 +3,7 @@ import { data, redirect } from "react-router";
 import type { Route } from "./+types/energy";
 import "~/styles/energy.css";
 import { BatteryWhatIf } from "~/components/energy/BatteryWhatIf";
+import { BillToDate } from "~/components/energy/BillToDate";
 import { EnergyChat } from "~/components/energy/EnergyChat";
 import { Inspector } from "~/components/energy/Inspector";
 import { DailyEnergyChart } from "~/components/energy/DailyEnergyChart";
@@ -40,7 +41,7 @@ function buildEnergyContext(calc: CalcResult, live: LiveData | null, measured: b
 		`On-peak รวม ${f1(f.onKwh)} kWh @ ${C.TOU_ON}฿ · Off-peak รวม ${f1(f.offKwh)} kWh @ ${C.TOU_OFF}฿`,
 		"",
 		`## ค่าไฟต่อเดือน (ประมาณ ${f0(f.monthlyKwh)} kWh)`,
-		`Flat (${C.FLAT_RATE}฿/kWh): ${money(f.cost1)}`,
+		`Flat (ขั้นบันได MEA + Ft + VAT): ${money(f.cost1)}`,
 		`TOU: ${money(f.cost2)} · TOU + Solar: ${money(f.cost3)}`,
 		`ประหยัดจาก TOU ${money(f.saveTou)}/เดือน · จาก Solar ${money(f.saveSolar)}/เดือน`,
 		"",
@@ -405,6 +406,9 @@ export default function EnergyPage() {
 						</div>
 						<div className={sectionCls(0)} style={sectionStyle(0)}>
 							<EnergyHeader a={calc.a} f={calc.f} liveOffline={liveOffline} />
+						</div>
+						<div className={sectionCls(1)} style={sectionStyle(1)}>
+							<BillToDate a={calc.a} />
 						</div>
 						<div className={sectionCls(1)} style={sectionStyle(1)}>
 							<LiveNow live={live} liveOffline={liveOffline} a={calc.a} updatedAt={liveUpdatedAt} />
