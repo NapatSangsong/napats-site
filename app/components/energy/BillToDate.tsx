@@ -1,5 +1,5 @@
 import type { Analysis } from "~/lib/energy-calc";
-import { ENERGY_CONST as C, FLAT_TIERS, flatEnergyBaht, dayNum } from "~/lib/energy-calc";
+import { ENERGY_CONST as C, FLAT_TIERS, flatEnergyBaht, dayNum, weekdayOf } from "~/lib/energy-calc";
 import { f0, f1, money } from "~/lib/energy-format";
 import type { LiveData } from "./types";
 
@@ -42,7 +42,30 @@ export function BillToDate({ a, live }: { a: Analysis; live: LiveData | null }) 
 	const todayOff = a.dailyOff.get(today) ?? 0;
 	const flatToday = flatEnergyBaht(kwh) - flatEnergyBaht(Math.max(0, kwh - todayKwh));
 	const touToday = todayOn * C.TOU_ON + todayOff * C.TOU_OFF;
-	const cheaperToday = touToday <= flatToday ? "TOU" : "Flat";
+
+	// TOU + solar estimate for today. Solar offsets the daytime bucket — on-peak on
+	// weekdays, off-peak on weekends (same rule as finance()). Adds the monthly
+	// solar subscription prorated to one day. 4kW ≈ 2× the 2kW system.
+	const SOLAR_4K_KWH_D = C.SOLAR_KWH_D * 2;
+	const SOLAR_4K_SUB = 1399;
+	const weekendToday = weekdayOf(today) >= 5;
+	const touSolarToday = (prodKwh: number, subMonthly: number) => {
+		const usable = Math.min(prodKwh, weekendToday ? todayOff : todayOn);
+		const energy = weekendToday
+			? todayOn * C.TOU_ON + (todayOff - usable) * C.TOU_OFF
+			: (todayOn - usable) * C.TOU_ON + todayOff * C.TOU_OFF;
+		return energy + subMonthly / 30;
+	};
+	const tou2kToday = touSolarToday(C.SOLAR_KWH_D, C.BLUERING);
+	const tou4kToday = touSolarToday(SOLAR_4K_KWH_D, SOLAR_4K_SUB);
+
+	const todayOpts = [
+		{ k: "Flat", v: flatToday },
+		{ k: "TOU", v: touToday },
+		{ k: "TOU+2k", v: tou2kToday },
+		{ k: "TOU+4k", v: tou4kToday },
+	];
+	const cheapestToday = todayOpts.reduce((best, o) => (o.v < best.v ? o : best)).k;
 
 	return (
 		<section>
@@ -82,7 +105,7 @@ export function BillToDate({ a, live }: { a: Analysis; live: LiveData | null }) 
 				<b>
 					วันนี้ — ใช้ {f1(todayKwh)} หน่วย (On {f1(todayOn)} / Off {f1(todayOff)})
 				</b>
-				<span className="mono">{cheaperToday} ถูกกว่า</span>
+				<span className="mono">{cheapestToday} ถูกสุด</span>
 			</div>
 			<div className="vstats">
 				<div className="vstat">
@@ -93,10 +116,20 @@ export function BillToDate({ a, live }: { a: Analysis; live: LiveData | null }) 
 					<span className="mono" style={{ fontSize: "1.2rem" }}>{money(touToday)} ฿</span>
 					<span>TOU วันนี้ (เฉพาะค่าพลังงาน)</span>
 				</div>
+				<div className="vstat">
+					<span className="mono" style={{ fontSize: "1.2rem" }}>{money(tou2kToday)} ฿</span>
+					<span>TOU + Solar 2kW (ประมาณการ · รวม sub {f0(C.BLUERING)}/ด เฉลี่ย/วัน)</span>
+				</div>
+				<div className="vstat">
+					<span className="mono" style={{ fontSize: "1.2rem" }}>{money(tou4kToday)} ฿</span>
+					<span>TOU + Solar 4kW (ประมาณการ · รวม sub {f0(SOLAR_4K_SUB)}/ด เฉลี่ย/วัน)</span>
+				</div>
 			</div>
 			<p className="pt-note">
 				* รอบบิล: นับตามเดือนปฏิทิน เป็นยอดสะสมถึงตอนนี้ (รวมค่าบริการ) · วันนี้: เฉพาะค่าพลังงาน
-				ไม่รวมค่าบริการรายเดือน · ทุกค่าคิดจากหน่วยที่ใช้จริง (ผ่าน calibration แล้ว)
+				ไม่รวมค่าบริการรายเดือน · กล่อง Solar เป็นประมาณการ (2kW ≈ {f0(C.SOLAR_KWH_D)} / 4kW ≈ {f0(SOLAR_4K_KWH_D)} หน่วย/วัน,
+				offset {weekendToday ? "off-peak (วันหยุด)" : "on-peak (วันธรรมดา)"}) รวมค่า sub รายเดือนเฉลี่ยต่อวัน ·
+				ทุกค่าคิดจากหน่วยที่ใช้จริง (ผ่าน calibration แล้ว)
 			</p>
 		</section>
 	);
