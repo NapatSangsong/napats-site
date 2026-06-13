@@ -49,16 +49,18 @@ export function HouseFlow({
 	live,
 	liveOffline,
 	a,
+	rawMeter,
 }: {
 	live: LiveData | null;
 	liveOffline: boolean;
 	a: Analysis;
+	rawMeter: number;
 }) {
 	// today's kWh — same rule as LiveNow (live meter counts only within the gap)
 	const today = dayNum(Date.now());
 	const liveExtra =
 		live && live.ts - a.t1 <= ENERGY_CONST.MAX_GAP_MS
-			? Math.max(0, live.meter_kwh - a.lastMeter)
+			? Math.max(0, live.meter_kwh - rawMeter)
 			: 0;
 	const todayKwh = (a.daily.get(today) ?? 0) + liveExtra;
 

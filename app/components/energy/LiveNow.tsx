@@ -7,19 +7,22 @@ interface Props {
 	live: LiveData | null;
 	liveOffline: boolean;
 	a: Analysis;
+	/** raw (uncalibrated) last stored meter — live.meter_kwh is raw too */
+	rawMeter: number;
 	/** wall-clock of the latest live fetch */
 	updatedAt: number | null;
 }
 
 /** Section 00 — Live Now: realtime shadow properties + today's kWh */
-export function LiveNow({ live, liveOffline, a, updatedAt }: Props) {
+export function LiveNow({ live, liveOffline, a, rawMeter, updatedAt }: Props) {
 	const today = dayNum(Date.now());
 	const todayBase = a.daily.get(today) ?? 0;
 	// live meter beyond the last synced point counts toward today only if the
-	// gap is within the profile rule (≤2h), mirroring analyze()
+	// gap is within the profile rule (≤2h), mirroring analyze(). Compare against
+	// the RAW last meter — both live.meter_kwh and rawMeter are uncalibrated.
 	const liveExtra =
 		live && live.ts - a.t1 <= ENERGY_CONST.MAX_GAP_MS
-			? Math.max(0, live.meter_kwh - a.lastMeter)
+			? Math.max(0, live.meter_kwh - rawMeter)
 			: 0;
 	const todayKwh = todayBase + liveExtra;
 	const dash = "—";
@@ -62,7 +65,7 @@ export function LiveNow({ live, liveOffline, a, updatedAt }: Props) {
 					<span>Frequency</span>
 				</div>
 				<div className="vstat">
-					<span className="mono">{live ? `${f2(live.meter_kwh)} kWh` : `${f2(a.lastMeter)} kWh`}</span>
+					<span className="mono">{live ? `${f2(live.meter_kwh)} kWh` : `${f2(rawMeter)} kWh`}</span>
 					<span>เลขมิเตอร์สะสม{live ? "" : " (ล่าสุดในคลัง)"}</span>
 				</div>
 				<div className="vstat">

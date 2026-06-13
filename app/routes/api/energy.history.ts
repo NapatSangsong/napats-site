@@ -1,7 +1,7 @@
 import type { Route } from "./+types/energy.history";
 import { requireEnergyAuth } from "~/lib/energy-gate.server";
 import { createServiceClient } from "~/lib/supabase.server";
-import { calibratePoints } from "~/lib/energy-calc";
+import { calibratePoints, ENERGY_CONST } from "~/lib/energy-calc";
 
 /** PostgREST caps responses at 1000 rows — page through with .range() */
 const PAGE = 1000;
@@ -38,9 +38,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	// Apply meter calibration (scales pre-boundary consumption) before the client
 	// derives anything — keeps the stored raw counter untouched and reversible.
 	const calibrated = calibratePoints(points);
+	// Raw (uncalibrated) last meter — the live endpoint reports the raw device
+	// counter, so live-vs-stored deltas (liveExtra) must compare against THIS,
+	// not the calibrated a.lastMeter (which is inflated by the factor).
+	const rawLastMeter = points.length ? points[points.length - 1][1] * ENERGY_CONST.SCALE : 0;
 
 	return Response.json(
-		{ ok: true, points: calibrated, days, fetchedAt: Date.now() },
+		{ ok: true, points: calibrated, rawLastMeter, days, fetchedAt: Date.now() },
 		{ headers: { "Cache-Control": "private, max-age=60" } },
 	);
 }

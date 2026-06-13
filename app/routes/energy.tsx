@@ -150,6 +150,9 @@ export default function EnergyPage() {
 	// Manual "Sync now": pull latest Tuya logs into the DB on demand
 	const [syncing, setSyncing] = useState(false);
 	const [syncedAt, setSyncedAt] = useState<number | null>(null);
+	// Raw (uncalibrated) last meter from /history — used for live-vs-stored deltas
+	// (live.meter_kwh is raw, so liveExtra must compare against this, not calibrated)
+	const [rawMeter, setRawMeter] = useState(0);
 
 	const fetchLive = useCallback(async (timeoutMs: number): Promise<boolean> => {
 		const started = Date.now();
@@ -186,8 +189,13 @@ export default function EnergyPage() {
 			const res = await fetch("/api/energy/history?days=30", {
 				signal: AbortSignal.timeout(HISTORY_TIMEOUT_MS),
 			});
-			const body = (await res.json()) as { ok: boolean; points?: [number, number][] };
+			const body = (await res.json()) as {
+				ok: boolean;
+				points?: [number, number][];
+				rawLastMeter?: number;
+			};
 			if (!body.ok || !body.points) throw new Error("history not ok");
+			setRawMeter(typeof body.rawLastMeter === "number" ? body.rawLastMeter : 0);
 			setStats((s) => ({
 				...s,
 				historyLatencyMs: Date.now() - started,
@@ -411,13 +419,13 @@ export default function EnergyPage() {
 							<BillToDate a={calc.a} f={calc.f} live={live} />
 						</div>
 						<div className={sectionCls(1)} style={sectionStyle(1)}>
-							<LiveNow live={live} liveOffline={liveOffline} a={calc.a} updatedAt={liveUpdatedAt} />
+							<LiveNow live={live} liveOffline={liveOffline} a={calc.a} rawMeter={rawMeter} updatedAt={liveUpdatedAt} />
 						</div>
 						<div className={sectionCls(2)} style={sectionStyle(2)}>
-							<PeriodTally a={calc.a} live={live} />
+							<PeriodTally a={calc.a} live={live} rawMeter={rawMeter} />
 						</div>
 						<div className={sectionCls(3)} style={sectionStyle(3)}>
-							<HouseFlow live={live} liveOffline={liveOffline} a={calc.a} />
+							<HouseFlow live={live} liveOffline={liveOffline} a={calc.a} rawMeter={rawMeter} />
 						</div>
 						<div className={sectionCls(4)} style={sectionStyle(4)}>
 							<SolarForecast a={calc.a} />

@@ -22,7 +22,7 @@ function splitDay(a: Analysis, day: number, wd: number, upToHour: number, lastHo
 /** Section — realtime per-TOU-period tally: units + accumulated ฿ for today
  *  (up to now) vs yesterday (same time), with a solar-offset row that reads 0
  *  until panels are actually installed. */
-export function PeriodTally({ a, live }: { a: Analysis; live: LiveData | null }) {
+export function PeriodTally({ a, live, rawMeter }: { a: Analysis; live: LiveData | null; rawMeter: number }) {
 	const now = Date.now();
 	const today = dayNum(now);
 	const yest = today - 1;
@@ -38,7 +38,7 @@ export function PeriodTally({ a, live }: { a: Analysis; live: LiveData | null })
 	// live tail beyond the last synced point — only when viewing the current hour
 	const liveExtra =
 		isLive && live && live.ts - a.t1 <= C.MAX_GAP_MS
-			? Math.max(0, live.meter_kwh - a.lastMeter)
+			? Math.max(0, live.meter_kwh - rawMeter)
 			: 0;
 	const liveIsOn = isOnPeakHour(wdT, hour);
 
