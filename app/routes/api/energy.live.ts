@@ -10,7 +10,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 		const live = await getLive(env, env.RATE_LIMIT_KV);
 		return Response.json(
 			{ ok: true, live, latency_ms: Date.now() - startedAt },
-			{ headers: { "Cache-Control": "private, max-age=10" } },
+			// no-store: every refresh/poll hits Tuya fresh (used to compare against the
+			// physical meter — must always be the latest reading, never browser-cached).
+			{ headers: { "Cache-Control": "no-store" } },
 		);
 	} catch (e) {
 		return Response.json(
