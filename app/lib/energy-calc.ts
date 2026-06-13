@@ -38,7 +38,7 @@ const C = ENERGY_CONST;
  * and fully reversible. Set factor to 1 to disable.
  */
 export const CALIBRATION: { factor: number; boundaryMs: number; rebaseDeltaUnits: number } = {
-	factor: 1.5534,
+	factor: 1.569,
 	boundaryMs: 1781337000000, // 2026-06-13 14:50:00 +07  (= 07:50:00 UTC)
 	// Recalibrating the meter in the Tuya app rebased its cumulative counter by a
 	// one-time jump (+1785 units at 14:51:44). Any single positive delta above
