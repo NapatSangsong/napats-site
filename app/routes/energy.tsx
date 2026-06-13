@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { data, redirect } from "react-router";
 import type { Route } from "./+types/energy";
 import "~/styles/energy.css";
 import { BatteryWhatIf } from "~/components/energy/BatteryWhatIf";
+import { EnergyChat } from "~/components/energy/EnergyChat";
 import { Inspector } from "~/components/energy/Inspector";
 import { DailyEnergyChart } from "~/components/energy/DailyEnergyChart";
 import { HouseFlow } from "~/components/energy/HouseFlow";
@@ -20,12 +21,52 @@ import { ForecastChart } from "~/components/energy/ForecastChart";
 import { GridQuality } from "~/components/energy/GridQuality";
 import { Heatmap } from "~/components/energy/Heatmap";
 import type { ApiStats, LiveData } from "~/components/energy/types";
-import { calcAll, type CalcResult } from "~/lib/energy-calc";
+import { calcAll, type CalcResult, ENERGY_CONST as C } from "~/lib/energy-calc";
+import { f0, f1, f2, pc, money } from "~/lib/energy-format";
 import { ENERGY_PUBLIC, gateCookie, keyHash, requireEnergyAuth, safeEqual } from "~/lib/energy-gate.server";
+
+/** Compact, human-readable snapshot of the dashboard for the AI chat context. */
+function buildEnergyContext(calc: CalcResult, live: LiveData | null, measured: boolean): string {
+	const { a, f, fc } = calc;
+	const lines = [
+		"# สรุปข้อมูลพลังงานบ้าน (ณ ตอนนี้)",
+		`ฐานการเงิน: ${measured ? "วัดจริง (realtime)" : `บิล MEA ${f0(f.monthlyKwh)} kWh/เดือน`}`,
+		`ใช้ไฟเฉลี่ย ${f2(a.kwhDay)} kWh/วัน · เก็บข้อมูล ${f1(a.spanDays)} วัน (${a.n} จุด) · รวม ${f1(a.total)} kWh`,
+		"",
+		"## สัดส่วนตามช่วงเวลา (TOU)",
+		`Off-peak กลางคืน 22:00–09:00: ${pc(f.nightPct)}% (${f1(a.night)} kWh) @ ${C.TOU_OFF}฿`,
+		`Daytime 09:00–17:00 (ช่วงโซลาร์): ${pc(f.daytimePct)}% (${f1(a.daytime)} kWh)`,
+		`Evening peak 17:00–22:00: ${pc(f.eveningPct)}% (${f1(a.evening)} kWh)`,
+		`On-peak รวม ${f1(f.onKwh)} kWh @ ${C.TOU_ON}฿ · Off-peak รวม ${f1(f.offKwh)} kWh @ ${C.TOU_OFF}฿`,
+		"",
+		`## ค่าไฟต่อเดือน (ประมาณ ${f0(f.monthlyKwh)} kWh)`,
+		`Flat (${C.FLAT_RATE}฿/kWh): ${money(f.cost1)}`,
+		`TOU: ${money(f.cost2)} · TOU + Solar: ${money(f.cost3)}`,
+		`ประหยัดจาก TOU ${money(f.saveTou)}/เดือน · จาก Solar ${money(f.saveSolar)}/เดือน`,
+		"",
+		"## โหลด & โซลาร์",
+		`Baseload ${f2(a.baseloadKw)} kW · โหลดกลางวัน(08–16) ${f2(a.daytimeKwhD)} kWh/วัน · โหลดเย็น ${f2(a.eveningKwhD)} kWh/วัน`,
+		`โซลาร์ใช้ได้ ${f2(f.usableD)} kWh/วัน · คุ้มค่า: ${f.viable ? "ใช่" : "ยังไม่คุ้ม"} · คืนทุน ~${f1(f.beMonths)} เดือน`,
+		"",
+		"## พยากรณ์สิ้นเดือน",
+		`คาดใช้ทั้งเดือน ${f0(fc.totalKwh)} kWh (เหลืออีก ${f0(fc.futureKwh)} kWh) · ค่าไฟคาด TOU ${money(fc.touCost)} / Flat ${money(fc.flatCost)}`,
+	];
+	if (live) {
+		lines.push(
+			"",
+			"## สถานะสด (live)",
+			`กำลังไฟตอนนี้ ${f0(live.power_w)} W · แรงดัน ${f1(live.voltage_v)}V · PF ${f2(live.power_factor)} · มิเตอร์สะสม ${f1(live.meter_kwh)} kWh`,
+		);
+	}
+	return lines.join("\n");
+}
 
 export const meta: Route.MetaFunction = () => [
 	{ title: "Energy Dashboard v10" },
 	{ name: "robots", content: "noindex, nofollow" },
+	// Match the iOS Safari status/URL bar to the dashboard's darkest navy so the
+	// browser chrome blends into the page instead of showing a black band on top.
+	{ name: "theme-color", content: "#10172a" },
 ];
 
 export const links: Route.LinksFunction = () => [
@@ -98,6 +139,12 @@ export default function EnergyPage() {
 	const setStep = useCallback((i: number, st: StepState) => {
 		setSteps((prev) => prev.map((s, j) => (j === i ? st : s)));
 	}, []);
+
+	// Snapshot of the current numbers handed to the AI chat as context.
+	const aiContext = useMemo(
+		() => (calc ? buildEnergyContext(calc, live, measured) : ""),
+		[calc, live, measured],
+	);
 
 	const fetchLive = useCallback(async (timeoutMs: number): Promise<boolean> => {
 		const started = Date.now();
@@ -361,6 +408,7 @@ export default function EnergyPage() {
 					</>
 				)}
 			</div>
+			{calc && overlayGone && <EnergyChat context={aiContext} />}
 		</div>
 	);
 }
