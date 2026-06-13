@@ -1,6 +1,7 @@
 import type { Analysis } from "~/lib/energy-calc";
 import { ENERGY_CONST as C, FLAT_TIERS, flatEnergyBaht, dayNum } from "~/lib/energy-calc";
 import { f0, f1, money } from "~/lib/energy-format";
+import type { LiveData } from "./types";
 
 const DAY_MS = 86400_000;
 /** YYYY-MM (BKK) for a dayNum — same convention as the rollup's date_bkk. */
@@ -12,7 +13,7 @@ const ymOf = (d: number) => new Date(d * DAY_MS).toISOString().slice(0, 7);
  *   - Flat: MEA Type 1.1.2 tiered ladder on the month's accumulated units + Ft + VAT + service
  *   - TOU:  on/off-peak split × TOU rates + service
  */
-export function BillToDate({ a }: { a: Analysis }) {
+export function BillToDate({ a, live }: { a: Analysis; live: LiveData | null }) {
 	const curYM = ymOf(dayNum(a.t1));
 	let kwh = 0;
 	let on = 0;
@@ -49,6 +50,12 @@ export function BillToDate({ a }: { a: Analysis }) {
 				<span className="mono">฿</span>
 				<h2>ค่าไฟสะสมรอบบิลนี้ (ถึงตอนนี้)</h2>
 			</div>
+			{live && (
+				<div className="bar-label">
+					<b>เลขมิเตอร์ล่าสุด {f1(live.meter_kwh)} หน่วย</b>
+					<span className="mono">จากมิเตอร์โดยตรง · เทียบหน้าปัดได้</span>
+				</div>
+			)}
 			<div className="bar-label">
 				<b>
 					ใช้ไปแล้ว {f0(kwh)} หน่วย · {days} วัน (เดือนนี้)

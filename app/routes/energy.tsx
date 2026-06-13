@@ -408,7 +408,7 @@ export default function EnergyPage() {
 							<EnergyHeader a={calc.a} f={calc.f} liveOffline={liveOffline} />
 						</div>
 						<div className={sectionCls(1)} style={sectionStyle(1)}>
-							<BillToDate a={calc.a} />
+							<BillToDate a={calc.a} live={live} />
 						</div>
 						<div className={sectionCls(1)} style={sectionStyle(1)}>
 							<LiveNow live={live} liveOffline={liveOffline} a={calc.a} updatedAt={liveUpdatedAt} />
