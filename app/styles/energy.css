@@ -1367,6 +1367,10 @@
 }
 
 /* ── Finance basis toggle (MEA baseline ↔ measured/realtime) ─────── */
+@keyframes energy-spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
 .energy-root .basis-bar {
 	display: flex;
 	align-items: center;

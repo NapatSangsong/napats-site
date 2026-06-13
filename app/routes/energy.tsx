@@ -146,6 +146,10 @@ export default function EnergyPage() {
 		[calc, live, measured],
 	);
 
+	// Manual "Sync now": pull latest Tuya logs into the DB on demand
+	const [syncing, setSyncing] = useState(false);
+	const [syncedAt, setSyncedAt] = useState<number | null>(null);
+
 	const fetchLive = useCallback(async (timeoutMs: number): Promise<boolean> => {
 		const started = Date.now();
 		try {
@@ -200,6 +204,30 @@ export default function EnergyPage() {
 			return null;
 		}
 	}, []);
+
+	// Manual sync: hit the cron's Tuya→DB pull + rollup, then re-fetch everything
+	const syncNow = useCallback(async () => {
+		if (syncing) return;
+		setSyncing(true);
+		try {
+			const res = await fetch("/api/energy/sync", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Origin: window.location.origin },
+			});
+			const body = (await res.json().catch(() => ({ ok: false }))) as { ok: boolean };
+			// refresh live + history regardless (sync may have written new rows)
+			await fetchLive(LIVE_TIMEOUT_MS);
+			const pts = await fetchHistory();
+			if (pts) {
+				pointsRef.current = pts;
+				const result = calcAll(pts, { nowMs: Date.now(), useMeaBaseline: !measuredRef.current });
+				if (result) setCalc(result);
+			}
+			if (body.ok) setSyncedAt(Date.now());
+		} finally {
+			setSyncing(false);
+		}
+	}, [syncing, fetchLive, fetchHistory]);
 
 	// initial loading sequence — steps tick with the real pipeline
 	useEffect(() => {
@@ -340,6 +368,35 @@ export default function EnergyPage() {
 									วัดจริง (realtime)
 								</button>
 							</div>
+							<button
+								type="button"
+								onClick={syncNow}
+								disabled={syncing}
+								title="ดึงข้อมูลล่าสุดจากมิเตอร์เข้าระบบทันที (ปกติ cron ทุก 15 นาที)"
+								style={{
+									appearance: "none",
+									border: "1px solid var(--line)",
+									background: "var(--night-2)",
+									color: syncing ? "var(--ink-dim)" : "var(--ink)",
+									borderRadius: 99,
+									padding: "5px 14px",
+									font: "inherit",
+									fontSize: "0.8rem",
+									fontWeight: 600,
+									cursor: syncing ? "wait" : "pointer",
+									display: "inline-flex",
+									alignItems: "center",
+									gap: 6,
+								}}
+							>
+								<span style={{ display: "inline-block", animation: syncing ? "energy-spin 0.8s linear infinite" : "none" }}>↻</span>
+								{syncing ? "กำลังซิงค์…" : "Sync now"}
+							</button>
+							{syncedAt && !syncing && (
+								<span className="mono" style={{ fontSize: "0.72rem", color: "var(--ink-dim)" }}>
+									ซิงค์ล่าสุด {new Date(syncedAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+								</span>
+							)}
 							<span className="basis-hint">
 								{measured
 									? "กำลังสเกลค่าเงินด้วยยอดที่วัดได้จริง — เปลี่ยนตามข้อมูล (ไม่บันทึก รีเฟรชแล้วกลับค่าเริ่มต้น)"
