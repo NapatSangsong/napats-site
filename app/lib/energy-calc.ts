@@ -28,6 +28,25 @@ export const ENERGY_CONST = {
 
 const C = ENERGY_CONST;
 
+/**
+ * Meter calibration. The Tuya forward-energy sensor under-reported consumption
+ * before it was recalibrated at source on 2026-06-13 14:50 BKK. Readings at/after
+ * that instant are accurate; earlier consumption is scaled up by `factor`.
+ *
+ * Applied at read-time via calibratePoints() — the stored raw counter is never
+ * mutated, so re-tuning `factor` after a longer comparison is a one-line change
+ * and fully reversible. Set factor to 1 to disable.
+ */
+export const CALIBRATION: { factor: number; boundaryMs: number; rebaseDeltaUnits: number } = {
+	factor: 1.5534,
+	boundaryMs: 1781337000000, // 2026-06-13 14:50:00 +07  (= 07:50:00 UTC)
+	// Recalibrating the meter in the Tuya app rebased its cumulative counter by a
+	// one-time jump (+1785 units at 14:51:44). Any single positive delta above
+	// this is a device rebase, not consumption, and is skipped. The largest real
+	// interval delta in the data is ~70, so 500 cleanly separates the two.
+	rebaseDeltaUnits: 500,
+};
+
 // ---------------- Bangkok time (fixed offset — no local Date getters) ----------------
 
 const BKK_MS = 7 * 3600 * 1000;
@@ -175,6 +194,35 @@ export function toPoints(raw: Iterable<readonly [number | string, number | strin
 	}
 	pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
 	return pts;
+}
+
+/**
+ * Rebuild the cumulative counter so that consumption (positive deltas) occurring
+ * BEFORE the calibration boundary is scaled by `cal.factor`. Intervals ending
+ * at/after the boundary pass through unchanged. The result stays a monotonic
+ * cumulative series, so every downstream calc (analyze/rollup) stays internally
+ * consistent and there is no boundary "cliff". Non-positive deltas (meter resets)
+ * are never scaled. Returns the input unchanged when factor === 1.
+ */
+export function calibratePoints(pts: Point[], cal = CALIBRATION): Point[] {
+	if (cal.factor === 1 || pts.length === 0) return pts;
+	const out: [number, number][] = [];
+	const base = pts[0][0] < cal.boundaryMs ? pts[0][1] * cal.factor : pts[0][1];
+	let acc = base;
+	out.push([pts[0][0], acc]);
+	for (let i = 1; i < pts.length; i++) {
+		const [t, v] = pts[i];
+		let delta = v - pts[i - 1][1];
+		// Device rebase (meter recalibrated) — not consumption; carry cumulative flat.
+		if (delta > cal.rebaseDeltaUnits) {
+			out.push([t, acc]);
+			continue;
+		}
+		if (delta > 0 && t < cal.boundaryMs) delta *= cal.factor;
+		acc += delta;
+		out.push([t, acc]);
+	}
+	return out;
 }
 
 export function analyze(pts: Point[]): Analysis {

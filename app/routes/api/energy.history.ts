@@ -1,6 +1,7 @@
 import type { Route } from "./+types/energy.history";
 import { requireEnergyAuth } from "~/lib/energy-gate.server";
 import { createServiceClient } from "~/lib/supabase.server";
+import { calibratePoints } from "~/lib/energy-calc";
 
 /** PostgREST caps responses at 1000 rows — page through with .range() */
 const PAGE = 1000;
@@ -34,8 +35,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 		if (!data || data.length < PAGE) break;
 	}
 
+	// Apply meter calibration (scales pre-boundary consumption) before the client
+	// derives anything — keeps the stored raw counter untouched and reversible.
+	const calibrated = calibratePoints(points);
+
 	return Response.json(
-		{ ok: true, points, days, fetchedAt: Date.now() },
+		{ ok: true, points: calibrated, days, fetchedAt: Date.now() },
 		{ headers: { "Cache-Control": "private, max-age=60" } },
 	);
 }

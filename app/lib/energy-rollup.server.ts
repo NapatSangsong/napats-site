@@ -13,7 +13,7 @@
  *    (diff > 0, gap ≤ 2 h, attribute to the LATER point's BKK hour).
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { ENERGY_CONST, dayNum, hourOf, isOnPeakHour, weekdayOf } from "./energy-calc";
+import { CALIBRATION, ENERGY_CONST, dayNum, hourOf, isOnPeakHour, weekdayOf } from "./energy-calc";
 import { createServiceClient } from "./supabase.server";
 import { getLive } from "./tuya.server";
 
@@ -51,8 +51,12 @@ async function rollupOne(supabase: SupabaseClient, d: number): Promise<boolean> 
 	for (let i = 1; i < data.length; i++) {
 		const tPrev = Number(data[i - 1].event_time);
 		const t = Number(data[i].event_time);
-		const dk = (Number(data[i].value) - Number(data[i - 1].value)) * ENERGY_CONST.SCALE;
+		let dk = (Number(data[i].value) - Number(data[i - 1].value)) * ENERGY_CONST.SCALE;
 		if (dk <= 0 || t - tPrev > ENERGY_CONST.MAX_GAP_MS) continue;
+		// Skip device-rebase jumps (meter recalibration), not real consumption.
+		if (dk > CALIBRATION.rebaseDeltaUnits * ENERGY_CONST.SCALE) continue;
+		// Meter calibration: scale pre-boundary consumption (mirrors calibratePoints)
+		if (t < CALIBRATION.boundaryMs) dk *= CALIBRATION.factor;
 		if (dayNum(t) !== d) continue;
 		const h = hourOf(t);
 		hourly.set(h, (hourly.get(h) ?? 0) + dk);
