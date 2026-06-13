@@ -95,7 +95,6 @@ export default function LearningLayout({ loaderData }: Route.ComponentProps) {
 
 			if (e.key === "?") { e.preventDefault(); setShowShortcuts(s => !s); }
 			if (e.key === "Escape") { setShowShortcuts(false); }
-			if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); /* TODO: command palette */ }
 		};
 		window.addEventListener("keydown", handler);
 		return () => window.removeEventListener("keydown", handler);
@@ -132,12 +131,7 @@ export default function LearningLayout({ loaderData }: Route.ComponentProps) {
 						<h3 style={{ fontFamily: "Playfair Display, serif", fontSize: 22, color: t.inkStrong, margin: "0 0 20px" }}>Keyboard Shortcuts</h3>
 						{[
 							["?", "Show/hide shortcuts"],
-							["\u2318K", "Command palette (coming soon)"],
-							["j / k", "Next / previous lesson"],
-							["g h", "Go to Home"],
-							["g l", "Go to Library"],
-							["g p", "Go to Progress"],
-							["F", "Focus mode (coming soon)"],
+							["Esc", "Close dialogs"],
 						].map(([key, desc]) => (
 							<div key={key} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${t.divider}` }}>
 								<code style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: t.ink }}>{key}</code>
