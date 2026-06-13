@@ -1,4 +1,4 @@
-import type { Analysis } from "~/lib/energy-calc";
+import type { Analysis, Finance } from "~/lib/energy-calc";
 import { ENERGY_CONST as C, FLAT_TIERS, flatEnergyBaht, dayNum, weekdayOf } from "~/lib/energy-calc";
 import { f0, f1, money } from "~/lib/energy-format";
 import type { LiveData } from "./types";
@@ -13,7 +13,7 @@ const ymOf = (d: number) => new Date(d * DAY_MS).toISOString().slice(0, 7);
  *   - Flat: MEA Type 1.1.2 tiered ladder on the month's accumulated units + Ft + VAT + service
  *   - TOU:  on/off-peak split × TOU rates + service
  */
-export function BillToDate({ a, live }: { a: Analysis; live: LiveData | null }) {
+export function BillToDate({ a, f, live }: { a: Analysis; f: Finance; live: LiveData | null }) {
 	const curYM = ymOf(dayNum(a.t1));
 	let kwh = 0;
 	let on = 0;
@@ -66,6 +66,22 @@ export function BillToDate({ a, live }: { a: Analysis; live: LiveData | null }) 
 		{ k: "TOU+4k", v: tou4kToday },
 	];
 	const cheapestToday = todayOpts.reduce((best, o) => (o.v < best.v ? o : best)).k;
+
+	// Full-month projection — reuses finance()'s monthly costs (respects the
+	// MEA/measured basis toggle). cost1/2/3 are flat / TOU / TOU+2k-solar; the 4k
+	// variant mirrors finance()'s solar offset with the larger array + its sub.
+	const usableD4k = Math.min(SOLAR_4K_KWH_D, f.daytimeLoadD);
+	const offOn4k = Math.min(usableD4k * C.WEEKDAYS_MO, f.onKwh);
+	const offOff4k = Math.min(usableD4k * C.WEEKENDS_MO, f.offKwh);
+	const month4k =
+		(f.onKwh - offOn4k) * C.TOU_ON + (f.offKwh - offOff4k) * C.TOU_OFF + C.TOU_FIXED + SOLAR_4K_SUB;
+	const monthOpts = [
+		{ k: "Flat", v: f.cost1 },
+		{ k: "TOU", v: f.cost2 },
+		{ k: "TOU+2k", v: f.cost3 },
+		{ k: "TOU+4k", v: month4k },
+	];
+	const cheapestMonth = monthOpts.reduce((best, o) => (o.v < best.v ? o : best)).k;
 
 	return (
 		<section>
@@ -125,11 +141,48 @@ export function BillToDate({ a, live }: { a: Analysis; live: LiveData | null }) 
 					<span>TOU + Solar 4kW (ประมาณการ · รวม sub {f0(SOLAR_4K_SUB)}/ด เฉลี่ย/วัน)</span>
 				</div>
 			</div>
+			{/* ===== full-month projection — visually separated block ===== */}
+			<div
+				style={{
+					marginTop: 28,
+					borderTop: "2px solid var(--line)",
+					paddingTop: 20,
+				}}
+			>
+				<div className="sec-head" style={{ marginBottom: 4 }}>
+					<span className="mono">📅</span>
+					<h2 style={{ fontSize: "1.05rem" }}>ประมาณการทั้งเดือน</h2>
+				</div>
+				<div className="bar-label">
+					<b>เต็มเดือน ~{f0(f.monthlyKwh)} หน่วย</b>
+					<span className="mono">{cheapestMonth} ถูกสุด · รวมค่าบริการ/sub เต็มเดือน</span>
+				</div>
+				<div className="vstats">
+					<div className="vstat">
+						<span className="mono" style={{ fontSize: "1.4rem" }}>{money(f.cost1)} ฿</span>
+						<span>Flat ทั้งเดือน (ขั้นบันได + Ft + VAT + ค่าบริการ)</span>
+					</div>
+					<div className="vstat">
+						<span className="mono" style={{ fontSize: "1.4rem" }}>{money(f.cost2)} ฿</span>
+						<span>TOU ทั้งเดือน (+ ค่าบริการ)</span>
+					</div>
+					<div className="vstat">
+						<span className="mono" style={{ fontSize: "1.4rem" }}>{money(f.cost3)} ฿</span>
+						<span>TOU + Solar 2kW (+ sub {f0(C.BLUERING)}/ด เต็มเดือน)</span>
+					</div>
+					<div className="vstat">
+						<span className="mono" style={{ fontSize: "1.4rem" }}>{money(month4k)} ฿</span>
+						<span>TOU + Solar 4kW (+ sub {f0(SOLAR_4K_SUB)}/ด เต็มเดือน)</span>
+					</div>
+				</div>
+			</div>
+
 			<p className="pt-note">
 				* รอบบิล: นับตามเดือนปฏิทิน เป็นยอดสะสมถึงตอนนี้ (รวมค่าบริการ) · วันนี้: เฉพาะค่าพลังงาน
 				ไม่รวมค่าบริการรายเดือน · กล่อง Solar เป็นประมาณการ (2kW ≈ {f0(C.SOLAR_KWH_D)} / 4kW ≈ {f0(SOLAR_4K_KWH_D)} หน่วย/วัน,
 				offset {weekendToday ? "off-peak (วันหยุด)" : "on-peak (วันธรรมดา)"}) รวมค่า sub รายเดือนเฉลี่ยต่อวัน ·
-				ทุกค่าคิดจากหน่วยที่ใช้จริง (ผ่าน calibration แล้ว)
+				ทุกค่าคิดจากหน่วยที่ใช้จริง (ผ่าน calibration แล้ว) · ประมาณการทั้งเดือน: อิงฐาน{" "}
+				{f0(f.monthlyKwh)} หน่วย/เดือน (สลับ บิล MEA / วัดจริง ที่ปุ่มด้านบน) รวมค่าบริการ + sub เต็มเดือน
 			</p>
 		</section>
 	);
