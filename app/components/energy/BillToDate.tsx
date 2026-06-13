@@ -46,7 +46,7 @@ export function BillToDate({ a, f, live }: { a: Analysis; f: Finance; live: Live
 	// TOU + solar estimate for today. Solar offsets the daytime bucket — on-peak on
 	// weekdays, off-peak on weekends (same rule as finance()). Adds the monthly
 	// solar subscription prorated to one day. 4kW ≈ 2× the 2kW system.
-	const SOLAR_4K_KWH_D = C.SOLAR_KWH_D * 2;
+	const SOLAR_4K_KWH_D = 4 * C.SOLAR_PSH * C.SOLAR_PR; // 4kWp × PSH × PR (same model as 2kW)
 	const SOLAR_4K_SUB = 1399;
 	const weekendToday = weekdayOf(today) >= 5;
 	const touSolarToday = (prodKwh: number, subMonthly: number) => {
@@ -179,8 +179,9 @@ export function BillToDate({ a, f, live }: { a: Analysis; f: Finance; live: Live
 
 			<p className="pt-note">
 				* รอบบิล: นับตามเดือนปฏิทิน เป็นยอดสะสมถึงตอนนี้ (รวมค่าบริการ) · วันนี้: เฉพาะค่าพลังงาน
-				ไม่รวมค่าบริการรายเดือน · กล่อง Solar เป็นประมาณการ (2kW ≈ {f0(C.SOLAR_KWH_D)} / 4kW ≈ {f0(SOLAR_4K_KWH_D)} หน่วย/วัน,
-				offset {weekendToday ? "off-peak (วันหยุด)" : "on-peak (วันธรรมดา)"}) รวมค่า sub รายเดือนเฉลี่ยต่อวัน ·
+				ไม่รวมค่าบริการรายเดือน · Solar = ประมาณการที่ PSH {C.SOLAR_PSH} × PR {Math.round(C.SOLAR_PR * 100)}% (ไม่โลกสวย):
+				2kW ≈ {f1(C.SOLAR_KWH_D)} / 4kW ≈ {f1(SOLAR_4K_KWH_D)} หน่วย/วัน, offset{" "}
+				{weekendToday ? "off-peak (วันหยุด)" : "on-peak (วันธรรมดา)"} รวมค่า sub รายเดือนเฉลี่ยต่อวัน ·
 				ทุกค่าคิดจากหน่วยที่ใช้จริง (ผ่าน calibration แล้ว) · ประมาณการทั้งเดือน: อิงฐาน{" "}
 				{f0(f.monthlyKwh)} หน่วย/เดือน (สลับ บิล MEA / วัดจริง ที่ปุ่มด้านบน) รวมค่าบริการ + sub เต็มเดือน
 			</p>

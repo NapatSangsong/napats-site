@@ -21,7 +21,10 @@ export const ENERGY_CONST = {
 	TOU_OFF: 2.99, // ฿/kWh TOU off-peak
 	TOU_FIXED: 40.9, // ฿/mo TOU service fee (Type 1.2: 38.22 + VAT 7%)
 	BLUERING: 699.0, // ฿/mo solar subscription
-	SOLAR_KWH_D: 8.0, // kWh/day from 2kW solar
+	SOLAR_KWP: 2.0, // โมเดลขนาดโซลาร์ (kWp)
+	SOLAR_PSH: 5.3, // peak sun hours/วัน (กรุงเทพฯ ติดตั้งเอียงคงที่)
+	SOLAR_PR: 0.75, // performance ratio — เผื่อ loss จริง (ไม่ใช่ 100% โลกสวย)
+	SOLAR_KWH_D: 2.0 * 5.3 * 0.75, // = 7.95 kWh/วัน ต่อ 2kWp (kWp × PSH × PR)
 	WEEKDAYS_MO: 22, // weekdays per month (solar offsets on-peak)
 	WEEKENDS_MO: 8, // weekend days per month (solar offsets off-peak)
 	METER_COST: 3350.0, // ฿ one-time TOU meter cost
