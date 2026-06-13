@@ -1,5 +1,6 @@
 import type { Analysis, Forecast } from "~/lib/energy-calc";
 import { dayMonth, dayOnly, f0, f1 } from "~/lib/energy-format";
+import { ChartTip, useChartTip } from "./useChartTip";
 
 const KIND_CLS = { actual: "fb-actual", partial: "fb-partial", today: "fb-today", fc: "fb-fc" } as const;
 
@@ -7,6 +8,7 @@ const KIND_CLS = { actual: "fb-actual", partial: "fb-partial", today: "fb-today"
 export function ForecastChart({ fc, a }: { fc: Forecast; a: Analysis }) {
 	const mx = Math.max(...fc.days.map((x) => x.kwh)) || 1;
 	const start = fc.days[0]?.day ?? 0;
+	const { tip, point, surface, wrapRef } = useChartTip();
 
 	return (
 		<section>
@@ -20,20 +22,20 @@ export function ForecastChart({ fc, a }: { fc: Forecast; a: Analysis }) {
 					จ–ศ {f1(fc.wdAvg)} · ส–อา {f1(fc.weAvg)} kWh/วัน
 				</span>
 			</div>
-			<div className="fchart">
+			<div className="fchart" ref={wrapRef} style={{ position: "relative" }} {...surface}>
 				{fc.days.map((x) => {
 					const h = Math.max((x.kwh / mx) * 100, 2);
 					const we = x.weekend && x.kind !== "today" ? " fb-we" : "";
 					return (
-						<div className="fcol" key={x.day}>
+						<div className="fcol" key={x.day} {...point(`${dayMonth(x.day)} · ${f1(x.kwh)} kWh`)}>
 							<div
 								className={`fbar ${KIND_CLS[x.kind]}${we}`}
 								style={{ height: `${h.toFixed(1)}%` }}
-								title={`${dayMonth(x.day)} · ${f1(x.kwh)} kWh`}
 							/>
 						</div>
 					);
 				})}
+				<ChartTip tip={tip} />
 			</div>
 			<div className="flabels">
 				{fc.days.map((x) => (

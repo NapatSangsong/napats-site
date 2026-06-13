@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { hourOf, minuteOf } from "~/lib/energy-calc";
 import { f1, f2 } from "~/lib/energy-format";
+import { ChartTip, useChartTip } from "./useChartTip";
 
 interface GridSample {
 	ts: number;
@@ -37,6 +38,7 @@ const hhmm = (ts: number) =>
  *  collecting state until there is enough to plot. */
 export function GridQuality() {
 	const [data, setData] = useState<GridResp | null>(null);
+	const { tip, point, surface, wrapRef } = useChartTip();
 
 	useEffect(() => {
 		let alive = true;
@@ -186,6 +188,7 @@ export function GridQuality() {
 						<b>ช่วงแรงดันรายวัน (ต่ำสุด–สูงสุด)</b>
 						<span className="mono">{dayRanges.length} วันล่าสุด</span>
 					</div>
+					<div ref={wrapRef} style={{ position: "relative" }} {...surface}>
 					<svg viewBox={`0 0 ${W} 170`} style={{ width: "100%", height: "auto" }} role="img" aria-label="Daily voltage range">
 						{(() => {
 							const PB2 = 24;
@@ -203,9 +206,16 @@ export function GridQuality() {
 										const color = out ? "#FF6A5E" : "#3DD6C3";
 										return (
 											<g key={d.day}>
-												<line x1={x} y1={Y2(d.vmax ?? NOMINAL)} x2={x} y2={Y2(d.vmin ?? NOMINAL)} stroke={color} strokeWidth="4" strokeLinecap="round" opacity="0.85">
-													<title>{`${d.date} · ${f1(d.vmin ?? 0)}–${f1(d.vmax ?? 0)} V (${d.samples} จุด)`}</title>
-												</line>
+												<line x1={x} y1={Y2(d.vmax ?? NOMINAL)} x2={x} y2={Y2(d.vmin ?? NOMINAL)} stroke={color} strokeWidth="4" strokeLinecap="round" opacity="0.85" />
+												<rect
+													x={x - slot / 2}
+													y={PT2}
+													width={slot}
+													height={170 - PB2 - PT2}
+													fill="transparent"
+													style={{ pointerEvents: "all", cursor: "pointer" }}
+													{...point(`${d.date} · ${f1(d.vmin ?? 0)}–${f1(d.vmax ?? 0)} V (${d.samples} จุด)`)}
+												/>
 												<text x={x} y={170 - 8} fontSize="9" fill="#8C9AC0" textAnchor="middle" fontFamily="IBM Plex Mono">
 													{d.date.slice(8)}
 												</text>
@@ -216,6 +226,8 @@ export function GridQuality() {
 							);
 						})()}
 					</svg>
+					<ChartTip tip={tip} />
+					</div>
 				</>
 			)}
 

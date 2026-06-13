@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { Analysis } from "~/lib/energy-calc";
 import { dayNum, dayNumFromYmd, hourOf } from "~/lib/energy-calc";
 import { f2 } from "~/lib/energy-format";
+import { ChartTip, useChartTip } from "./useChartTip";
 
 /** Section — Tuya-style energy explorer (Day / Month / Year).
  *  Mirrors the Smart Meter app "Forward Energy" curve: a smooth blue line
@@ -60,6 +61,7 @@ export function DailyEnergyChart({ a }: { a: Analysis }) {
 
 	const [mode, setMode] = useState<Mode>("day");
 	const [anchor, setAnchor] = useState<number>(maxDay); // a dayNum inside the period
+	const { tip, point, surface, wrapRef } = useChartTip();
 
 	const s: Series = useMemo(() => {
 		if (mode === "day") {
@@ -181,6 +183,13 @@ export function DailyEnergyChart({ a }: { a: Analysis }) {
 		: "";
 	const gridVals = [mx * 0.25, mx * 0.5, mx * 0.75];
 	const cur = s.currentIdx != null ? pts[s.currentIdx] : null;
+	const hitW = (W - PL - PR) / Math.max(1, n - 1);
+	const xText = (i: number) =>
+		mode === "day"
+			? `${String(i).padStart(2, "0")}:00`
+			: mode === "month"
+				? `วันที่ ${i + 1}`
+				: (MONTHS[i] ?? String(i + 1));
 
 	const MODES: Array<[Mode, string]> = [
 		["day", "วัน"],
@@ -220,6 +229,7 @@ export function DailyEnergyChart({ a }: { a: Analysis }) {
 				</div>
 			</div>
 
+			<div ref={wrapRef} style={{ position: "relative" }} {...surface}>
 			<svg
 				viewBox={`0 0 ${W} ${H}`}
 				style={{ width: "100%", height: "auto" }}
@@ -278,7 +288,26 @@ export function DailyEnergyChart({ a }: { a: Analysis }) {
 						{text}
 					</text>
 				))}
+				{/* invisible per-bucket hit columns for hover/tap labels */}
+				{s.values.map((v, i) => (
+					<rect
+						key={`hit-${i}`}
+						x={X(i) - hitW / 2}
+						y={PT}
+						width={hitW}
+						height={H - PB - PT}
+						fill="transparent"
+						style={{ pointerEvents: "all", cursor: "pointer" }}
+						{...point(
+							`${xText(i)} · ${f2(v)} kWh${
+								s.overlay && s.overlay[i] != null ? ` · ${s.overlayLabel}: ${f2(s.overlay[i] as number)}` : ""
+							}`,
+						)}
+					/>
+				))}
 			</svg>
+			<ChartTip tip={tip} />
+			</div>
 
 			{s.overlayLabel && (
 				<div className="chart-legend">
