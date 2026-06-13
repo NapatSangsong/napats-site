@@ -32,6 +32,17 @@ export function BillToDate({ a }: { a: Analysis }) {
 	const gap = Math.abs(flat - tou);
 	const tierStr = FLAT_TIERS.map(([, r]) => r).join("/");
 
+	// Today (latest BKK day) — energy charge only (the monthly service fee isn't
+	// attributable to a single day). Flat is the marginal cost of today's units
+	// given where the cycle sits on the tier ladder.
+	const today = dayNum(a.t1);
+	const todayKwh = a.daily.get(today) ?? 0;
+	const todayOn = a.dailyOn.get(today) ?? 0;
+	const todayOff = a.dailyOff.get(today) ?? 0;
+	const flatToday = flatEnergyBaht(kwh) - flatEnergyBaht(Math.max(0, kwh - todayKwh));
+	const touToday = todayOn * C.TOU_ON + todayOff * C.TOU_OFF;
+	const cheaperToday = touToday <= flatToday ? "TOU" : "Flat";
+
 	return (
 		<section>
 			<div className="sec-head">
@@ -60,8 +71,25 @@ export function BillToDate({ a }: { a: Analysis }) {
 					</span>
 				</div>
 			</div>
+			<div className="bar-label" style={{ marginTop: 22 }}>
+				<b>
+					วันนี้ — ใช้ {f1(todayKwh)} หน่วย (On {f1(todayOn)} / Off {f1(todayOff)})
+				</b>
+				<span className="mono">{cheaperToday} ถูกกว่า</span>
+			</div>
+			<div className="vstats">
+				<div className="vstat">
+					<span className="mono" style={{ fontSize: "1.2rem" }}>{money(flatToday)} ฿</span>
+					<span>Flat วันนี้ (เฉพาะค่าพลังงาน + Ft + VAT)</span>
+				</div>
+				<div className="vstat">
+					<span className="mono" style={{ fontSize: "1.2rem" }}>{money(touToday)} ฿</span>
+					<span>TOU วันนี้ (เฉพาะค่าพลังงาน)</span>
+				</div>
+			</div>
 			<p className="pt-note">
-				* นับตามเดือนปฏิทิน · เป็นยอดสะสมถึงตอนนี้ (ยังไม่จบรอบบิล) · คิดจากหน่วยที่ใช้จริง (ผ่าน calibration แล้ว)
+				* รอบบิล: นับตามเดือนปฏิทิน เป็นยอดสะสมถึงตอนนี้ (รวมค่าบริการ) · วันนี้: เฉพาะค่าพลังงาน
+				ไม่รวมค่าบริการรายเดือน · ทุกค่าคิดจากหน่วยที่ใช้จริง (ผ่าน calibration แล้ว)
 			</p>
 		</section>
 	);
