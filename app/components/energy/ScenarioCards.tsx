@@ -1,6 +1,8 @@
 import type { Analysis, Finance } from "~/lib/energy-calc";
-import { ENERGY_CONST as C, flatAvgRate } from "~/lib/energy-calc";
+import { ENERGY_CONST as C, flatAvgRate, touSolarScenario } from "~/lib/energy-calc";
 import { f0, f1, f2, money } from "~/lib/energy-format";
+
+const SOLAR_4K_SUB = 1399; // ฿/mo subscription for the 4kW plan
 
 /** Section 06 — Baseload & Evening Peak */
 export function BaseloadStats({ a }: { a: Analysis }) {
@@ -33,8 +35,12 @@ export function BaseloadStats({ a }: { a: Analysis }) {
 	);
 }
 
-/** Section 07 — 3 scenario cost cards */
+/** Section 07 — scenario cost cards */
 export function ScenarioCards({ f }: { f: Finance }) {
+	const solar4kKwhD = 4 * C.SOLAR_PSH * C.SOLAR_PR; // 4kWp × PSH × PR
+	const s4 = touSolarScenario(f, solar4kKwhD, SOLAR_4K_SUB);
+	const save4 = f.cost2 - s4.cost; // vs TOU baseline
+	const minCost = Math.min(f.cost1, f.cost2, f.cost3, s4.cost);
 	return (
 		<section>
 			<div className="sec-head">
@@ -42,7 +48,8 @@ export function ScenarioCards({ f }: { f: Finance }) {
 				<h2>เปรียบเทียบค่าไฟรายเดือน</h2>
 			</div>
 			<div className="cards">
-				<div className="card">
+				<div className={`card${f.cost1 === minCost ? " best" : ""}`}>
+					{f.cost1 === minCost && <span className="best-badge">ถูกสุด</span>}
 					<div className="tag">Scenario 1 · Before</div>
 					<h3>มิเตอร์ปกติ (Flat ขั้นบันได)</h3>
 					<div className="cost mono">
@@ -57,7 +64,8 @@ export function ScenarioCards({ f }: { f: Finance }) {
 						</div>
 					</div>
 				</div>
-				<div className="card">
+				<div className={`card${f.cost2 === minCost ? " best" : ""}`}>
+					{f.cost2 === minCost && <span className="best-badge">ถูกสุด</span>}
 					<div className="tag">Scenario 2 · Baseline</div>
 					<h3>TOU Premium</h3>
 					<div className="cost mono">
@@ -84,16 +92,16 @@ export function ScenarioCards({ f }: { f: Finance }) {
 						</div>
 					</div>
 				</div>
-				<div className={`card${f.viable ? " best" : ""}`}>
-					{f.viable && <span className="best-badge">ถูกสุด</span>}
+				<div className={`card${f.cost3 === minCost ? " best" : ""}`}>
+					{f.cost3 === minCost && <span className="best-badge">ถูกสุด</span>}
 					<div className="tag">Scenario 3</div>
 					<h3>TOU + Solar 2kW (BlueRing)</h3>
 					<div className="cost mono">
 						{money(f.cost3)}
 						<small>฿/เดือน</small>
 					</div>
-					<div className={`delta ${f.viable ? "plus" : "minus"}`}>
-						{f.viable ? `−${money(f.saveSolar)}` : `+${money(-f.saveSolar)}`} ฿ เทียบ TOU
+					<div className={`delta ${f.saveSolar >= 0 ? "plus" : "minus"}`}>
+						{f.saveSolar >= 0 ? `−${money(f.saveSolar)}` : `+${money(-f.saveSolar)}`} ฿ เทียบ TOU
 						อย่างเดียว
 					</div>
 					<div className="kv">
@@ -108,6 +116,32 @@ export function ScenarioCards({ f }: { f: Finance }) {
 						<div>
 							<span>BlueRing</span>
 							<span className="mono">{f2(C.BLUERING)}</span>
+						</div>
+					</div>
+				</div>
+				<div className={`card${s4.cost === minCost ? " best" : ""}`}>
+					{s4.cost === minCost && <span className="best-badge">ถูกสุด</span>}
+					<div className="tag">Scenario 4</div>
+					<h3>TOU + Solar 4kW</h3>
+					<div className="cost mono">
+						{money(s4.cost)}
+						<small>฿/เดือน</small>
+					</div>
+					<div className={`delta ${save4 >= 0 ? "plus" : "minus"}`}>
+						{save4 >= 0 ? `−${money(save4)}` : `+${money(-save4)}`} ฿ เทียบ TOU อย่างเดียว
+					</div>
+					<div className="kv">
+						<div>
+							<span>On-Peak เหลือ</span>
+							<span className="mono">{f0(s4.remOn)} kWh</span>
+						</div>
+						<div>
+							<span>Off-Peak เหลือ</span>
+							<span className="mono">{f0(s4.remOff)} kWh</span>
+						</div>
+						<div>
+							<span>โซลาร์ 4kW ({f1(solar4kKwhD)} kWh/วัน) + sub</span>
+							<span className="mono">{f2(SOLAR_4K_SUB)}</span>
 						</div>
 					</div>
 				</div>

@@ -424,6 +424,21 @@ export function finance(a: Analysis, useMeaBaseline: boolean = C.USE_MEA_BASELIN
 	};
 }
 
+/** TOU + solar monthly cost for an arbitrary array size — same model as
+ *  finance()'s Scenario 3 (cost3), parameterised by daily yield + subscription
+ *  so other sizes (e.g. 4kW) reuse the exact offset logic. */
+export function touSolarScenario(
+	f: Finance,
+	solarKwhD: number,
+	subMonthly: number,
+): { cost: number; remOn: number; remOff: number } {
+	const usableD = Math.min(solarKwhD, f.daytimeLoadD);
+	const remOn = f.onKwh - Math.min(usableD * C.WEEKDAYS_MO, f.onKwh);
+	const remOff = f.offKwh - Math.min(usableD * C.WEEKENDS_MO, f.offKwh);
+	const cost = remOn * C.TOU_ON + remOff * C.TOU_OFF + C.TOU_FIXED + subMonthly;
+	return { cost, remOn, remOff };
+}
+
 // ---------------- 3) forecast ----------------
 
 export function forecast(a: Analysis, forecastEnd: number): Forecast {

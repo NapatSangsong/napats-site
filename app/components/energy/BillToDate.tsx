@@ -1,5 +1,5 @@
 import type { Analysis, Finance } from "~/lib/energy-calc";
-import { ENERGY_CONST as C, FLAT_TIERS, flatEnergyBaht, dayNum, weekdayOf } from "~/lib/energy-calc";
+import { ENERGY_CONST as C, FLAT_TIERS, flatEnergyBaht, dayNum, weekdayOf, touSolarScenario } from "~/lib/energy-calc";
 import { f0, f1, money } from "~/lib/energy-format";
 import type { LiveData } from "./types";
 
@@ -62,12 +62,7 @@ export function BillToDate({ a, f, live }: { a: Analysis; f: Finance; live: Live
 		(on - offOn4k) * C.TOU_ON + (off - offOff4k) * C.TOU_OFF + (C.TOU_FIXED + SOLAR_4K_SUB) * fixedF;
 
 	// ── full-month projection (mirrors finance(); 4k uses the same solar model) ──
-	const usableD4k = Math.min(solar4k, f.daytimeLoadD);
-	const month4k =
-		(f.onKwh - Math.min(usableD4k * C.WEEKDAYS_MO, f.onKwh)) * C.TOU_ON +
-		(f.offKwh - Math.min(usableD4k * C.WEEKENDS_MO, f.offKwh)) * C.TOU_OFF +
-		C.TOU_FIXED +
-		SOLAR_4K_SUB;
+	const month4k = touSolarScenario(f, solar4k, SOLAR_4K_SUB).cost;
 
 	const rows = [
 		{ k: "Flat", soFar: flat, month: f.cost1, desc: `ขั้นบันได (${FLAT_TIERS.map(([, r]) => r).join("/")}) + Ft + VAT + ค่าบริการ` },
