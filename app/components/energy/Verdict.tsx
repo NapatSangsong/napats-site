@@ -1,37 +1,62 @@
 import type { Analysis, Finance, Forecast } from "~/lib/energy-calc";
-import { ENERGY_CONST as C } from "~/lib/energy-calc";
+import { ENERGY_CONST as C, touSolarScenario } from "~/lib/energy-calc";
 import { dayMonth, f0, f2, money, timeLabel } from "~/lib/energy-format";
 
-/** Section 08 — verdict & tipping point + notes + footer */
+const SOLAR_4K_SUB = 1399; // ฿/mo subscription for the 4kW plan
+
+/** Section 08 — verdict: which of the four tariffs is cheapest THIS month, all
+ *  data-driven (recomputes with the basis toggle), consistent with the scenario
+ *  cards. No fixed/rate-only numbers. */
 export function Verdict({ a, f, fc }: { a: Analysis; f: Finance; fc: Forecast }) {
-	const head = f.viable
-		? `Solar 2kW + BlueRing คุ้ม — ประหยัดเพิ่ม ${money(f.saveSolar)} ฿/เดือน`
-		: `Solar 2kW + BlueRing ยังไม่คุ้ม — แพงขึ้น ${money(-f.saveSolar)} ฿/เดือน`;
-	const text = f.viable
-		? `โซลาร์วันธรรมดาตัด On-Peak หน่วยแพง ${f2(C.TOU_ON)}฿ ตรง ๆ ส่วนเสาร์–อาทิตย์ตัด Off-Peak มูลค่ารวมชนะค่า subscription ${f0(C.BLUERING)}฿/เดือน`
-		: `ค่า subscription ${f0(C.BLUERING)}฿/เดือน มากกว่ามูลค่าไฟที่โซลาร์ตัดได้จริง ต้องใช้โซลาร์เองให้ถึง ${f2(f.tipKwhD)} kWh/วันก่อนถึงจะคุ้ม`;
+	const cost4k = touSolarScenario(f, 4 * C.SOLAR_PSH * C.SOLAR_PR, SOLAR_4K_SUB).cost;
+	const opts = [
+		{ k: "Flat (มิเตอร์ปกติ)", cost: f.cost1, solar: false },
+		{ k: "TOU เดี่ยว", cost: f.cost2, solar: false },
+		{ k: "TOU + Solar 2kW", cost: f.cost3, solar: true },
+		{ k: "TOU + Solar 4kW", cost: cost4k, solar: true },
+	];
+	const sorted = [...opts].sort((x, y) => x.cost - y.cost);
+	const best = sorted[0];
+	const runnerUp = sorted[1];
+	const vsFlat = f.cost1 - best.cost; // ฿/mo saved vs the default flat meter
+	const solar4Cheaper = cost4k <= f.cost3;
 
 	return (
 		<>
 			<section>
 				<div className="sec-head">
 					<span className="mono">08</span>
-					<h2>คำตัดสิน &amp; Tipping Point</h2>
+					<h2>คำตัดสิน — ตัวเลือกที่ถูกสุดเดือนนี้</h2>
 				</div>
-				<div className={`verdict ${f.viable ? "viable" : "not-viable"}`}>
+				<div className={`verdict ${best.solar ? "viable" : "not-viable"}`}>
 					<div className="big">
-						<span className="pill">{f.viable ? "VIABLE ✓" : "NOT VIABLE ✗"}</span>
-						<h2>{head}</h2>
+						<span className="pill">ถูกสุด</span>
+						<h2>
+							{best.k} — {money(best.cost)} ฿/เดือน
+						</h2>
 					</div>
-					<p>{text}</p>
+					<p>
+						ประหยัด {money(vsFlat)} ฿/เดือน เทียบมิเตอร์ปกติ (Flat) · อันดับสอง {runnerUp.k} ห่าง{" "}
+						{money(runnerUp.cost - best.cost)} ฿
+						{best.solar ? "" : " — โซลาร์ที่ช่วยได้ยังไม่ชนะตัวเลือกนี้ (ต้องใช้ไฟกลางวันมากกว่านี้)"}
+					</p>
 					<div className="vstats">
 						<div className="vstat">
-							<span className="mono">{f2(f.tipKwhD)} kWh/วัน</span>
-							<span>จุดคุ้มทุนโซลาร์ (ใช้เองจริงขั้นต่ำ เพื่อชนะค่า BlueRing)</span>
+							<span className="mono">{money(vsFlat)} ฿/ด.</span>
+							<span>ประหยัดจาก Flat เมื่อเลือก {best.k}</span>
 						</div>
 						<div className="vstat">
-							<span className="mono">{f2(f.usableD)} kWh/วัน</span>
-							<span>โซลาร์ที่ใช้เองได้จริงตอนนี้ (daytime load {f2(f.daytimeLoadD)} kWh/วัน)</span>
+							<span className="mono">
+								{solar4Cheaper ? "−" : "+"}
+								{money(Math.abs(cost4k - f.cost3))} ฿/ด.
+							</span>
+							<span>
+								4kW {solar4Cheaper ? "ถูกกว่า" : "แพงกว่า"} 2kW (โหลดกลางวัน {f2(f.daytimeLoadD)} kWh/วัน)
+							</span>
+						</div>
+						<div className="vstat">
+							<span className="mono">{f2(a.eveningKwhD)} kWh/วัน</span>
+							<span>พีคเย็น 17–22 ที่โซลาร์ช่วยไม่ได้ — ต้องมีแบตถึงจะตัดได้</span>
 						</div>
 					</div>
 				</div>
@@ -49,8 +74,8 @@ export function Verdict({ a, f, fc }: { a: Analysis; f: Finance; fc: Forecast })
 						ครอบคลุมทั้งบ้านหรือไม่
 					</li>
 					<li>
-						โซลาร์ {f0(C.SOLAR_KWH_D)} kWh/วันคงที่ · จ–ศ {C.WEEKDAYS_MO} วันตัด On-Peak · ส–อา{" "}
-						{C.WEEKENDS_MO} วันตัด Off-Peak · cap ด้วย load กลางวันจริง
+						โซลาร์ {f2(C.SOLAR_KWH_D)} (2kW) / {f2(4 * C.SOLAR_PSH * C.SOLAR_PR)} (4kW) kWh/วัน · จ–ศ{" "}
+						{C.WEEKDAYS_MO} วันตัด On-Peak · ส–อา {C.WEEKENDS_MO} วันตัด Off-Peak · cap ด้วย load กลางวันจริง
 					</li>
 				</ul>
 			</div>
