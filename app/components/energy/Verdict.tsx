@@ -26,14 +26,6 @@ export function Verdict({ a, f, fc }: { a: Analysis; f: Finance; fc: Forecast })
 					<p>{text}</p>
 					<div className="vstats">
 						<div className="vstat">
-							<span className="mono">
-								{Number.isFinite(f.beMonths) ? f2(f.beMonths) : "∞"} เดือน
-							</span>
-							<span>
-								มิเตอร์ TOU {money(C.METER_COST)}฿ คืนทุน (ประหยัด {money(f.saveTou)} ฿/ด.)
-							</span>
-						</div>
-						<div className="vstat">
 							<span className="mono">{f2(f.tipKwhD)} kWh/วัน</span>
 							<span>จุดคุ้มทุนโซลาร์ (ใช้เองจริงขั้นต่ำ เพื่อชนะค่า BlueRing)</span>
 						</div>

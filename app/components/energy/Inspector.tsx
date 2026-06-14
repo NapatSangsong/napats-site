@@ -44,7 +44,6 @@ const CONSTANT_ROWS: Array<[string, string, string]> = [
 	["SOLAR_KWH_D", `${C.SOLAR_KWH_D} kWh/วัน`, "ประมาณการผลิตของระบบ 2kW"],
 	["WEEKDAYS_MO", `${C.WEEKDAYS_MO} วัน`, "วันธรรมดา/เดือน (โซลาร์ตัด On-Peak)"],
 	["WEEKENDS_MO", `${C.WEEKENDS_MO} วัน`, "เสาร์–อาทิตย์/เดือน (โซลาร์ตัด Off-Peak)"],
-	["METER_COST", `${money(C.METER_COST)} ฿`, "ค่าเปลี่ยนมิเตอร์ TOU (ครั้งเดียว)"],
 	["MEA_MONTHLY_KWH", `${C.MEA_MONTHLY_KWH} kWh`, "ฐานบิลทั้งบ้านจาก MEA"],
 	["SCALE", `${C.SCALE}`, "หน่วยดิบ forward_energy_total → kWh"],
 	["MAX_GAP_MS", "2 ชม.", "delta ข้าม gap ยาวกว่านี้ไม่เข้าโปรไฟล์"],
