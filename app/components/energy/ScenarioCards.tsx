@@ -1,8 +1,10 @@
 import type { Analysis, Finance } from "~/lib/energy-calc";
-import { ENERGY_CONST as C, flatAvgRate, touSolarScenario } from "~/lib/energy-calc";
+import { ENERGY_CONST as C, batteryEveningSaving, flatAvgRate, touSolarScenario } from "~/lib/energy-calc";
 import { f0, f1, f2, money } from "~/lib/energy-format";
 
 const SOLAR_4K_SUB = 1399; // ฿/mo subscription for the 4kW plan
+const BATT_KWH = 5; // modelled battery size
+const BATT_COST_PER_KWH = 8000; // ฿/kWh (matches BatteryWhatIf default) — capital, NOT in the bill
 
 /** Section 06 — Baseload & Evening Peak */
 export function BaseloadStats({ a }: { a: Analysis }) {
@@ -36,10 +38,15 @@ export function BaseloadStats({ a }: { a: Analysis }) {
 }
 
 /** Section 07 — scenario cost cards */
-export function ScenarioCards({ f }: { f: Finance }) {
+export function ScenarioCards({ f, a }: { f: Finance; a: Analysis }) {
 	const solar4kKwhD = 4 * C.SOLAR_PSH * C.SOLAR_PR; // 4kWp × PSH × PR
 	const s4 = touSolarScenario(f, solar4kKwhD, SOLAR_4K_SUB);
 	const save4 = f.cost2 - s4.cost; // vs TOU baseline
+	// Scenario 5: 4kW + 5kWh battery — shifts daytime surplus into the evening
+	// peak. EXCLUDED from minCost / the "ถูกสุด" badge: this figure does NOT
+	// include the battery's ~฿40k capital, so flagging it cheapest is unfair.
+	const saveBatt = batteryEveningSaving(a, 4, BATT_KWH);
+	const cost5 = s4.cost - saveBatt;
 	const minCost = Math.min(f.cost1, f.cost2, f.cost3, s4.cost);
 	return (
 		<section>
@@ -142,6 +149,25 @@ export function ScenarioCards({ f }: { f: Finance }) {
 						<div>
 							<span>โซลาร์ 4kW ({f1(solar4kKwhD)} kWh/วัน) + sub</span>
 							<span className="mono">{f2(SOLAR_4K_SUB)}</span>
+						</div>
+					</div>
+				</div>
+				<div className="card">
+					<div className="tag">Scenario 5</div>
+					<h3>TOU + Solar 4kW + Batt {BATT_KWH}kWh</h3>
+					<div className="cost mono">
+						{money(cost5)}
+						<small>฿/เดือน</small>
+					</div>
+					<div className="delta plus">−{money(f.cost2 - cost5)} ฿ เทียบ TOU อย่างเดียว</div>
+					<div className="kv">
+						<div>
+							<span>แบตกินพีคเย็นเพิ่ม (เก็บ surplus กลางวัน)</span>
+							<span className="mono">−{money(saveBatt)}/ด.</span>
+						</div>
+						<div>
+							<span>⚠️ ยังไม่รวมค่าแบต ~{money(BATT_KWH * BATT_COST_PER_KWH)}</span>
+							<span className="mono">ดู “จำลองแบตเตอรี่”</span>
 						</div>
 					</div>
 				</div>

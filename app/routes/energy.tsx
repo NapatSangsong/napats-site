@@ -465,7 +465,7 @@ export default function EnergyPage() {
 							<BillToDate a={calc.a} f={calc.f} live={live} />
 						</div>
 						<div className={sectionCls(5)} style={sectionStyle(5)}>
-							<ScenarioCards f={calc.f} />
+							<ScenarioCards f={calc.f} a={calc.a} />
 						</div>
 						<div className={sectionCls(6)} style={sectionStyle(6)}>
 							<Verdict a={calc.a} f={calc.f} fc={calc.fc} />

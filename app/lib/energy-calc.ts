@@ -561,6 +561,23 @@ export function solarCurve(): number[] {
 	return shape.map((x) => (x / s) * C.SOLAR_KWH_D);
 }
 
+/** Round-trip battery efficiency (charge → store → discharge). */
+export const BATTERY_RT_EFF = 0.9;
+
+/** Monthly ฿ a battery saves by storing daytime solar SURPLUS (production beyond
+ *  the same-hour load) and discharging it into the evening peak (17–22). Energy
+ *  value only — does NOT include the battery's capital cost. Same model as the
+ *  BatteryWhatIf section. */
+export function batteryEveningSaving(a: Analysis, solarKw: number, battKwh: number): number {
+	const sol = solarCurve();
+	const scale = solarKw / 2; // solarCurve() is shaped for the 2kW reference
+	let surplus = 0;
+	for (let h = 0; h < 24; h++) surplus += Math.max(0, sol[h] * scale - (a.prof[h] ?? 0));
+	const usable = Math.min(battKwh, surplus) * BATTERY_RT_EFF;
+	const offsetEvening = Math.min(usable, a.eveningKwhD);
+	return offsetEvening * (C.WEEKDAYS_MO * C.TOU_ON + C.WEEKENDS_MO * C.TOU_OFF);
+}
+
 // ---------------- wrapper ----------------
 
 export interface CalcResult {
