@@ -93,6 +93,40 @@ export function BatteryWhatIf({ a }: { a: Analysis }) {
 				</div>
 			</div>
 
+			<div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+				{[
+					{ label: "2kW + 5kWh", kw: 2, batt: 5 },
+					{ label: "4kW + 5kWh", kw: 4, batt: 5 },
+					{ label: "4kW + 10kWh", kw: 4, batt: 10 },
+				].map((p) => {
+					const active = solarKw === p.kw && battKwh === p.batt;
+					return (
+						<button
+							key={p.label}
+							type="button"
+							onClick={() => {
+								setSolarKw(p.kw);
+								setBattKwh(p.batt);
+							}}
+							style={{
+								appearance: "none",
+								border: `1px solid ${active ? "var(--good)" : "var(--line)"}`,
+								background: active ? "rgba(90,224,143,0.12)" : "var(--night-2)",
+								color: active ? "var(--good)" : "var(--ink-dim)",
+								borderRadius: 99,
+								padding: "5px 12px",
+								font: "inherit",
+								fontSize: "0.78rem",
+								fontWeight: 600,
+								cursor: "pointer",
+							}}
+						>
+							{p.label}
+						</button>
+					);
+				})}
+			</div>
+
 			<div className="bw-sliders">
 				{slider("โซลาร์", solarKw, setSolarKw, 1, 6, 0.5, "kW")}
 				{slider("แบตเตอรี่", battKwh, setBattKwh, 0, 15, 0.5, "kWh")}
