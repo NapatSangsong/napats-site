@@ -22,13 +22,37 @@ import { ForecastChart } from "~/components/energy/ForecastChart";
 import { GridQuality } from "~/components/energy/GridQuality";
 import { Heatmap } from "~/components/energy/Heatmap";
 import type { ApiStats, LiveData } from "~/components/energy/types";
-import { calcAll, type CalcResult, ENERGY_CONST as C } from "~/lib/energy-calc";
+import { calcAll, type CalcResult, ENERGY_CONST as C, touSolarScenario, flatEnergyBaht } from "~/lib/energy-calc";
 import { f0, f1, f2, pc, money } from "~/lib/energy-format";
 import { ENERGY_PUBLIC, gateCookie, keyHash, requireEnergyAuth, safeEqual } from "~/lib/energy-gate.server";
 
 /** Compact, human-readable snapshot of the dashboard for the AI chat context. */
 function buildEnergyContext(calc: CalcResult, live: LiveData | null, measured: boolean): string {
 	const { a, f, fc } = calc;
+	// Every tariff/solar combo the AI might be asked about — same model as the cards.
+	const yield4 = 4 * C.SOLAR_PSH * C.SOLAR_PR; // 4kW kWh/day
+	const flatSolar = (yieldKwhD: number, sub: number) => {
+		const usable = Math.min(yieldKwhD, f.daytimeLoadD);
+		const grid = Math.max(0, f.monthlyKwh - usable * (C.WEEKDAYS_MO + C.WEEKENDS_MO));
+		return flatEnergyBaht(grid) + C.FLAT_FIXED + sub;
+	};
+	const opts: Array<[string, number]> = [
+		["Flat (มิเตอร์ปกติ)", f.cost1],
+		["TOU เดี่ยว", f.cost2],
+		["TOU + Solar 2kW", f.cost3],
+		["TOU + Solar 4kW", touSolarScenario(f, yield4, 1399).cost],
+		["Flat + Solar 2kW", flatSolar(C.SOLAR_KWH_D, 699)],
+		["Flat + Solar 4kW", flatSolar(yield4, 1399)],
+	];
+	const sc = {
+		flat: f.cost1,
+		tou: f.cost2,
+		tou2: f.cost3,
+		tou4: opts[3][1],
+		flat2: opts[4][1],
+		flat4: opts[5][1],
+		cheapest: opts.reduce((b, o) => (o[1] < b[1] ? o : b)),
+	};
 	const lines = [
 		"# สรุปข้อมูลพลังงานบ้าน (ณ ตอนนี้)",
 		`ฐานการเงิน: ${measured ? "วัดจริง (realtime)" : `บิล MEA ${f0(f.monthlyKwh)} kWh/เดือน`}`,
@@ -40,14 +64,24 @@ function buildEnergyContext(calc: CalcResult, live: LiveData | null, measured: b
 		`Evening peak 17:00–22:00: ${pc(f.eveningPct)}% (${f1(a.evening)} kWh)`,
 		`On-peak รวม ${f1(f.onKwh)} kWh @ ${C.TOU_ON}฿ · Off-peak รวม ${f1(f.offKwh)} kWh @ ${C.TOU_OFF}฿`,
 		"",
-		`## ค่าไฟต่อเดือน (ประมาณ ${f0(f.monthlyKwh)} kWh)`,
-		`Flat (ขั้นบันได MEA + Ft + VAT): ${money(f.cost1)}`,
-		`TOU: ${money(f.cost2)} · TOU + Solar: ${money(f.cost3)}`,
-		`ประหยัดจาก TOU ${money(f.saveTou)}/เดือน · จาก Solar ${money(f.saveSolar)}/เดือน`,
+		`## เปรียบเทียบค่าไฟรายเดือน (ฐาน ${f0(f.monthlyKwh)} หน่วย/เดือน)`,
+		`Flat (มิเตอร์ปกติ): ${money(sc.flat)}`,
+		`TOU เดี่ยว: ${money(sc.tou)}`,
+		`TOU + Solar 2kW: ${money(sc.tou2)}`,
+		`TOU + Solar 4kW: ${money(sc.tou4)}`,
+		`Flat + Solar 2kW: ${money(sc.flat2)}`,
+		`Flat + Solar 4kW: ${money(sc.flat4)}`,
+		`→ ถูกสุด: ${sc.cheapest[0]} ที่ ${money(sc.cheapest[1] as number)}`,
 		"",
-		"## โหลด & โซลาร์",
-		`Baseload ${f2(a.baseloadKw)} kW · โหลดกลางวัน(08–16) ${f2(a.daytimeKwhD)} kWh/วัน · โหลดเย็น ${f2(a.eveningKwhD)} kWh/วัน`,
-		`โซลาร์ใช้ได้ ${f2(f.usableD)} kWh/วัน · คุ้มค่า: ${f.viable ? "ใช่" : "ยังไม่คุ้ม"} · คืนทุน ~${f1(f.beMonths)} เดือน`,
+		"## พารามิเตอร์โมเดล (ใช้คำนวณคอมโบอื่นเองได้ เช่น flat+battery, 6kW ฯลฯ)",
+		"- Flat ขั้นบันได: ≤150 @3.2484, 151–400 @4.2218, >400 @4.4217 ฿/kWh, + Ft 0.1623/หน่วย, ×VAT 1.07, + ค่าบริการ 40.9",
+		`- TOU: on-peak (จ–ศ 09:00–21:59) 5.81, off-peak 2.99 ฿/kWh, + ค่าบริการ 40.9 · บ้านนี้ on ${f1(f.onKwh)} / off ${f1(f.offKwh)} หน่วย/เดือน`,
+		`- โซลาร์ผลิต PSH 5.3 × PR 0.75 = 3.975 kWh/kWp/วัน → 2kW=7.95, 4kW=15.9 · ตัดได้ไม่เกินโหลดกลางวัน ${f2(f.daytimeLoadD)} kWh/วัน`,
+		"- ค่า subscription โซลาร์: 2kW=699, 4kW=1399 ฿/เดือน · โซลาร์ตัด on-peak จ–ศ 22วัน + off-peak ส–อา 8วัน (flat ตัดทุกวัน 30)",
+		"- โซลาร์ช่วยพีคเย็น 17–22 ไม่ได้ — ต้องมีแบตเตอรี่ (RT eff 0.9) ถึงจะตัดได้",
+		"",
+		"## โหลด",
+		`Baseload ${f2(a.baseloadKw)} kW · โหลดกลางวัน(08–16) ${f2(a.daytimeKwhD)} kWh/วัน · โหลดเย็น(พีค) ${f2(a.eveningKwhD)} kWh/วัน`,
 		"",
 		"## พยากรณ์สิ้นเดือน",
 		`คาดใช้ทั้งเดือน ${f0(fc.totalKwh)} kWh (เหลืออีก ${f0(fc.futureKwh)} kWh) · ค่าไฟคาด TOU ${money(fc.touCost)} / Flat ${money(fc.flatCost)}`,
