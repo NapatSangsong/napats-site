@@ -412,12 +412,11 @@ export default function EnergyPage() {
 									: "ค่าเริ่มต้น: สเกลค่าเงินด้วยฐานบิล MEA 1,100 kWh/เดือน · กด “วัดจริง” เพื่อดูตามที่ใช้จริง"}
 							</span>
 						</div>
+						{/* ── thesis ── */}
 						<div className={sectionCls(0)} style={sectionStyle(0)}>
 							<EnergyHeader a={calc.a} f={calc.f} liveOffline={liveOffline} />
 						</div>
-						<div className={sectionCls(1)} style={sectionStyle(1)}>
-							<BillToDate a={calc.a} f={calc.f} live={live} />
-						</div>
+						{/* ── 1) ตอนนี้ / วันนี้ ── */}
 						<div className={sectionCls(1)} style={sectionStyle(1)}>
 							<LiveNow live={live} liveOffline={liveOffline} a={calc.a} rawMeter={rawMeter} updatedAt={liveUpdatedAt} />
 						</div>
@@ -427,46 +426,53 @@ export default function EnergyPage() {
 						<div className={sectionCls(3)} style={sectionStyle(3)}>
 							<HouseFlow live={live} liveOffline={liveOffline} a={calc.a} rawMeter={rawMeter} />
 						</div>
+						{/* ── 2) บิล & การตัดสินใจ ── */}
 						<div className={sectionCls(4)} style={sectionStyle(4)}>
-							<SolarForecast a={calc.a} />
+							<BillToDate a={calc.a} f={calc.f} live={live} />
 						</div>
 						<div className={sectionCls(5)} style={sectionStyle(5)}>
-							<DailyEnergyChart a={calc.a} />
-						</div>
-						<div className={sectionCls(6)} style={sectionStyle(6)}>
-							<GridQuality />
-						</div>
-						<div className={sectionCls(7)} style={sectionStyle(7)}>
-							<ProfileBars f={calc.f} barsOn={barsOn} />
-						</div>
-						<div className={sectionCls(8)} style={sectionStyle(8)}>
-							<LoadCurve prof={calc.a.prof} sol={calc.sol} />
-						</div>
-						<div className={sectionCls(9)} style={sectionStyle(9)}>
-							<Heatmap a={calc.a} />
-						</div>
-						<div className={sectionCls(10)} style={sectionStyle(10)}>
-							<ForecastChart fc={calc.fc} a={calc.a} />
-						</div>
-						<div className={sectionCls(11)} style={sectionStyle(11)}>
-							<SavingsChart sv={calc.sv} fc={calc.fc} />
-						</div>
-						<div className={sectionCls(12)} style={sectionStyle(12)}>
-							<BaseloadStats a={calc.a} />
-						</div>
-						<div className={sectionCls(13)} style={sectionStyle(13)}>
 							<ScenarioCards f={calc.f} />
 						</div>
-						<div className={sectionCls(14)} style={sectionStyle(14)}>
-							<InstallGauge f={calc.f} />
-						</div>
-						<div className={sectionCls(15)} style={sectionStyle(15)}>
-							<BatteryWhatIf a={calc.a} />
-						</div>
-						<div className={sectionCls(16)} style={sectionStyle(16)}>
+						<div className={sectionCls(6)} style={sectionStyle(6)}>
 							<Verdict a={calc.a} f={calc.f} fc={calc.fc} />
 						</div>
+						<div className={sectionCls(7)} style={sectionStyle(7)}>
+							<InstallGauge f={calc.f} />
+						</div>
+						<div className={sectionCls(8)} style={sectionStyle(8)}>
+							<BatteryWhatIf a={calc.a} />
+						</div>
+						<div className={sectionCls(9)} style={sectionStyle(9)}>
+							<SavingsChart sv={calc.sv} fc={calc.fc} />
+						</div>
+						{/* ── 3) รูปแบบการใช้ไฟ (ทำไม) ── */}
+						<div className={sectionCls(10)} style={sectionStyle(10)}>
+							<ProfileBars f={calc.f} barsOn={barsOn} />
+						</div>
+						<div className={sectionCls(11)} style={sectionStyle(11)}>
+							<LoadCurve prof={calc.a.prof} sol={calc.sol} />
+						</div>
+						<div className={sectionCls(12)} style={sectionStyle(12)}>
+							<Heatmap a={calc.a} />
+						</div>
+						<div className={sectionCls(13)} style={sectionStyle(13)}>
+							<DailyEnergyChart a={calc.a} />
+						</div>
+						{/* ── 4) พยากรณ์ ── */}
+						<div className={sectionCls(14)} style={sectionStyle(14)}>
+							<ForecastChart fc={calc.fc} a={calc.a} />
+						</div>
+						<div className={sectionCls(15)} style={sectionStyle(15)}>
+							<SolarForecast a={calc.a} />
+						</div>
+						{/* ── 5) วินิจฉัย / เทคนิค ── */}
+						<div className={sectionCls(16)} style={sectionStyle(16)}>
+							<BaseloadStats a={calc.a} />
+						</div>
 						<div className={sectionCls(17)} style={sectionStyle(17)}>
+							<GridQuality />
+						</div>
+						<div className={sectionCls(18)} style={sectionStyle(18)}>
 							<Inspector
 								calc={calc}
 								live={live}
