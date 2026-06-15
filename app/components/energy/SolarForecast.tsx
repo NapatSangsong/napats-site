@@ -40,6 +40,7 @@ function dayLabel(date: string, idx: number): string {
 export function SolarForecast({ a }: { a: Analysis }) {
 	const [data, setData] = useState<SolarResp | null>(null);
 	const [sel, setSel] = useState(1); // default พรุ่งนี้
+	const [kw, setKw] = useState(4); // ขนาดระบบที่จำลอง — default 4kW
 	const { tip, point, surface, wrapRef } = useChartTip();
 
 	useEffect(() => {
@@ -58,7 +59,7 @@ export function SolarForecast({ a }: { a: Analysis }) {
 	const head = (
 		<div className="sec-head house-head">
 			<span className="mono">☀︎</span>
-			<h2>จำลองผลิตไฟ โซลาร์รูฟ 2kW</h2>
+			<h2>จำลองผลิตไฟ โซลาร์รูฟ {kw}kW</h2>
 			<div className="house-badges">
 				<span className="solar-sim">พรีวิว · ยังไม่ติดจริง</span>
 			</div>
@@ -74,8 +75,16 @@ export function SolarForecast({ a }: { a: Analysis }) {
 		);
 	}
 
+	// API returns production for a data.kwp (=2) kW reference — scale linearly.
+	const scale = data.kwp > 0 ? kw / data.kwp : 1;
 	const idx = Math.min(sel, data.days.length - 1);
-	const day = data.days[idx];
+	const raw = data.days[idx];
+	const day = {
+		...raw,
+		totalKwh: raw.totalKwh * scale,
+		peakKw: raw.peakKw != null ? raw.peakKw * scale : raw.peakKw,
+		hours: raw.hours.map((h) => ({ ...h, kwh: h.kwh * scale })),
+	};
 	const hrs = day.hours.filter((h) => h.hour >= 6 && h.hour <= 18);
 
 	// ---- on-peak offset: how much of the solar a 2kW system could actually
@@ -99,10 +108,10 @@ export function SolarForecast({ a }: { a: Analysis }) {
 	const saveBaht = onPeakUseful * ENERGY_CONST.TOU_ON + offPeakUseful * ENERGY_CONST.TOU_OFF;
 	const verdict =
 		util < 0.55
-			? "2kW ใหญ่กว่าโหลดกลางวัน — ส่วนเกินถูกทิ้ง (ยังไม่ขายคืน) ลองขนาดเล็กลง ย้ายโหลดมากลางวัน หรือเพิ่มแบตเตอรี่"
+			? `${kw}kW ใหญ่กว่าโหลดกลางวัน — ส่วนเกินถูกทิ้ง (ยังไม่ขายคืน) ลองขนาดเล็กลง ย้ายโหลดมากลางวัน หรือเพิ่มแบตเตอรี่`
 			: util < 0.85
-				? "2kW พอเหมาะกับโหลดกลางวัน ใช้ได้เกือบหมด"
-				: "โหลดกลางวันสูงกว่าที่ 2kW ผลิต — ใช้หมดทุกหน่วย ขยายขนาดได้อีก";
+				? `${kw}kW พอเหมาะกับโหลดกลางวัน ใช้ได้เกือบหมด`
+				: `โหลดกลางวันสูงกว่าที่ ${kw}kW ผลิต — ใช้หมดทุกหน่วย ขยายขนาดได้อีก`;
 
 	// ---- grouped bars: solar produced vs house's typical load, per hour ----
 	const W = 920;
@@ -128,7 +137,34 @@ export function SolarForecast({ a }: { a: Analysis }) {
 			{head}
 
 			<div className="solar-note">
-				🔌 ภาพจำลอง — <b>ยังไม่ได้ติดตั้ง/ต่อเข้าบ้าน</b> ขณะนี้ใช้ไฟการไฟฟ้า 100% · ดูไว้ว่าถ้าติดโซลาร์ 2kW จะผลิตได้เท่าไหร่
+				🔌 ภาพจำลอง — <b>ยังไม่ได้ติดตั้ง/ต่อเข้าบ้าน</b> ขณะนี้ใช้ไฟการไฟฟ้า 100% · ดูไว้ว่าถ้าติดโซลาร์ {kw}kW จะผลิตได้เท่าไหร่
+			</div>
+
+			<div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+				{[2, 4].map((k) => {
+					const on = kw === k;
+					return (
+						<button
+							key={k}
+							type="button"
+							onClick={() => setKw(k)}
+							style={{
+								appearance: "none",
+								border: `1px solid ${on ? "var(--sun)" : "var(--line)"}`,
+								background: on ? "rgba(255,180,84,0.14)" : "var(--night-2)",
+								color: on ? "var(--sun)" : "var(--ink-dim)",
+								borderRadius: 99,
+								padding: "5px 16px",
+								font: "inherit",
+								fontSize: "0.82rem",
+								fontWeight: 600,
+								cursor: "pointer",
+							}}
+						>
+							{k}kW
+						</button>
+					);
+				})}
 			</div>
 
 			<div className="solar-days">
@@ -140,7 +176,7 @@ export function SolarForecast({ a }: { a: Analysis }) {
 						onClick={() => setSel(i)}
 					>
 						<span className="d-name">{dayLabel(d.date, i)}</span>
-						<span className="d-kwh mono">{f1(d.totalKwh)}</span>
+						<span className="d-kwh mono">{f1(d.totalKwh * scale)}</span>
 						<span className="d-unit">kWh</span>
 					</button>
 				))}
@@ -227,7 +263,7 @@ export function SolarForecast({ a }: { a: Analysis }) {
 			<div className="chart-legend">
 				<span>
 					<i style={{ background: "#ffb454" }} />
-					ผลิต (โซลาร์ 2kW)
+					ผลิต (โซลาร์ {kw}kW)
 				</span>
 				<span>
 					<i style={{ background: "#3dd6c3" }} />
@@ -252,7 +288,7 @@ export function SolarForecast({ a }: { a: Analysis }) {
 				</div>
 				<div className="house-chip">
 					<span className="mono">
-						{data.kwp}
+						{kw}
 						<small> kW</small>
 					</span>
 					<span>ขนาดระบบ (PR {data.pr})</span>
@@ -290,7 +326,7 @@ export function SolarForecast({ a }: { a: Analysis }) {
 						ใช้พยากรณ์ <b>ความเข้มแสงอาทิตย์ (GHI)</b> รายชั่วโมงจาก Open-Meteo ที่พิกัดบางใหญ่ แล้วประเมินกำลังผลิตด้วยสูตร:
 					</p>
 					<p className="mono formula">
-						kWh/ชม. = GHI(W/m²) ÷ 1000 × {data.kwp} kW × PR {data.pr}
+						kWh/ชม. = GHI(W/m²) ÷ 1000 × {kw} kW × PR {data.pr}
 					</p>
 					<ul>
 						<li>1000 W/m² = สภาวะมาตรฐาน STC</li>
