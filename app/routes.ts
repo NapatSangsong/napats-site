@@ -8,6 +8,9 @@ export default [
 
 	// Energy dashboard (private, key-gated, not in nav)
 	route("energy", "routes/energy.tsx"),
+	route("energy-dashboard", "routes/energy-dashboard.tsx"),
+	route("energy/report", "routes/energy-report.tsx"),
+	route("api/energy/report", "routes/api/energy.report.ts"),
 	route("api/energy/live", "routes/api/energy.live.ts"),
 	route("api/energy/history", "routes/api/energy.history.ts"),
 	route("api/energy/weather", "routes/api/energy.weather.ts"),

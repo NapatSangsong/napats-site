@@ -38,14 +38,24 @@ export function BaseloadStats({ a }: { a: Analysis }) {
 }
 
 /** Section 07 — scenario cost cards */
-export function ScenarioCards({ f, a }: { f: Finance; a: Analysis }) {
-	const solar4kKwhD = 4 * C.SOLAR_PSH * C.SOLAR_PR; // 4kWp × PSH × PR
+export function ScenarioCards({ f, a, solarPr }: { f: Finance; a: Analysis; solarPr: number }) {
+	const solar2kKwhD = C.SOLAR_KWP * C.SOLAR_PSH * solarPr; // 2kWp × PSH × PR(case)
+	const solar4kKwhD = 4 * C.SOLAR_PSH * solarPr; // 4kWp × PSH × PR(case)
+	// surplus the 4kW array can't self-consume (no export/batt) — capped at the
+	// house's daytime load. This is "free" solar you could absorb by shifting more
+	// daytime load into the solar window. Grows as PR rises (more production, same cap).
+	const waste4kD = Math.max(0, solar4kKwhD - f.daytimeLoadD);
+	// ฿/mo value if that surplus were fully self-consumed via load-shifting — same
+	// rate the model already credits usable daytime solar (weekday on-peak + weekend
+	// off-peak), so it's the marginal saving on top of the shown 4kW bill.
+	const shiftCoef = C.WEEKDAYS_MO * C.TOU_ON + C.WEEKENDS_MO * C.TOU_OFF;
+	const waste4Baht = waste4kD * shiftCoef;
 	const s4 = touSolarScenario(f, solar4kKwhD, SOLAR_4K_SUB);
 	const save4 = f.cost2 - s4.cost; // vs TOU baseline
 	// Scenario 5: 4kW + 5kWh battery — shifts daytime surplus into the evening
 	// peak. EXCLUDED from minCost / the "ถูกสุด" badge: this figure does NOT
 	// include the battery's ~฿40k capital, so flagging it cheapest is unfair.
-	const saveBatt = batteryEveningSaving(a, 4, BATT_KWH);
+	const saveBatt = batteryEveningSaving(a, 4, BATT_KWH, solarPr);
 	const cost5 = s4.cost - saveBatt;
 	const minCost = Math.min(f.cost1, f.cost2, f.cost3, s4.cost);
 	return (
@@ -121,7 +131,7 @@ export function ScenarioCards({ f, a }: { f: Finance; a: Analysis }) {
 							<span className="mono">{f0(f.remOff)} kWh</span>
 						</div>
 						<div>
-							<span>BlueRing</span>
+							<span>โซลาร์ 2kW ({f1(solar2kKwhD)} kWh/วัน) + sub</span>
 							<span className="mono">{f2(C.BLUERING)}</span>
 						</div>
 					</div>
@@ -149,6 +159,18 @@ export function ScenarioCards({ f, a }: { f: Finance; a: Analysis }) {
 						<div>
 							<span>โซลาร์ 4kW ({f1(solar4kKwhD)} kWh/วัน) + sub</span>
 							<span className="mono">{f2(SOLAR_4K_SUB)}</span>
+						</div>
+						<div>
+							<span>เหลือทิ้ง (ย้ายโหลดมาใช้กลางวันได้)</span>
+							<span className="mono" style={{ color: waste4kD > 0 ? "var(--sun)" : "var(--ink-dim)" }}>
+								{f1(waste4kD)} kWh/วัน
+							</span>
+						</div>
+						<div>
+							<span>↳ ถ้าย้ายโหลดใช้เต็มที่ ประหยัดเพิ่ม</span>
+							<span className="mono" style={{ color: waste4Baht > 0 ? "var(--good)" : "var(--ink-dim)" }}>
+								~{f0(waste4Baht)}฿/ด.
+							</span>
 						</div>
 					</div>
 				</div>

@@ -1,4 +1,3 @@
-import { ENERGY_CONST as C } from "~/lib/energy-calc";
 import { f0, f2 } from "~/lib/energy-format";
 import { ChartTip, useChartTip } from "./useChartTip";
 
@@ -15,6 +14,9 @@ export function LoadCurve({ prof, sol }: { prof: number[]; sol: number[] }) {
 	const Y = (v: number) => H - PB - (v / mx) * (H - PB - PT);
 	const { tip, point, surface, wrapRef } = useChartTip();
 	const slot = (W - PL - 10) / 23;
+	// daily solar total derived from the (already case-scaled) curve, so the label
+	// tracks the best/worst/ideal PR toggle instead of a fixed 7.95.
+	const solDailyKwh = sol.reduce((s, v) => s + v, 0);
 	const zones: Array<[number, number, string]> = [
 		[0, 9, "#2D5DB0"],
 		[9, 17, "#FFB454"],
@@ -124,7 +126,7 @@ export function LoadCurve({ prof, sol }: { prof: number[]; sol: number[] }) {
 							background: "repeating-linear-gradient(90deg,#FFB454 0 7px,transparent 7px 12px)",
 						}}
 					/>
-					โซลาร์ 2kW ({f0(C.SOLAR_KWH_D)} kWh/วัน)
+					โซลาร์ 2kW ({f0(solDailyKwh)} kWh/วัน)
 				</span>
 				<span>
 					<i style={{ background: "#2D5DB0", height: 10 }} />

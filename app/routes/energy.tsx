@@ -27,10 +27,16 @@ import { f0, f1, f2, pc, money } from "~/lib/energy-format";
 import { ENERGY_PUBLIC, gateCookie, keyHash, requireEnergyAuth, safeEqual } from "~/lib/energy-gate.server";
 
 /** Compact, human-readable snapshot of the dashboard for the AI chat context. */
-function buildEnergyContext(calc: CalcResult, live: LiveData | null, measured: boolean): string {
+function buildEnergyContext(
+	calc: CalcResult,
+	live: LiveData | null,
+	measured: boolean,
+	solarPr: number,
+): string {
 	const { a, f, fc } = calc;
 	// Every tariff/solar combo the AI might be asked about — same model as the cards.
-	const yield4 = 4 * C.SOLAR_PSH * C.SOLAR_PR; // 4kW kWh/day
+	const yield2 = C.SOLAR_KWP * C.SOLAR_PSH * solarPr; // 2kW kWh/day @ chosen PR
+	const yield4 = C.SOLAR_4K_KWP * C.SOLAR_PSH * solarPr; // 4kW kWh/day @ chosen PR
 	const flatSolar = (yieldKwhD: number, sub: number) => {
 		const usable = Math.min(yieldKwhD, f.daytimeLoadD);
 		const grid = Math.max(0, f.monthlyKwh - usable * (C.WEEKDAYS_MO + C.WEEKENDS_MO));
@@ -40,9 +46,9 @@ function buildEnergyContext(calc: CalcResult, live: LiveData | null, measured: b
 		["Flat (มิเตอร์ปกติ)", f.cost1],
 		["TOU เดี่ยว", f.cost2],
 		["TOU + Solar 2kW", f.cost3],
-		["TOU + Solar 4kW", touSolarScenario(f, yield4, 1399).cost],
-		["Flat + Solar 2kW", flatSolar(C.SOLAR_KWH_D, 699)],
-		["Flat + Solar 4kW", flatSolar(yield4, 1399)],
+		["TOU + Solar 4kW", touSolarScenario(f, yield4, C.SOLAR_4K_SUB).cost],
+		["Flat + Solar 2kW", flatSolar(yield2, C.BLUERING)],
+		["Flat + Solar 4kW", flatSolar(yield4, C.SOLAR_4K_SUB)],
 	];
 	const sc = {
 		flat: f.cost1,
@@ -64,7 +70,7 @@ function buildEnergyContext(calc: CalcResult, live: LiveData | null, measured: b
 		`Evening peak 17:00–22:00: ${pc(f.eveningPct)}% (${f1(a.evening)} kWh)`,
 		`On-peak รวม ${f1(f.onKwh)} kWh @ ${C.TOU_ON}฿ · Off-peak รวม ${f1(f.offKwh)} kWh @ ${C.TOU_OFF}฿`,
 		"",
-		`## เปรียบเทียบค่าไฟรายเดือน (ฐาน ${f0(f.monthlyKwh)} หน่วย/เดือน)`,
+		`## เปรียบเทียบค่าไฟรายเดือน (ฐาน ${f0(f.monthlyKwh)} หน่วย/เดือน · PR โซลาร์ ${solarPr})`,
 		`Flat (มิเตอร์ปกติ): ${money(sc.flat)}`,
 		`TOU เดี่ยว: ${money(sc.tou)}`,
 		`TOU + Solar 2kW: ${money(sc.tou2)}`,
@@ -76,7 +82,7 @@ function buildEnergyContext(calc: CalcResult, live: LiveData | null, measured: b
 		"## พารามิเตอร์โมเดล (ใช้คำนวณคอมโบอื่นเองได้ เช่น flat+battery, 6kW ฯลฯ)",
 		"- Flat ขั้นบันได: ≤150 @3.2484, 151–400 @4.2218, >400 @4.4217 ฿/kWh, + Ft 0.1623/หน่วย, ×VAT 1.07, + ค่าบริการ 40.9",
 		`- TOU: on-peak (จ–ศ 09:00–21:59) 5.81, off-peak 2.99 ฿/kWh, + ค่าบริการ 40.9 · บ้านนี้ on ${f1(f.onKwh)} / off ${f1(f.offKwh)} หน่วย/เดือน`,
-		`- โซลาร์ผลิต PSH 5.3 × PR 0.75 = 3.975 kWh/kWp/วัน → 2kW=7.95, 4kW=15.9 · ตัดได้ไม่เกินโหลดกลางวัน ${f2(f.daytimeLoadD)} kWh/วัน`,
+		`- โซลาร์ผลิต PSH ${C.SOLAR_PSH} × PR ${solarPr} = ${f2(C.SOLAR_PSH * solarPr)} kWh/kWp/วัน → 2kW=${f2(yield2)}, 4kW=${f2(yield4)} · ตัดได้ไม่เกินโหลดกลางวัน ${f2(f.daytimeLoadD)} kWh/วัน`,
 		"- ค่า subscription โซลาร์: 2kW=699, 4kW=1399 ฿/เดือน · โซลาร์ตัด on-peak จ–ศ 22วัน + off-peak ส–อา 8วัน (flat ตัดทุกวัน 30)",
 		"- โซลาร์ช่วยพีคเย็น 17–22 ไม่ได้ — ต้องมีแบตเตอรี่ (RT eff 0.9) ถึงจะตัดได้",
 		"",
@@ -133,7 +139,32 @@ const HISTORY_TIMEOUT_MS = 20_000;
 
 const SECTION_STAGGER_MS = 80;
 
+// Solar PR (Performance Ratio) scenarios — a global toggle that scales every
+// solar-derived figure. worst 0.75 = the conservative default (= C.SOLAR_PR),
+// best 0.85 = a good install, ideal 1.0 = theoretical no-loss. Linear multiplier
+// on solar yield, so it flows through finance()/solarCurve() into all sections.
+const SOLAR_PR_BY_CASE = { worst: 0.75, best: 0.85, ideal: 1.0 } as const;
+type SolarCase = keyof typeof SOLAR_PR_BY_CASE;
+const SOLAR_CASE_LABEL: Record<SolarCase, string> = {
+	worst: "Worst 0.75",
+	best: "Best 0.85",
+	ideal: "Ideal 1.0",
+};
+
 export default function EnergyPage() {
+	const [theme, setTheme] = useState<"dark" | "light">("light");
+	useEffect(() => {
+		const stored = localStorage.getItem("edash-theme");
+		if (stored === "light" || stored === "dark") setTheme(stored);
+	}, []);
+	const toggleTheme = useCallback(() => {
+		setTheme((prev) => {
+			const next = prev === "dark" ? "light" : "dark";
+			localStorage.setItem("edash-theme", next);
+			return next;
+		});
+	}, []);
+
 	const [steps, setSteps] = useState<StepState[]>(["wait", "wait", "wait", "wait"]);
 	const [overlayFading, setOverlayFading] = useState(false);
 	const [overlayGone, setOverlayGone] = useState(false);
@@ -161,12 +192,33 @@ export default function EnergyPage() {
 	// Ephemeral (not persisted) — resets to default on reload, by design.
 	const [measured, setMeasured] = useState(false);
 	const measuredRef = useRef(false);
+	// solar PR scenario: worst (default) / best / ideal. Same ephemeral pattern as
+	// `measured` — ref mirrors state so the polling closures read the latest value.
+	const [solarCase, setSolarCase] = useState<SolarCase>("worst");
+	const solarCaseRef = useRef<SolarCase>("worst");
 	const setBasis = useCallback((next: boolean) => {
 		measuredRef.current = next;
 		setMeasured(next);
 		const pts = pointsRef.current;
 		if (pts.length >= 2) {
-			const result = calcAll(pts, { nowMs: Date.now(), useMeaBaseline: !next });
+			const result = calcAll(pts, {
+				nowMs: Date.now(),
+				useMeaBaseline: !next,
+				solarPr: SOLAR_PR_BY_CASE[solarCaseRef.current],
+			});
+			if (result) setCalc(result);
+		}
+	}, []);
+	const setCase = useCallback((next: SolarCase) => {
+		solarCaseRef.current = next;
+		setSolarCase(next);
+		const pts = pointsRef.current;
+		if (pts.length >= 2) {
+			const result = calcAll(pts, {
+				nowMs: Date.now(),
+				useMeaBaseline: !measuredRef.current,
+				solarPr: SOLAR_PR_BY_CASE[next],
+			});
 			if (result) setCalc(result);
 		}
 	}, []);
@@ -177,8 +229,8 @@ export default function EnergyPage() {
 
 	// Snapshot of the current numbers handed to the AI chat as context.
 	const aiContext = useMemo(
-		() => (calc ? buildEnergyContext(calc, live, measured) : ""),
-		[calc, live, measured],
+		() => (calc ? buildEnergyContext(calc, live, measured, SOLAR_PR_BY_CASE[solarCase]) : ""),
+		[calc, live, measured, solarCase],
 	);
 
 	// Manual "Sync now": pull latest Tuya logs into the DB on demand
@@ -263,7 +315,11 @@ export default function EnergyPage() {
 			const pts = await fetchHistory();
 			if (pts) {
 				pointsRef.current = pts;
-				const result = calcAll(pts, { nowMs: Date.now(), useMeaBaseline: !measuredRef.current });
+				const result = calcAll(pts, {
+					nowMs: Date.now(),
+					useMeaBaseline: !measuredRef.current,
+					solarPr: SOLAR_PR_BY_CASE[solarCaseRef.current],
+				});
 				if (result) setCalc(result);
 			}
 			if (body.ok) setSyncedAt(Date.now());
@@ -313,7 +369,11 @@ export default function EnergyPage() {
 			// yield a frame so the step state is visible before sync calc work
 			await new Promise((r) => setTimeout(r, 30));
 			if (cancelled) return;
-			const result = calcAll(pts, { nowMs: Date.now(), useMeaBaseline: !measuredRef.current });
+			const result = calcAll(pts, {
+				nowMs: Date.now(),
+				useMeaBaseline: !measuredRef.current,
+				solarPr: SOLAR_PR_BY_CASE[solarCaseRef.current],
+			});
 			if (!result) {
 				setStep(2, "fail");
 				setFatal("empty");
@@ -345,7 +405,11 @@ export default function EnergyPage() {
 			void fetchHistory().then((pts) => {
 				if (!pts) return;
 				pointsRef.current = pts;
-				const result = calcAll(pts, { nowMs: Date.now(), useMeaBaseline: !measuredRef.current });
+				const result = calcAll(pts, {
+					nowMs: Date.now(),
+					useMeaBaseline: !measuredRef.current,
+					solarPr: SOLAR_PR_BY_CASE[solarCaseRef.current],
+				});
 				if (result) setCalc(result);
 			});
 		}, HISTORY_POLL_MS);
@@ -366,7 +430,7 @@ export default function EnergyPage() {
 		reducedRef.current ? undefined : { transitionDelay: `${i * SECTION_STAGGER_MS}ms` };
 
 	return (
-		<div className="energy-root">
+		<div className="energy-root" data-theme={theme}>
 			{!overlayGone && <LoadingOverlay steps={steps} fading={overlayFading} />}
 			<div className="wrap">
 				{fatal === "history" && (
@@ -411,6 +475,21 @@ export default function EnergyPage() {
 									วัดจริง (realtime)
 								</button>
 							</div>
+							<span className="basis-label">PR โซลาร์</span>
+							<div className="basis-seg" role="tablist" aria-label="ระดับ PR โซลาร์">
+								{(Object.keys(SOLAR_PR_BY_CASE) as SolarCase[]).map((cs) => (
+									<button
+										key={cs}
+										type="button"
+										role="tab"
+										aria-selected={solarCase === cs}
+										className={solarCase === cs ? "on" : ""}
+										onClick={() => solarCase !== cs && setCase(cs)}
+									>
+										{SOLAR_CASE_LABEL[cs]}
+									</button>
+								))}
+							</div>
 							<button
 								type="button"
 								onClick={syncNow}
@@ -440,10 +519,31 @@ export default function EnergyPage() {
 									ซิงค์ล่าสุด {new Date(syncedAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
 								</span>
 							)}
+							<button
+								type="button"
+								onClick={toggleTheme}
+								title={theme === "dark" ? "เปลี่ยนเป็น Light mode" : "เปลี่ยนเป็น Dark mode"}
+								style={{
+									appearance: "none",
+									border: "1px solid var(--line)",
+									background: "var(--night-2)",
+									color: "var(--ink)",
+									borderRadius: 99,
+									padding: "5px 12px",
+									font: "inherit",
+									fontSize: "0.86rem",
+									cursor: "pointer",
+									marginLeft: "auto",
+								}}
+							>
+								{theme === "dark" ? "☀" : "☾"}
+							</button>
 							<span className="basis-hint">
 								{measured
 									? "กำลังสเกลค่าเงินด้วยยอดที่วัดได้จริง — เปลี่ยนตามข้อมูล (ไม่บันทึก รีเฟรชแล้วกลับค่าเริ่มต้น)"
 									: "ค่าเริ่มต้น: สเกลค่าเงินด้วยฐานบิล MEA 1,100 kWh/เดือน · กด “วัดจริง” เพื่อดูตามที่ใช้จริง"}
+								{" · "}PR โซลาร์: <b>{SOLAR_CASE_LABEL[solarCase]}</b>{" "}
+								(worst 0.75 = ค่าเริ่มต้น/conservative · ideal 1.0 = ทฤษฎีไม่มี loss) — กระทบทุก section ที่เกี่ยวกับโซลาร์
 							</span>
 						</div>
 						{/* ── thesis ── */}
@@ -451,33 +551,39 @@ export default function EnergyPage() {
 							<EnergyHeader a={calc.a} f={calc.f} liveOffline={liveOffline} />
 						</div>
 						{/* ── 1) ตอนนี้ / วันนี้ ── */}
-						<div className={sectionCls(1)} style={sectionStyle(1)}>
-							<LiveNow live={live} liveOffline={liveOffline} a={calc.a} rawMeter={rawMeter} updatedAt={liveUpdatedAt} />
-						</div>
-						<div className={sectionCls(2)} style={sectionStyle(2)}>
-							<PeriodTally a={calc.a} live={live} rawMeter={rawMeter} />
+						<div className="e-row">
+							<div className={sectionCls(1)} style={sectionStyle(1)}>
+								<LiveNow live={live} liveOffline={liveOffline} a={calc.a} rawMeter={rawMeter} updatedAt={liveUpdatedAt} />
+							</div>
+							<div className={sectionCls(2)} style={sectionStyle(2)}>
+								<PeriodTally a={calc.a} live={live} rawMeter={rawMeter} />
+							</div>
 						</div>
 						<div className={sectionCls(3)} style={sectionStyle(3)}>
 							<HouseFlow live={live} liveOffline={liveOffline} a={calc.a} rawMeter={rawMeter} />
 						</div>
 						{/* ── 2) บิล & การตัดสินใจ ── */}
 						<div className={sectionCls(4)} style={sectionStyle(4)}>
-							<BillToDate a={calc.a} f={calc.f} live={live} />
+							<BillToDate a={calc.a} f={calc.f} live={live} solarPr={SOLAR_PR_BY_CASE[solarCase]} />
 						</div>
 						<div className={sectionCls(5)} style={sectionStyle(5)}>
-							<ScenarioCards f={calc.f} a={calc.a} />
+							<ScenarioCards f={calc.f} a={calc.a} solarPr={SOLAR_PR_BY_CASE[solarCase]} />
 						</div>
-						<div className={sectionCls(6)} style={sectionStyle(6)}>
-							<Verdict a={calc.a} f={calc.f} fc={calc.fc} />
+						<div className="e-row">
+							<div className={sectionCls(6)} style={sectionStyle(6)}>
+								<Verdict a={calc.a} f={calc.f} fc={calc.fc} solarPr={SOLAR_PR_BY_CASE[solarCase]} />
+							</div>
+							<div className={sectionCls(7)} style={sectionStyle(7)}>
+								<InstallGauge f={calc.f} solarPr={SOLAR_PR_BY_CASE[solarCase]} />
+							</div>
 						</div>
-						<div className={sectionCls(7)} style={sectionStyle(7)}>
-							<InstallGauge f={calc.f} />
-						</div>
-						<div className={sectionCls(8)} style={sectionStyle(8)}>
-							<BatteryWhatIf a={calc.a} />
-						</div>
-						<div className={sectionCls(9)} style={sectionStyle(9)}>
-							<SavingsChart sv={calc.sv} fc={calc.fc} />
+						<div className="e-row">
+							<div className={sectionCls(8)} style={sectionStyle(8)}>
+								<BatteryWhatIf a={calc.a} solarPr={SOLAR_PR_BY_CASE[solarCase]} />
+							</div>
+							<div className={sectionCls(9)} style={sectionStyle(9)}>
+								<SavingsChart sv={calc.sv} fc={calc.fc} />
+							</div>
 						</div>
 						{/* ── 3) รูปแบบการใช้ไฟ (ทำไม) ── */}
 						<div className={sectionCls(10)} style={sectionStyle(10)}>
@@ -486,25 +592,31 @@ export default function EnergyPage() {
 						<div className={sectionCls(11)} style={sectionStyle(11)}>
 							<LoadCurve prof={calc.a.prof} sol={calc.sol} />
 						</div>
-						<div className={sectionCls(12)} style={sectionStyle(12)}>
-							<Heatmap a={calc.a} />
-						</div>
-						<div className={sectionCls(13)} style={sectionStyle(13)}>
-							<DailyEnergyChart a={calc.a} />
+						<div className="e-row">
+							<div className={sectionCls(12)} style={sectionStyle(12)}>
+								<Heatmap a={calc.a} />
+							</div>
+							<div className={sectionCls(13)} style={sectionStyle(13)}>
+								<DailyEnergyChart a={calc.a} />
+							</div>
 						</div>
 						{/* ── 4) พยากรณ์ ── */}
-						<div className={sectionCls(14)} style={sectionStyle(14)}>
-							<ForecastChart fc={calc.fc} a={calc.a} />
-						</div>
-						<div className={sectionCls(15)} style={sectionStyle(15)}>
-							<SolarForecast a={calc.a} />
+						<div className="e-row">
+							<div className={sectionCls(14)} style={sectionStyle(14)}>
+								<ForecastChart fc={calc.fc} a={calc.a} />
+							</div>
+							<div className={sectionCls(15)} style={sectionStyle(15)}>
+								<SolarForecast a={calc.a} solarPr={SOLAR_PR_BY_CASE[solarCase]} />
+							</div>
 						</div>
 						{/* ── 5) วินิจฉัย / เทคนิค ── */}
-						<div className={sectionCls(16)} style={sectionStyle(16)}>
-							<BaseloadStats a={calc.a} />
-						</div>
-						<div className={sectionCls(17)} style={sectionStyle(17)}>
-							<GridQuality />
+						<div className="e-row">
+							<div className={sectionCls(16)} style={sectionStyle(16)}>
+								<BaseloadStats a={calc.a} />
+							</div>
+							<div className={sectionCls(17)} style={sectionStyle(17)}>
+								<GridQuality />
+							</div>
 						</div>
 						<div className={sectionCls(18)} style={sectionStyle(18)}>
 							<Inspector
@@ -512,6 +624,7 @@ export default function EnergyPage() {
 								live={live}
 								stats={stats}
 								points={pointsRef.current}
+								solarPr={SOLAR_PR_BY_CASE[solarCase]}
 							/>
 						</div>
 					</>

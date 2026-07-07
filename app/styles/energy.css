@@ -30,7 +30,7 @@
 	font-family: "Anuphan", sans-serif;
 	color: var(--ink);
 	line-height: 1.55;
-	padding: 0 20px 72px;
+	padding: 0 clamp(20px, 4vw, 60px) 72px;
 	min-height: 100vh;
 	/* Establish a block formatting context so the first child's top margin
 	   (e.g. .basis-bar margin-top:70px) stays INSIDE this navy box instead of
@@ -44,7 +44,6 @@
 		var(--night);
 }
 .energy-root .wrap {
-	max-width: 980px;
 	margin: 0 auto;
 }
 .energy-root .mono {
@@ -1783,4 +1782,133 @@
 		grid-template-columns: 70px 1fr 92px;
 		gap: 8px;
 	}
+}
+
+/* ── Two-column layout rows ── */
+.energy-root .e-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0 clamp(16px, 2.5vw, 40px);
+	align-items: start;
+}
+@media (max-width: 900px) {
+	.energy-root .e-row { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ * Light theme token overrides. Applied when JS sets data-theme="light"
+ * on .energy-root. Dark remains the implicit default (no attribute).
+ * ═══════════════════════════════════════════════════════════════════ */
+.energy-root[data-theme="light"] {
+	--night: #f5f7fb;
+	--night-2: #eef1f7;
+	--panel: #ffffff;
+	--line: #d0d7e8;
+	--ink: #1a2238;
+	--ink-dim: #6b7a99;
+	--sun: #c07818;
+	--sun-deep: #a06010;
+	--peak: #d9483b;
+	--off: #1fa897;
+	--good: #2f9e63;
+	--bad: #d9483b;
+
+	background:
+		radial-gradient(1100px 500px at 85% -10%, #e2e8f4 0%, transparent 60%),
+		radial-gradient(900px 480px at -10% 30%, #e8edf7 0%, transparent 55%),
+		var(--night);
+}
+/* Elements with hardcoded dark hex that need explicit overrides in light mode */
+.energy-root[data-theme="light"] .card {
+	background: linear-gradient(180deg, #ffffff, #f4f6fc);
+}
+.energy-root[data-theme="light"] .verdict.viable {
+	background: linear-gradient(135deg, #e6f4ed 0%, #f0faf4 60%, var(--night-2) 100%);
+	border-color: #7dc89a;
+}
+.energy-root[data-theme="light"] .verdict.not-viable {
+	background: linear-gradient(135deg, #faeaec 0%, #fdf3f4 60%, var(--night-2) 100%);
+	border-color: #dfa0a6;
+}
+.energy-root[data-theme="light"] .overlay {
+	background:
+		radial-gradient(1100px 500px at 85% -10%, #e2e8f4 0%, transparent 60%),
+		radial-gradient(900px 480px at -10% 30%, #e8edf7 0%, transparent 55%),
+		var(--night);
+}
+.energy-root[data-theme="light"] .insp-body {
+	background: rgba(245, 247, 251, 0.9);
+}
+.energy-root[data-theme="light"] .vstat {
+	background: rgba(238, 241, 247, 0.8);
+}
+.energy-root[data-theme="light"] .solar-method {
+	background: rgba(245, 247, 251, 0.8);
+}
+.energy-root[data-theme="light"] .solar-offset {
+	background: linear-gradient(180deg, rgba(255, 180, 84, 0.07), rgba(245, 247, 251, 0.5));
+}
+.energy-root[data-theme="light"] .house-weather {
+	background: rgba(245, 247, 251, 0.88);
+}
+.energy-root[data-theme="light"] .hempty {
+	background: repeating-linear-gradient(45deg, #e2e8f4 0 4px, #eef1f7 4px 8px);
+}
+.energy-root[data-theme="light"] .fb-fc {
+	background: repeating-linear-gradient(
+		45deg,
+		rgba(31, 168, 151, 0.1) 0 5px,
+		rgba(31, 168, 151, 0.05) 5px 10px
+	);
+	border-color: rgba(31, 168, 151, 0.4);
+}
+.energy-root[data-theme="light"] .bw-flow {
+	background: rgba(47, 158, 99, 0.06);
+	border-color: rgba(47, 158, 99, 0.22);
+}
+.energy-root[data-theme="light"] .badge-off {
+	background: rgba(217, 72, 59, 0.1);
+	border-color: rgba(217, 72, 59, 0.4);
+}
+.energy-root[data-theme="light"] .best-badge {
+	color: #0f3d2a;
+}
+/* basis-seg / de-seg pill containers use hardcoded rgba(16,23,42,0.6) */
+.energy-root[data-theme="light"] .basis-seg {
+	background: rgba(200, 210, 230, 0.5);
+}
+/* amber text (#ffb454) is below 3:1 contrast on white — darken for light mode */
+.energy-root[data-theme="light"] .solar-sim {
+	color: #8c5c00;
+	background: rgba(192, 120, 24, 0.1);
+	border-color: rgba(192, 120, 24, 0.35);
+}
+.energy-root[data-theme="light"] .solar-note {
+	color: var(--ink-dim);
+	background: rgba(192, 120, 24, 0.06);
+	border-color: rgba(192, 120, 24, 0.22);
+	border-left-color: #c07818;
+}
+.energy-root[data-theme="light"] .solar-day.on .d-kwh {
+	color: #8c5c00;
+}
+.energy-root[data-theme="light"] .solar-day.on {
+	background: rgba(192, 120, 24, 0.1);
+	border-color: #c07818;
+}
+/* light yellow formula text invisible on white */
+.energy-root[data-theme="light"] .solar-method .formula {
+	color: #7a5200;
+	background: rgba(192, 120, 24, 0.08);
+	border-color: rgba(192, 120, 24, 0.2);
+}
+.energy-root[data-theme="light"] .solar-offset .so-item b.peak {
+	color: #8c5c00;
+}
+/* summary arrow glyphs */
+.energy-root[data-theme="light"] .solar-method summary::before {
+	color: #c07818;
+}
+.energy-root[data-theme="light"] .solar-method[open] summary::before {
+	color: #c07818;
 }

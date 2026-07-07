@@ -37,7 +37,7 @@ function dayLabel(date: string, idx: number): string {
 /** Section — SIMULATED 2 kWp rooftop-solar production forecast.
  *  Not installed, not wired to the house — a weather-driven preview of how
  *  much a future system would make, hour by hour, for the next few days. */
-export function SolarForecast({ a }: { a: Analysis }) {
+export function SolarForecast({ a, solarPr }: { a: Analysis; solarPr: number }) {
 	const [data, setData] = useState<SolarResp | null>(null);
 	const [sel, setSel] = useState(1); // default พรุ่งนี้
 	const [kw, setKw] = useState(4); // ขนาดระบบที่จำลอง — default 4kW
@@ -75,8 +75,9 @@ export function SolarForecast({ a }: { a: Analysis }) {
 		);
 	}
 
-	// API returns production for a data.kwp (=2) kW reference — scale linearly.
-	const scale = data.kwp > 0 ? kw / data.kwp : 1;
+	// API returns production for a data.kwp (=2) kW reference at PR data.pr — scale
+	// linearly by kW, and rescale PR (server PR → the chosen best/worst/ideal case).
+	const scale = (data.kwp > 0 ? kw / data.kwp : 1) * (data.pr > 0 ? solarPr / data.pr : 1);
 	const idx = Math.min(sel, data.days.length - 1);
 	const raw = data.days[idx];
 	const day = {
@@ -291,7 +292,7 @@ export function SolarForecast({ a }: { a: Analysis }) {
 						{kw}
 						<small> kW</small>
 					</span>
-					<span>ขนาดระบบ (PR {data.pr})</span>
+					<span>ขนาดระบบ (PR {solarPr})</span>
 				</div>
 			</div>
 
@@ -326,11 +327,11 @@ export function SolarForecast({ a }: { a: Analysis }) {
 						ใช้พยากรณ์ <b>ความเข้มแสงอาทิตย์ (GHI)</b> รายชั่วโมงจาก Open-Meteo ที่พิกัดบางใหญ่ แล้วประเมินกำลังผลิตด้วยสูตร:
 					</p>
 					<p className="mono formula">
-						kWh/ชม. = GHI(W/m²) ÷ 1000 × {kw} kW × PR {data.pr}
+						kWh/ชม. = GHI(W/m²) ÷ 1000 × {kw} kW × PR {solarPr}
 					</p>
 					<ul>
 						<li>1000 W/m² = สภาวะมาตรฐาน STC</li>
-						<li>PR {data.pr} = Performance Ratio (รวมการสูญเสียจาก inverter · ความร้อน · ฝุ่น)</li>
+						<li>PR {solarPr} = Performance Ratio (รวมการสูญเสียจาก inverter · ความร้อน · ฝุ่น)</li>
 						<li>“ใช้จริง” = โปรไฟล์โหลดเฉลี่ยต่อชั่วโมงจากมิเตอร์จริง · หักล้าง = Σ min(ผลิต, โหลด)</li>
 						<li>วันแดดจัด ~8 kWh/วัน (สอดคล้องสมมติฐานเดิมของแดชบอร์ด)</li>
 					</ul>

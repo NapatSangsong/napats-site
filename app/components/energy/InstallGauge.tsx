@@ -2,18 +2,16 @@ import type { Finance } from "~/lib/energy-calc";
 import { ENERGY_CONST as C, touSolarScenario } from "~/lib/energy-calc";
 import { f0 } from "~/lib/energy-format";
 
-const SOLAR_4K_SUB = 1399; // ฿/mo subscription for the 4kW plan
-
 /** Section — "Should we install solar?" gauge, for 2kW and 4kW side by side.
  *  Each arrow slides left (ไม่ติด) ↔ right (ติด) driven by the monthly ฿ that
  *  adding that array (incl. its subscription) saves vs TOU-only. Recomputes with
  *  the rest of the dashboard, so flipping the finance basis toggle slides it. */
-export function InstallGauge({ f }: { f: Finance }) {
-	const solar4kKwhD = 4 * C.SOLAR_PSH * C.SOLAR_PR;
-	const save4 = f.cost2 - touSolarScenario(f, solar4kKwhD, SOLAR_4K_SUB).cost;
+export function InstallGauge({ f, solarPr }: { f: Finance; solarPr: number }) {
+	const solar4kKwhD = C.SOLAR_4K_KWP * C.SOLAR_PSH * solarPr;
+	const save4 = f.cost2 - touSolarScenario(f, solar4kKwhD, C.SOLAR_4K_SUB).cost;
 	const gauges = [
 		{ kw: "2kW", save: f.saveSolar, sub: C.BLUERING },
-		{ kw: "4kW", save: save4, sub: SOLAR_4K_SUB },
+		{ kw: "4kW", save: save4, sub: C.SOLAR_4K_SUB },
 	];
 
 	return (

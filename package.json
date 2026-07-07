@@ -16,9 +16,12 @@
 	"dependencies": {
 		"@supabase/supabase-js": "^2.103.3",
 		"isbot": "5.1.32",
+		"lucide-react": "^1.21.0",
+		"motion": "^12.40.0",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",
 		"react-router": "7.9.6",
+		"recharts": "^3.8.1",
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {

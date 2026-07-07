@@ -1,26 +1,25 @@
 import type { Analysis, Finance } from "~/lib/energy-calc";
-import { ENERGY_CONST as C, FLAT_TIERS, flatEnergyBaht, dayNum, weekdayOf, touSolarScenario } from "~/lib/energy-calc";
-import { f0, f1, money } from "~/lib/energy-format";
+import { ENERGY_CONST as C, FLAT_TIERS, flatEnergyBaht, dayNum, weekdayOf, touSolarScenario, billingCycleOf } from "~/lib/energy-calc";
+import { dayMonth, f0, f1, money } from "~/lib/energy-format";
 import type { LiveData } from "./types";
 
-const DAY_MS = 86400_000;
-/** YYYY-MM (BKK) for a dayNum — same convention as the rollup's date_bkk. */
-const ymOf = (d: number) => new Date(d * DAY_MS).toISOString().slice(0, 7);
-
-const SOLAR_4K_SUB = 1399; // ฿/mo subscription for the 4kW plan
-
 /**
- * Bill for the current cycle (calendar month), four tariffs side by side.
+ * Bill for the current billing cycle (cuts on the 2nd, BKK), four tariffs side by side.
  * Each row shows BOTH the accrued-so-far (actual calibrated usage to date) and
  * the full-month projection (finance(), respects the MEA/measured toggle), plus
  * a today-only block. Solar uses the explicit PSH × PR model from energy-calc.
  */
-export function BillToDate({ a, f, live }: { a: Analysis; f: Finance; live: LiveData | null }) {
-	const solar2k = C.SOLAR_KWH_D; // 2kWp × PSH × PR
-	const solar4k = 4 * C.SOLAR_PSH * C.SOLAR_PR; // 4kWp × PSH × PR (same model)
+export function BillToDate({
+	a,
+	f,
+	live,
+	solarPr,
+}: { a: Analysis; f: Finance; live: LiveData | null; solarPr: number }) {
+	const solar2k = C.SOLAR_KWP * C.SOLAR_PSH * solarPr; // 2kWp × PSH × PR(case)
+	const solar4k = C.SOLAR_4K_KWP * C.SOLAR_PSH * solarPr; // 4kWp × PSH × PR(case)
 
-	// ── accumulate the current calendar month (actual, calibrated) ──
-	const curYM = ymOf(dayNum(a.t1));
+	// ── accumulate the current billing cycle [2nd … 1st] (actual, calibrated) ──
+	const cyc = billingCycleOf(a.t1);
 	let kwh = 0;
 	let on = 0;
 	let off = 0;
@@ -31,7 +30,7 @@ export function BillToDate({ a, f, live }: { a: Analysis; f: Finance; live: Live
 	let offOn4k = 0;
 	let offOff4k = 0;
 	for (const [d, v] of a.daily) {
-		if (ymOf(d) !== curYM) continue;
+		if (d < cyc.startDay || d > cyc.endDay) continue;
 		const dOn = a.dailyOn.get(d) ?? 0;
 		const dOff = a.dailyOff.get(d) ?? 0;
 		kwh += v;
@@ -51,24 +50,23 @@ export function BillToDate({ a, f, live }: { a: Analysis; f: Finance; live: Live
 	// Fixed charges + solar subscription are monthly, so prorate them by elapsed
 	// days — otherwise a full month's sub (699/1399) on a few days of energy makes
 	// solar look absurdly expensive mid-cycle. Energy is the real accrued usage.
-	const [yy, mm] = curYM.split("-").map(Number);
-	const daysInMonth = new Date(Date.UTC(yy, mm, 0)).getUTCDate();
-	const fixedF = daysInMonth > 0 ? days / daysInMonth : 0; // share of the cycle elapsed
+	const cycleLen = cyc.endDay - cyc.startDay + 1;
+	const fixedF = cycleLen > 0 ? days / cycleLen : 0; // share of the cycle elapsed
 	const flat = flatEnergyBaht(kwh) + C.FLAT_FIXED * fixedF;
 	const tou = on * C.TOU_ON + off * C.TOU_OFF + C.TOU_FIXED * fixedF;
 	const touSolar2k =
 		(on - offOn2k) * C.TOU_ON + (off - offOff2k) * C.TOU_OFF + (C.TOU_FIXED + C.BLUERING) * fixedF;
 	const touSolar4k =
-		(on - offOn4k) * C.TOU_ON + (off - offOff4k) * C.TOU_OFF + (C.TOU_FIXED + SOLAR_4K_SUB) * fixedF;
+		(on - offOn4k) * C.TOU_ON + (off - offOff4k) * C.TOU_OFF + (C.TOU_FIXED + C.SOLAR_4K_SUB) * fixedF;
 
 	// ── full-month projection (mirrors finance(); 4k uses the same solar model) ──
-	const month4k = touSolarScenario(f, solar4k, SOLAR_4K_SUB).cost;
+	const month4k = touSolarScenario(f, solar4k, C.SOLAR_4K_SUB).cost;
 
 	const rows = [
 		{ k: "Flat", soFar: flat, month: f.cost1, desc: `ขั้นบันได (${FLAT_TIERS.map(([, r]) => r).join("/")}) + Ft + VAT + ค่าบริการ` },
 		{ k: "TOU", soFar: tou, month: f.cost2, desc: `On ${f1(on)}×${C.TOU_ON} + Off ${f1(off)}×${C.TOU_OFF} + ค่าบริการ` },
 		{ k: "TOU + Solar 2kW", soFar: touSolar2k, month: f.cost3, desc: `solar ${f1(solar2k)} หน่วย/วัน + sub ${f0(C.BLUERING)}/ด` },
-		{ k: "TOU + Solar 4kW", soFar: touSolar4k, month: month4k, desc: `solar ${f1(solar4k)} หน่วย/วัน + sub ${f0(SOLAR_4K_SUB)}/ด` },
+		{ k: "TOU + Solar 4kW", soFar: touSolar4k, month: month4k, desc: `solar ${f1(solar4k)} หน่วย/วัน + sub ${f0(C.SOLAR_4K_SUB)}/ด` },
 	];
 	const cheapestSoFar = rows.reduce((b, o) => (o.soFar < b.soFar ? o : b)).k;
 
@@ -91,7 +89,7 @@ export function BillToDate({ a, f, live }: { a: Analysis; f: Finance; live: Live
 		{ k: "Flat", v: flatToday },
 		{ k: "TOU", v: touToday },
 		{ k: "TOU + Solar 2kW", v: touSolarToday(solar2k, C.BLUERING) },
-		{ k: "TOU + Solar 4kW", v: touSolarToday(solar4k, SOLAR_4K_SUB) },
+		{ k: "TOU + Solar 4kW", v: touSolarToday(solar4k, C.SOLAR_4K_SUB) },
 	];
 	const cheapestToday = todayRows.reduce((b, o) => (o.v < b.v ? o : b)).k;
 
@@ -109,7 +107,7 @@ export function BillToDate({ a, f, live }: { a: Analysis; f: Finance; live: Live
 			)}
 			<div className="bar-label">
 				<b>
-					ใช้ไปแล้ว {f0(kwh)} หน่วย · {days} วัน (เดือนนี้)
+					ใช้ไปแล้ว {f0(kwh)} หน่วย · {days} วัน (รอบบิล {dayMonth(cyc.startDay)} – {dayMonth(cyc.endDay)})
 				</b>
 				<span className="mono">{cheapestSoFar} ถูกสุดตอนนี้</span>
 			</div>
@@ -151,9 +149,9 @@ export function BillToDate({ a, f, live }: { a: Analysis; f: Finance; live: Live
 			</div>
 
 			<p className="pt-note">
-				* “สะสมแล้ว” = ยอดจริงถึงตอนนี้ (ค่าบริการ/sub เฉลี่ยตามวันที่ผ่าน {days}/{daysInMonth} วัน) · “ทั้งเดือน” = ประมาณการอิงฐาน{" "}
+				* “สะสมแล้ว” = ยอดจริงถึงตอนนี้ (ค่าบริการ/sub เฉลี่ยตามวันที่ผ่าน {days}/{cycleLen} วัน · รอบบิลตัดวันที่ 2) · “ทั้งเดือน” = ประมาณการอิงฐาน{" "}
 				{f0(f.monthlyKwh)} หน่วย/เดือน (สลับ บิล MEA / วัดจริง ที่ปุ่มด้านบน) · วันนี้ = เฉพาะค่าพลังงาน ·
-				Solar คิดที่ PSH {C.SOLAR_PSH} × PR {Math.round(C.SOLAR_PR * 100)}% (ไม่โลกสวย): 2kW {f1(solar2k)} / 4kW{" "}
+				Solar คิดที่ PSH {C.SOLAR_PSH} × PR {Math.round(solarPr * 100)}%: 2kW {f1(solar2k)} / 4kW{" "}
 				{f1(solar4k)} หน่วย/วัน, offset {weekendToday ? "off-peak (วันหยุด)" : "on-peak (วันธรรมดา)"} · ทุกค่าผ่าน calibration แล้ว
 			</p>
 		</section>

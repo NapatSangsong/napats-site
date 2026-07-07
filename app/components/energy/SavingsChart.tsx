@@ -1,4 +1,5 @@
 import type { Forecast, Savings } from "~/lib/energy-calc";
+import { isCycleStartDay } from "~/lib/energy-calc";
 import { dayMonth, dayOnly, f1, f2, money } from "~/lib/energy-format";
 import { ChartTip, useChartTip } from "./useChartTip";
 
@@ -28,6 +29,14 @@ export function SavingsChart({ sv, fc }: { sv: Savings; fc: Forecast }) {
 		.map(({ s, i }) => `${X(i).toFixed(1)},${Y(s.cum).toFixed(1)}`)
 		.join(" ");
 
+	// Install day marker — always index 0 (series starts at install day)
+	const installX = X(0);
+
+	// Billing-cycle boundary markers: cycle start (the 2nd) in the series
+	const monthMarkers = ser
+		.map((s, i) => ({ s, i }))
+		.filter(({ s }) => isCycleStartDay(s.day));
+
 	return (
 		<section>
 			<div className="sec-head">
@@ -35,7 +44,7 @@ export function SavingsChart({ sv, fc }: { sv: Savings; fc: Forecast }) {
 				<h2>เงินประหยัดสะสม (TOU ประหยัดกว่า Flat)</h2>
 			</div>
 			<div className="bar-label">
-				<b>TOU ประหยัดกว่า Flat สะสม (ฐานบิลทั้งบ้าน)</b>
+				<b>TOU ประหยัดกว่า Flat สะสม — นับแต่ติดตั้งมิเตอร์ TOU 19 มิ.ย. 10:30</b>
 				<span className="mono">เส้นทึบ = วัดจริง · เส้นประ = forecast</span>
 			</div>
 			<div ref={wrapRef} style={{ position: "relative" }} {...surface}>
@@ -50,6 +59,23 @@ export function SavingsChart({ sv, fc }: { sv: Savings; fc: Forecast }) {
 				>
 					0
 				</text>
+
+				{/* TOU installation date marker */}
+				<line x1={installX} x2={installX} y1={PT} y2={H - PB} stroke="#ffb454" strokeWidth="1.5" />
+				<text x={installX + 4} y={PT + 10} fontSize="9" fill="#ffb454" fontFamily="IBM Plex Mono">
+					ติดตั้ง TOU 19 มิ.ย.
+				</text>
+
+				{/* Monthly billing cycle boundaries */}
+				{monthMarkers.map(({ s, i }) => (
+					<g key={`mb-${s.day}`}>
+						<line x1={X(i)} x2={X(i)} y1={PT} y2={H - PB} stroke="#2c3a60" strokeWidth="1" strokeDasharray="3 3" />
+						<text x={X(i) + 3} y={H - PB - 4} fontSize="8" fill="#8C9AC0" fontFamily="IBM Plex Mono">
+							รอบ {dayMonth(s.day)}
+						</text>
+					</g>
+				))}
+
 				{ptsActual && (
 					<polyline points={ptsActual} fill="none" stroke="#5AE08F" strokeWidth="2.5" />
 				)}
@@ -101,7 +127,7 @@ export function SavingsChart({ sv, fc }: { sv: Savings; fc: Forecast }) {
 				</div>
 				<div className="vstat">
 					<span className="mono">{f1(sv.avgD)} ฿/วัน</span>
-					<span>อัตราประหยัดเฉลี่ย (สเกลเป็นฐานบิล MEA ×{f2(sv.scaleUp)})</span>
+					<span>อัตราประหยัดเฉลี่ย นับแต่ติดตั้ง (สเกล MEA ×{f2(sv.scaleUp)})</span>
 				</div>
 			</div>
 		</section>

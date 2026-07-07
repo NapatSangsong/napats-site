@@ -21,6 +21,8 @@ export const ENERGY_CONST = {
 	TOU_OFF: 2.99, // ฿/kWh TOU off-peak
 	TOU_FIXED: 40.9, // ฿/mo TOU service fee (Type 1.2: 38.22 + VAT 7%)
 	BLUERING: 699.0, // ฿/mo solar subscription
+	SOLAR_4K_KWP: 4.0, // แผนที่จะติดจริง 21 ก.ค. 2569 (kWp)
+	SOLAR_4K_SUB: 1399.0, // ฿/mo subscription แผน 4kW
 	SOLAR_KWP: 2.0, // โมเดลขนาดโซลาร์ (kWp)
 	SOLAR_PSH: 5.3, // peak sun hours/วัน (กรุงเทพฯ ติดตั้งเอียงคงที่)
 	SOLAR_PR: 0.75, // performance ratio — เผื่อ loss จริง (ไม่ใช่ 100% โลกสวย)
@@ -53,6 +55,22 @@ export const CALIBRATION: { factor: number; boundaryMs: number; rebaseDeltaUnits
 	rebaseDeltaUnits: 500,
 };
 
+/**
+ * Ft ราคาย้อนหลังตามงวด กกพ. (ปรับทุก 4 เดือน) — รายงานรอบบิลเก่าต้องคิดด้วย Ft
+ * ของงวดนั้น ไม่ใช่ค่าปัจจุบัน. เพิ่ม entry ใหม่ตอน Ft เปลี่ยน (FT_RATE ด้านบน
+ * คือ "งวดปัจจุบัน" ใช้กับ projection).
+ */
+export const FT_HISTORY: ReadonlyArray<{ fromYm: string; rate: number }> = [
+	{ fromYm: "2026-05", rate: 0.1623 }, // งวด พ.ค.–ส.ค. 2569
+];
+
+/** Ft ฿/kWh สำหรับรอบบิลที่เริ่มเดือน ym ("YYYY-MM") — entry ล่าสุดที่ ≤ ym */
+export function ftRateForYm(ym: string): number {
+	let rate = FT_HISTORY[0].rate;
+	for (const e of FT_HISTORY) if (e.fromYm <= ym) rate = e.rate;
+	return rate;
+}
+
 // ---------------- flat tariff: MEA Type 1.1.2 tiered ladder ----------------
 
 /** ขั้นบันได กฟน. ประเภท 1.1.2 (>150 หน่วย/เดือน): [เพดานหน่วยสะสม, ฿/kWh ก่อน Ft+VAT] */
@@ -62,8 +80,9 @@ export const FLAT_TIERS: ReadonlyArray<readonly [number, number]> = [
 	[Infinity, 4.4217],
 ];
 
-/** ค่าพลังงาน flat ทั้งเดือน: ขั้นบันได + Ft ต่อหน่วย, รวม VAT — ไม่รวมค่าบริการ */
-export function flatEnergyBaht(kwhMonth: number): number {
+/** ค่าพลังงาน flat ทั้งเดือน: ขั้นบันได + Ft ต่อหน่วย, รวม VAT — ไม่รวมค่าบริการ.
+ *  ftRate default = งวดปัจจุบัน; รายงานรอบเก่าส่ง ftRateForYm(ym) เข้ามา */
+export function flatEnergyBaht(kwhMonth: number, ftRate: number = C.FT_RATE): number {
 	let cost = 0;
 	let prev = 0;
 	for (const [upto, rate] of FLAT_TIERS) {
@@ -72,7 +91,7 @@ export function flatEnergyBaht(kwhMonth: number): number {
 		cost += units * rate;
 		prev = upto;
 	}
-	return (cost + kwhMonth * C.FT_RATE) * C.VAT;
+	return (cost + kwhMonth * ftRate) * C.VAT;
 }
 
 /** อัตราเฉลี่ยจริง ฿/kWh ณ ปริมาณรายเดือนนั้น (ใช้เกลี่ยบิลขั้นบันไดลงรายวัน) */
@@ -89,6 +108,21 @@ const DAY_MS = 86400 * 1000;
 
 /** Bangkok calendar day as integer (days since epoch in BKK) */
 export const dayNum = (ms: number): number => Math.floor((ms + BKK_MS) / DAY_MS);
+
+/**
+ * TOU meter installation timestamp. Date.UTC() is deterministic (no runtime
+ * clock) so it's safe at module-level in SSR/Workers.
+ * 2026-06-19 10:30:00 BKK = 2026-06-19 03:30:00 UTC
+ */
+export const TOU_INSTALL_MS = Date.UTC(2026, 5, 19, 3, 30);
+export const TOU_INSTALL_DAY = dayNum(TOU_INSTALL_MS); // = 20623
+/**
+ * Solar 4kW installation (planned). Same pattern as TOU_INSTALL — realized
+ * solar effects are only attributed from this day forward.
+ * 2026-07-21 10:30:00 BKK = 2026-07-21 03:30:00 UTC
+ */
+export const SOLAR_INSTALL_MS = Date.UTC(2026, 6, 21, 3, 30);
+export const SOLAR_INSTALL_DAY = dayNum(SOLAR_INSTALL_MS);
 /** Bangkok hour 0–23 */
 export const hourOf = (ms: number): number => Math.floor((ms + BKK_MS) / 3600_000) % 24;
 /** Python datetime.weekday(): Mon=0 … Sun=6 (epoch day 0 = Thu = 3) */
@@ -101,11 +135,62 @@ export const isOnPeakHour = (wd: number, h: number): boolean => wd < 5 && h >= 9
 /** dayNum for a BKK calendar date */
 export const dayNumFromYmd = (y: number, m1: number, d: number): number =>
 	Math.floor(Date.UTC(y, m1 - 1, d) / DAY_MS);
-/** Last day of the current BKK month (production default for forecastEnd) */
+/** Last day of the current BKK month (kept for tests/tools — production billing
+ *  now cuts on the 2nd, see billingCycleOf/endOfCurrentCycleBkk below) */
 export function endOfCurrentMonthBkk(nowMs: number): number {
 	const dt = new Date(nowMs + BKK_MS);
 	return Math.floor(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth() + 1, 0) / DAY_MS);
 }
+
+// ---------------- billing cycle (MEA cutoff = the 2nd, BKK) ----------------
+
+/** รอบบิลจริงตัดทุกวันที่ 2 ของเดือน (BKK) — single source of truth */
+export const BILLING_CUTOFF_DOM = 2;
+
+export interface BillingCycle {
+	/** first dayNum of the cycle (the 2nd, inclusive) */
+	startDay: number;
+	/** last dayNum of the cycle (the 1st of the next month, inclusive) */
+	endDay: number;
+	/** cycle label = its start month */
+	y: number;
+	/** 1..12 */
+	m: number;
+}
+
+/** Cycle labeled by its start month: [2 m/y … 1 of the next month] */
+export function billingCycleForYm(y: number, m1: number): BillingCycle {
+	// Date.UTC normalizes month overflow (m1=13 → Jan next year), so the label
+	// fields must be re-read from the normalized date, not from the inputs.
+	const start = new Date(Date.UTC(y, m1 - 1, BILLING_CUTOFF_DOM));
+	return {
+		startDay: Math.floor(start.getTime() / DAY_MS),
+		endDay: Math.floor(Date.UTC(y, m1, 1) / DAY_MS),
+		y: start.getUTCFullYear(),
+		m: start.getUTCMonth() + 1,
+	};
+}
+
+/** The billing cycle CONTAINING nowMs (BKK). Day-of-month 1 belongs to the
+ *  PREVIOUS month's cycle (e.g. 1 Aug is the tail of the 2 Jul – 1 Aug cycle). */
+export function billingCycleOf(nowMs: number): BillingCycle {
+	const dt = new Date(nowMs + BKK_MS);
+	const y = dt.getUTCFullYear();
+	const m1 = dt.getUTCMonth() + 1;
+	return dt.getUTCDate() >= BILLING_CUTOFF_DOM
+		? billingCycleForYm(y, m1)
+		: billingCycleForYm(y, m1 - 1);
+}
+
+/** Production default for forecastEnd — last day of the current billing cycle */
+export const endOfCurrentCycleBkk = (nowMs: number): number => billingCycleOf(nowMs).endDay;
+
+/** True when a BKK dayNum is a cycle start (day-of-month === 2) — chart markers */
+export const isCycleStartDay = (day: number): boolean =>
+	new Date(day * DAY_MS).getUTCDate() === BILLING_CUTOFF_DOM;
+
+/** "YYYY-MM" label of a cycle (its start month) — pairs with ftRateForYm */
+export const cycleYm = (c: BillingCycle): string => `${c.y}-${String(c.m).padStart(2, "0")}`;
 
 // ---------------- types ----------------
 
@@ -209,6 +294,8 @@ export interface Savings {
 	/** dayNum of projected break-even, null if no savings */
 	beDay: number | null;
 	scaleUp: number;
+	/** dayNum of TOU meter installation — series starts here */
+	installDay: number;
 }
 
 // ---------------- 1) load + profile ----------------
@@ -374,7 +461,11 @@ export function analyze(pts: Point[]): Analysis {
 
 // ---------------- 2) financial engine ----------------
 
-export function finance(a: Analysis, useMeaBaseline: boolean = C.USE_MEA_BASELINE): Finance {
+export function finance(
+	a: Analysis,
+	useMeaBaseline: boolean = C.USE_MEA_BASELINE,
+	solarPr: number = C.SOLAR_PR,
+): Finance {
 	const pct = (v: number) => (a.total ? v / a.total : 0);
 	const onPct = pct(a.on);
 	const offPct = pct(a.off);
@@ -387,7 +478,7 @@ export function finance(a: Analysis, useMeaBaseline: boolean = C.USE_MEA_BASELIN
 	const cost2 = onKwh * C.TOU_ON + offKwh * C.TOU_OFF + C.TOU_FIXED;
 	const scaleUp = measuredMo ? m / measuredMo : 1.0;
 	const daytimeLoadD = a.daytimeKwhD * scaleUp;
-	const usableD = Math.min(C.SOLAR_KWH_D, daytimeLoadD);
+	const usableD = Math.min(C.SOLAR_KWP * C.SOLAR_PSH * solarPr, daytimeLoadD);
 	const offsetOn = Math.min(usableD * C.WEEKDAYS_MO, onKwh);
 	const offsetOff = Math.min(usableD * C.WEEKENDS_MO, offKwh);
 	const remOn = onKwh - offsetOn;
@@ -437,6 +528,221 @@ export function touSolarScenario(
 	const remOff = f.offKwh - Math.min(usableD * C.WEEKENDS_MO, f.offKwh);
 	const cost = remOn * C.TOU_ON + remOff * C.TOU_OFF + C.TOU_FIXED + subMonthly;
 	return { cost, remOn, remOff };
+}
+
+// ---------------- 2b) billing-cycle aggregation (report + bill-to-date) ----------------
+
+/** Shape of one energy_daily row as the report consumes it (kWh, calibrated) */
+export interface CycleDailyRow {
+	day: number; // BKK dayNum
+	totalKwh: number;
+	onKwh: number;
+	offKwh: number;
+	/** distinct hours with data — <23 means the day is partial */
+	hours?: number;
+	baseload?: number | null;
+}
+
+export interface CycleTotals {
+	total: number;
+	on: number;
+	off: number;
+	/** days that have any data in the cycle window */
+	days: number;
+	/** of those, days with <23 hours of data */
+	partialDays: number;
+	cycleLen: number;
+	/** days ÷ cycleLen — <1 flags an incomplete cycle in comparisons */
+	coverage: number;
+}
+
+/** Sum daily rows inside [cycle.startDay, cycle.endDay] */
+export function cycleTotals(rows: readonly CycleDailyRow[], cycle: BillingCycle): CycleTotals {
+	let total = 0;
+	let on = 0;
+	let off = 0;
+	let days = 0;
+	let partialDays = 0;
+	for (const r of rows) {
+		if (r.day < cycle.startDay || r.day > cycle.endDay) continue;
+		total += r.totalKwh;
+		on += r.onKwh;
+		off += r.offKwh;
+		days += 1;
+		if ((r.hours ?? 24) < 23) partialDays += 1;
+	}
+	const cycleLen = cycle.endDay - cycle.startDay + 1;
+	return { total, on, off, days, partialDays, cycleLen, coverage: cycleLen ? days / cycleLen : 0 };
+}
+
+export interface CycleCostOpts {
+	solarPr?: number;
+	/** solar offset applies from this dayNum on. Default SOLAR_INSTALL_DAY
+	 *  (= realized). Pass -Infinity for a whole-cycle what-if projection. */
+	solarActiveFromDay?: number;
+	/** Ft ฿/kWh for the cycle — default looks it up from the cycle's month */
+	ftRate?: number;
+}
+
+export interface CycleCosts {
+	/** actual TOU bill for the window (the headline) */
+	tou: number;
+	/** what the same usage would cost on the flat/tiered tariff */
+	flat: number;
+	/** TOU with the 4kW solar offset applied on active days + prorated sub */
+	touSolar4k: number;
+	/** kWh the 4kW array offsets inside the window (0 when never active) */
+	offsetKwh4k: number;
+	/** solar-active days inside the window (drives sub proration) */
+	solarDays: number;
+	totals: CycleTotals;
+}
+
+/**
+ * Per-tariff ฿ for one billing cycle from daily rows. Same model as
+ * BillToDate: energy is real accrued usage; monthly fixed charges & solar sub
+ * prorate by elapsed days ÷ cycle length. Solar offset per day = min(yield,
+ * that day's on-peak (weekday) or off-peak (weekend) usage), only on days the
+ * array is active (gated like savingsTrack gates on TOU_INSTALL_DAY).
+ */
+export function cycleCosts(
+	rows: readonly CycleDailyRow[],
+	cycle: BillingCycle,
+	opts: CycleCostOpts = {},
+): CycleCosts {
+	const totals = cycleTotals(rows, cycle);
+	const solarPr = opts.solarPr ?? C.SOLAR_PR;
+	const activeFrom = opts.solarActiveFromDay ?? SOLAR_INSTALL_DAY;
+	const ftRate = opts.ftRate ?? ftRateForYm(cycleYm(cycle));
+	const yield4k = C.SOLAR_4K_KWP * C.SOLAR_PSH * solarPr;
+
+	let offOn = 0;
+	let offOff = 0;
+	let solarDays = 0;
+	for (const r of rows) {
+		if (r.day < cycle.startDay || r.day > cycle.endDay || r.day < activeFrom) continue;
+		solarDays += 1;
+		if (weekdayOf(r.day) >= 5) offOff += Math.min(yield4k, r.offKwh);
+		else offOn += Math.min(yield4k, r.onKwh);
+	}
+
+	const fixedF = totals.cycleLen ? totals.days / totals.cycleLen : 0;
+	const subF = totals.cycleLen ? solarDays / totals.cycleLen : 0;
+	const tou = totals.on * C.TOU_ON + totals.off * C.TOU_OFF + C.TOU_FIXED * fixedF;
+	const flat = flatEnergyBaht(totals.total, ftRate) + C.FLAT_FIXED * fixedF;
+	const touSolar4k =
+		(totals.on - offOn) * C.TOU_ON +
+		(totals.off - offOff) * C.TOU_OFF +
+		C.TOU_FIXED * fixedF +
+		C.SOLAR_4K_SUB * subF;
+	return { tou, flat, touSolar4k, offsetKwh4k: offOn + offOff, solarDays, totals };
+}
+
+export interface CycleOutlook {
+	kwh: number;
+	on: number;
+	off: number;
+	touBaht: number;
+	flatBaht: number;
+	/** days filled with class averages instead of actuals */
+	futureDays: number;
+}
+
+/**
+ * End-of-cycle projection from daily rollup rows alone (no raw readings):
+ * finalized days stay actual; the newest (partial) day and missing/future days
+ * are filled with weekday/weekend averages over the most recent complete days.
+ * Coarser than forecast() — no hourly profile — but it only needs energy_daily,
+ * so the report's loader can compute it without shipping raw points.
+ */
+export function cycleOutlook(
+	rows: readonly CycleDailyRow[],
+	cycle: BillingCycle,
+	opts: { lookback?: number; ftRate?: number } = {},
+): CycleOutlook {
+	const lookback = opts.lookback ?? 28;
+	const byDay = new Map<number, CycleDailyRow>();
+	let lastDataDay = -Infinity;
+	for (const r of rows) {
+		byDay.set(r.day, r);
+		if (r.day > lastDataDay) lastDataDay = r.day;
+	}
+
+	// class averages from the most recent complete days (anywhere, not just the cycle)
+	const complete = rows
+		.filter((r) => (r.hours ?? 24) >= 23)
+		.sort((x, y) => y.day - x.day)
+		.slice(0, lookback);
+	const avg = (xs: CycleDailyRow[], pick: (r: CycleDailyRow) => number) =>
+		xs.length ? xs.reduce((s, r) => s + pick(r), 0) / xs.length : 0;
+	const wd = complete.filter((r) => weekdayOf(r.day) < 5);
+	const we = complete.filter((r) => weekdayOf(r.day) >= 5);
+	// fallbacks: weekend class borrows weekday averages (and vice versa) when empty
+	const cls = (xs: CycleDailyRow[], alt: CycleDailyRow[]) => {
+		const src = xs.length ? xs : alt;
+		return { kwh: avg(src, (r) => r.totalKwh), on: avg(src, (r) => r.onKwh), off: avg(src, (r) => r.offKwh) };
+	};
+	const wdAvg = cls(wd, we);
+	const weAvg = cls(we, wd);
+
+	let kwh = 0;
+	let on = 0;
+	let off = 0;
+	let futureDays = 0;
+	for (let d = cycle.startDay; d <= cycle.endDay; d++) {
+		const row = byDay.get(d);
+		const c = weekdayOf(d) < 5 ? wdAvg : weAvg;
+		if (row && d < lastDataDay) {
+			// finalized history — as recorded, even if the day has gaps
+			kwh += row.totalKwh;
+			on += row.onKwh;
+			off += row.offKwh;
+		} else if (row && d === lastDataDay) {
+			// today (partial): at least the actual, at most the class average
+			const k = Math.max(row.totalKwh, c.kwh);
+			const o = Math.min(Math.max(row.onKwh, c.on), k);
+			kwh += k;
+			on += o;
+			off += k - o;
+			if ((row.hours ?? 24) < 23) futureDays += 1;
+		} else {
+			kwh += c.kwh;
+			on += c.on;
+			off += c.off;
+			futureDays += 1;
+		}
+	}
+	const ftRate = opts.ftRate ?? ftRateForYm(cycleYm(cycle));
+	return {
+		kwh,
+		on,
+		off,
+		touBaht: on * C.TOU_ON + off * C.TOU_OFF + C.TOU_FIXED,
+		flatBaht: flatEnergyBaht(kwh, ftRate) + C.FLAT_FIXED,
+		futureDays,
+	};
+}
+
+/**
+ * Forecast totals for ONE cycle. forecast() starts its loop at the earliest
+ * data day, not the cycle start — so slice fc.days to the cycle window before
+ * summing, or a 30-day history window overstates the cycle.
+ */
+export function cycleForecast(
+	fc: Forecast,
+	cycle: BillingCycle,
+): { kwh: number; touBaht: number; days: number } {
+	let kwh = 0;
+	let energy = 0;
+	let n = 0;
+	for (const x of fc.days) {
+		if (x.day < cycle.startDay || x.day > cycle.endDay) continue;
+		kwh += x.kwh;
+		energy += x.on * C.TOU_ON + x.off * C.TOU_OFF;
+		n += 1;
+	}
+	const cycleLen = cycle.endDay - cycle.startDay + 1;
+	return { kwh, touBaht: energy + C.TOU_FIXED * (cycleLen ? n / cycleLen : 0), days: n };
 }
 
 // ---------------- 3) forecast ----------------
@@ -526,18 +832,23 @@ export function savingsTrack(f: Finance, fc: Forecast): Savings {
 	// days reproduces the real tiered bill. Service charges (38.22+VAT) are
 	// identical on both tariffs, so they cancel and don't appear here.
 	const flatRateM = flatAvgRate(f.monthlyKwh);
+	// Only count savings from the actual TOU installation (2026-06-19 10:30 BKK).
+	// The install-day fraction = remaining hours after 10:30 / 24 = 13.5/24.
+	const installHour = hourOf(TOU_INSTALL_MS); // = 10
+	const installFrac = (24 - installHour) / 24;
 	let cum = 0;
 	const series: SavingsPoint[] = [];
 	for (const x of fc.days) {
+		if (x.day < TOU_INSTALL_DAY) continue; // no TOU benefit before installation
 		const flatD = x.kwh * flatRateM;
 		const touEnergyD = x.on * C.TOU_ON + x.off * C.TOU_OFF;
-		const saveD = Math.max((flatD - touEnergyD) * scaleUp, 0);
+		const frac = x.day === TOU_INSTALL_DAY ? installFrac : 1;
+		const saveD = Math.max((flatD - touEnergyD) * scaleUp * frac, 0);
 		cum += saveD;
 		series.push({ day: x.day, cum, kind: x.kind });
 	}
 	const avgD = series.length ? cum / series.length : 0;
 	const daysToBe = avgD > 0 ? C.METER_COST / avgD : Infinity;
-	// Python: date + timedelta(days=float) uses only whole days (truncation)
 	const beDay = avgD > 0 ? series[0].day + Math.floor(daysToBe) : null;
 	return {
 		series,
@@ -546,19 +857,20 @@ export function savingsTrack(f: Finance, fc: Forecast): Savings {
 		pct: Math.min((cum / C.METER_COST) * 100, 100),
 		beDay,
 		scaleUp,
+		installDay: TOU_INSTALL_DAY,
 	};
 }
 
 // ---------------- 3c) hourly solar production curve ----------------
 
-export function solarCurve(): number[] {
+export function solarCurve(solarPr: number = C.SOLAR_PR): number[] {
 	const shape: number[] = [];
 	for (let h = 0; h < 24; h++) {
 		const c = h + 0.5;
 		shape.push(c >= 6.5 && c <= 17.5 ? Math.max(Math.sin((Math.PI * (c - 6.5)) / 11.0), 0) : 0);
 	}
 	const s = shape.reduce((a, b) => a + b, 0);
-	return shape.map((x) => (x / s) * C.SOLAR_KWH_D);
+	return shape.map((x) => (x / s) * (C.SOLAR_KWP * C.SOLAR_PSH * solarPr));
 }
 
 /** Round-trip battery efficiency (charge → store → discharge). */
@@ -568,8 +880,13 @@ export const BATTERY_RT_EFF = 0.9;
  *  the same-hour load) and discharging it into the evening peak (17–22). Energy
  *  value only — does NOT include the battery's capital cost. Same model as the
  *  BatteryWhatIf section. */
-export function batteryEveningSaving(a: Analysis, solarKw: number, battKwh: number): number {
-	const sol = solarCurve();
+export function batteryEveningSaving(
+	a: Analysis,
+	solarKw: number,
+	battKwh: number,
+	solarPr: number = C.SOLAR_PR,
+): number {
+	const sol = solarCurve(solarPr);
 	const scale = solarKw / 2; // solarCurve() is shaped for the 2kW reference
 	let surplus = 0;
 	for (let h = 0; h < 24; h++) surplus += Math.max(0, sol[h] * scale - (a.prof[h] ?? 0));
@@ -591,16 +908,17 @@ export interface CalcResult {
 /** Returns null when there isn't enough data to analyze */
 export function calcAll(
 	raw: Iterable<readonly [number | string, number | string]>,
-	opts: { forecastEnd?: number; nowMs?: number; useMeaBaseline?: boolean } = {},
+	opts: { forecastEnd?: number; nowMs?: number; useMeaBaseline?: boolean; solarPr?: number } = {},
 ): CalcResult | null {
 	const pts = toPoints(raw);
 	if (pts.length < 2) return null;
 	const a = analyze(pts);
 	if (a.daily.size === 0) return null;
-	const f = finance(a, opts.useMeaBaseline ?? C.USE_MEA_BASELINE);
-	const fc = forecast(a, opts.forecastEnd ?? endOfCurrentMonthBkk(opts.nowMs ?? a.t1));
+	const solarPr = opts.solarPr ?? C.SOLAR_PR;
+	const f = finance(a, opts.useMeaBaseline ?? C.USE_MEA_BASELINE, solarPr);
+	const fc = forecast(a, opts.forecastEnd ?? endOfCurrentCycleBkk(opts.nowMs ?? a.t1));
 	const sv = savingsTrack(f, fc);
-	return { a, f, fc, sv, sol: solarCurve() };
+	return { a, f, fc, sv, sol: solarCurve(solarPr) };
 }
 
 // ---------------- calculation trace (Technical Inspector) ----------------
@@ -623,7 +941,14 @@ function tierSubst(kwhMonth: number): string {
 
 /** Every headline number as "formula = substituted = result", from the same
  *  objects that render the charts (single source of truth). */
-export function traceLines(a: Analysis, f: Finance, fc: Forecast, sv: Savings): string[] {
+export function traceLines(
+	a: Analysis,
+	f: Finance,
+	fc: Forecast,
+	sv: Savings,
+	solarPr: number = C.SOLAR_PR,
+): string[] {
+	const solarYieldD = C.SOLAR_KWP * C.SOLAR_PSH * solarPr; // 2kW daily yield @ chosen PR
 	return [
 		`onPct = on/total = ${tf(a.on)}/${tf(a.total)} = ${(f.onPct * 100).toFixed(1)}%`,
 		`offPct = off/total = ${tf(a.off)}/${tf(a.total)} = ${(f.offPct * 100).toFixed(1)}%`,
@@ -636,7 +961,7 @@ export function traceLines(a: Analysis, f: Finance, fc: Forecast, sv: Savings): 
 		`S2 TOU = ${tf(f.onKwh, 1)}×${C.TOU_ON} + ${tf(f.offKwh, 1)}×${C.TOU_OFF} + ${C.TOU_FIXED} = ${tf(f.onKwh * C.TOU_ON)} + ${tf(f.offKwh * C.TOU_OFF)} + ${tf(C.TOU_FIXED)} = ${tf(f.cost2)} ฿`,
 		`scaleUp = monthlyKwh/measuredMo = ${tf(f.monthlyKwh)}/${tf(f.measuredMo)} = ${tf(f.scaleUp)}`,
 		`daytimeLoadD = daytimeKwhD×scaleUp = ${tf(a.daytimeKwhD)}×${tf(f.scaleUp)} = ${tf(f.daytimeLoadD)} kWh/วัน`,
-		`usable = min(${C.SOLAR_KWH_D}, ${tf(f.daytimeLoadD)}) = ${tf(f.usableD)} kWh/วัน`,
+		`usable = min(${tf(solarYieldD)}, ${tf(f.daytimeLoadD)}) = ${tf(f.usableD)} kWh/วัน`,
 		`offsetOn = min(${tf(f.usableD)}×${C.WEEKDAYS_MO}, ${tf(f.onKwh, 1)}) = ${tf(f.offsetOn, 1)} kWh`,
 		`offsetOff = min(${tf(f.usableD)}×${C.WEEKENDS_MO}, ${tf(f.offKwh, 1)}) = ${tf(f.offsetOff, 1)} kWh`,
 		`S3 = ${tf(f.remOn, 1)}×${C.TOU_ON} + ${tf(f.remOff, 1)}×${C.TOU_OFF} + ${C.TOU_FIXED} + ${C.BLUERING} = ${tf(f.cost3)} ฿`,

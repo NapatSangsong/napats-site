@@ -21,6 +21,7 @@ interface Props {
 	live: LiveData | null;
 	stats: ApiStats;
 	points: [number, number][];
+	solarPr: number;
 }
 
 interface Gap {
@@ -57,7 +58,7 @@ function bucketOf(h: number): string {
 
 /** Section 09 — Technical Inspector. Everything here reads from the SAME
  *  calc objects that render the charts (single source of truth). */
-export function Inspector({ calc, live, stats, points }: Props) {
+export function Inspector({ calc, live, stats, points, solarPr }: Props) {
 	const { a, f, fc, sv } = calc;
 	const [open, setOpen] = useState(false);
 	const [acc, setAcc] = useState<Record<string, boolean>>({});
@@ -124,7 +125,7 @@ export function Inspector({ calc, live, stats, points }: Props) {
 		return { est, dev, ok: dev <= 0.1 };
 	}, [live]);
 
-	const trace = useMemo(() => traceLines(a, f, fc, sv), [a, f, fc, sv]);
+	const trace = useMemo(() => traceLines(a, f, fc, sv, solarPr), [a, f, fc, sv, solarPr]);
 
 	const copyAll = async () => {
 		const payload = {

@@ -39,6 +39,9 @@ BLUERING = 699.00
 SOLAR_KWH_D = 2.0 * 5.3 * 0.75  # 2kWp × PSH 5.3 × PR 0.75 = 7.95 kWh/day (keep identical to TS)
 WEEKDAYS_MO, WEEKENDS_MO = 22, 8
 METER_COST = 3350.00
+# TOU meter installation — savings only accrue from here (mirrors TOU_INSTALL_MS/DAY)
+TOU_INSTALL_DATE = datetime.date(2026, 6, 19)
+TOU_INSTALL_HOUR = 10  # 10:30 BKK → hourOf() = 10
 
 
 def flat_energy_baht(kwh):
@@ -195,11 +198,16 @@ def savings_track(f, fc):
     scale_up = f["monthly_kwh"] / f["measured_mo"] if f["measured_mo"] else 1.0
     # avg tiered rate at the monthly volume; service charges equal on both tariffs → cancel
     flat_rate_m = flat_avg_rate(f["monthly_kwh"])
+    # Only count savings from the TOU installation (mirrors savingsTrack)
+    install_frac = (24 - TOU_INSTALL_HOUR) / 24
     cum, series = 0.0, []
     for x in fc["days"]:
+        if x["date"] < TOU_INSTALL_DATE:
+            continue  # no TOU benefit before installation
         flat_d = x["kwh"] * flat_rate_m
         tou_energy_d = x["on"] * TOU_ON + x["off"] * TOU_OFF
-        save_d = max((flat_d - tou_energy_d) * scale_up, 0.0)
+        frac = install_frac if x["date"] == TOU_INSTALL_DATE else 1.0
+        save_d = max((flat_d - tou_energy_d) * scale_up * frac, 0.0)
         cum += save_d
         series.append({"date": x["date"], "cum": cum, "kind": x["kind"]})
     avg_d = cum / len(series) if series else 0.0

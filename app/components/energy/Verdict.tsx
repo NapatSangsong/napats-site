@@ -7,8 +7,13 @@ const SOLAR_4K_SUB = 1399; // ฿/mo subscription for the 4kW plan
 /** Section 08 — verdict: which of the four tariffs is cheapest THIS month, all
  *  data-driven (recomputes with the basis toggle), consistent with the scenario
  *  cards. No fixed/rate-only numbers. */
-export function Verdict({ a, f, fc }: { a: Analysis; f: Finance; fc: Forecast }) {
-	const cost4k = touSolarScenario(f, 4 * C.SOLAR_PSH * C.SOLAR_PR, SOLAR_4K_SUB).cost;
+export function Verdict({
+	a,
+	f,
+	fc,
+	solarPr,
+}: { a: Analysis; f: Finance; fc: Forecast; solarPr: number }) {
+	const cost4k = touSolarScenario(f, 4 * C.SOLAR_PSH * solarPr, SOLAR_4K_SUB).cost;
 	const opts = [
 		{ k: "Flat (มิเตอร์ปกติ)", cost: f.cost1, solar: false },
 		{ k: "TOU เดี่ยว", cost: f.cost2, solar: false },
@@ -74,7 +79,7 @@ export function Verdict({ a, f, fc }: { a: Analysis; f: Finance; fc: Forecast })
 						ครอบคลุมทั้งบ้านหรือไม่
 					</li>
 					<li>
-						โซลาร์ {f2(C.SOLAR_KWH_D)} (2kW) / {f2(4 * C.SOLAR_PSH * C.SOLAR_PR)} (4kW) kWh/วัน · จ–ศ{" "}
+						โซลาร์ {f2(C.SOLAR_KWP * C.SOLAR_PSH * solarPr)} (2kW) / {f2(4 * C.SOLAR_PSH * solarPr)} (4kW) kWh/วัน · จ–ศ{" "}
 						{C.WEEKDAYS_MO} วันตัด On-Peak · ส–อา {C.WEEKENDS_MO} วันตัด Off-Peak · cap ด้วย load กลางวันจริง
 					</li>
 				</ul>

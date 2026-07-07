@@ -9,13 +9,22 @@
 import { describe, expect, it } from "vitest";
 import {
 	ENERGY_CONST,
+	SOLAR_INSTALL_DAY,
 	analyze,
+	billingCycleForYm,
+	billingCycleOf,
+	cycleCosts,
+	cycleForecast,
+	cycleTotals,
 	dayNum,
 	dayNumFromYmd,
+	endOfCurrentCycleBkk,
 	endOfCurrentMonthBkk,
 	finance,
 	forecast,
+	ftRateForYm,
 	hourOf,
+	isCycleStartDay,
 	savingsTrack,
 	solarCurve,
 	toPoints,
@@ -239,6 +248,133 @@ describe("synthetic edge cases", () => {
 			[base + HOUR, 1100],
 		]);
 		expect(series.length).toBe(2);
+	});
+});
+
+describe("billing cycle (cutoff = the 2nd, BKK)", () => {
+	const C = ENERGY_CONST;
+
+	it("cycle containing a mid-month instant", () => {
+		// 2026-07-06 12:00 BKK = 05:00 UTC
+		const c = billingCycleOf(Date.UTC(2026, 6, 6, 5, 0));
+		expect(dayNumToIso(c.startDay)).toBe("2026-07-02");
+		expect(dayNumToIso(c.endDay)).toBe("2026-08-01");
+		expect([c.y, c.m]).toEqual([2026, 7]);
+	});
+
+	it("day-of-month 1 belongs to the PREVIOUS month's cycle", () => {
+		// 2026-07-01 01:00 BKK = 2026-06-30 18:00 UTC
+		const c = billingCycleOf(Date.UTC(2026, 5, 30, 18, 0));
+		expect(dayNumToIso(c.startDay)).toBe("2026-06-02");
+		expect(dayNumToIso(c.endDay)).toBe("2026-07-01");
+		expect([c.y, c.m]).toEqual([2026, 6]);
+	});
+
+	it("day-of-month 2 at 00:00 BKK starts the new cycle", () => {
+		// 2026-07-02 00:00 BKK = 2026-07-01 17:00 UTC
+		const c = billingCycleOf(Date.UTC(2026, 6, 1, 17, 0));
+		expect(dayNumToIso(c.startDay)).toBe("2026-07-02");
+	});
+
+	it("February cycle length", () => {
+		const c = billingCycleForYm(2026, 2);
+		expect(dayNumToIso(c.startDay)).toBe("2026-02-02");
+		expect(dayNumToIso(c.endDay)).toBe("2026-03-01");
+		expect(c.endDay - c.startDay + 1).toBe(28);
+	});
+
+	it("December cycle wraps the year", () => {
+		const c = billingCycleForYm(2026, 12);
+		expect(dayNumToIso(c.startDay)).toBe("2026-12-02");
+		expect(dayNumToIso(c.endDay)).toBe("2027-01-01");
+		// 2027-01-01 12:00 BKK is still inside the December cycle
+		const jan1 = billingCycleOf(Date.UTC(2027, 0, 1, 5, 0));
+		expect([jan1.y, jan1.m]).toEqual([2026, 12]);
+	});
+
+	it("month-index normalization (m1=0 → Dec of previous year)", () => {
+		const c = billingCycleForYm(2026, 0);
+		expect(dayNumToIso(c.startDay)).toBe("2025-12-02");
+		expect([c.y, c.m]).toEqual([2025, 12]);
+	});
+
+	it("endOfCurrentCycleBkk + isCycleStartDay", () => {
+		expect(dayNumToIso(endOfCurrentCycleBkk(Date.UTC(2026, 6, 6, 5, 0)))).toBe("2026-08-01");
+		expect(isCycleStartDay(dayNumFromYmd(2026, 7, 2))).toBe(true);
+		expect(isCycleStartDay(dayNumFromYmd(2026, 7, 1))).toBe(false);
+		expect(isCycleStartDay(dayNumFromYmd(2026, 7, 3))).toBe(false);
+	});
+
+	it("ftRateForYm picks the latest period ≤ ym", () => {
+		expect(ftRateForYm("2026-06")).toBe(0.1623);
+		expect(ftRateForYm("2020-01")).toBe(0.1623); // before first entry → first rate
+	});
+
+	const cyc = billingCycleForYm(2026, 7); // 2 Jul – 1 Aug, len 31
+	// Thu 2026-07-02 (weekday) and Sat 2026-07-04 (weekend), plus one outside
+	const rows = [
+		{ day: dayNumFromYmd(2026, 7, 1), totalKwh: 99, onKwh: 50, offKwh: 49, hours: 24 }, // outside (prev cycle)
+		{ day: dayNumFromYmd(2026, 7, 2), totalKwh: 30, onKwh: 20, offKwh: 10, hours: 24 },
+		{ day: dayNumFromYmd(2026, 7, 4), totalKwh: 24, onKwh: 0, offKwh: 24, hours: 12 }, // partial Sat
+	];
+
+	it("cycleTotals filters to the window and tracks coverage", () => {
+		const t = cycleTotals(rows, cyc);
+		expect(t.total).toBe(54);
+		expect(t.on).toBe(20);
+		expect(t.off).toBe(34);
+		expect(t.days).toBe(2);
+		expect(t.partialDays).toBe(1);
+		expect(t.cycleLen).toBe(31);
+		close(t.coverage, 2 / 31);
+	});
+
+	it("cycleCosts: TOU headline + solar gating", () => {
+		// no solar (activeFrom = +Infinity ≡ never active in this window)
+		const noSolar = cycleCosts(rows, cyc, { solarActiveFromDay: Infinity });
+		close(noSolar.tou, 20 * C.TOU_ON + 34 * C.TOU_OFF + C.TOU_FIXED * (2 / 31));
+		expect(noSolar.offsetKwh4k).toBe(0);
+		close(noSolar.touSolar4k - noSolar.tou, 0); // no offset, no sub days
+
+		// whole-cycle what-if (activeFrom = -Infinity): yield 4×5.3×0.75 = 15.9/day
+		const whatIf = cycleCosts(rows, cyc, { solarActiveFromDay: -Infinity, solarPr: 0.75 });
+		const y = C.SOLAR_4K_KWP * C.SOLAR_PSH * 0.75;
+		const expOffset = Math.min(y, 20) + Math.min(y, 24); // Thu on-peak + Sat off-peak
+		close(whatIf.offsetKwh4k, expOffset);
+		expect(whatIf.solarDays).toBe(2);
+		close(
+			whatIf.touSolar4k,
+			(20 - Math.min(y, 20)) * C.TOU_ON +
+				(34 - Math.min(y, 24)) * C.TOU_OFF +
+				C.TOU_FIXED * (2 / 31) +
+				C.SOLAR_4K_SUB * (2 / 31),
+		);
+		// default gate is the real install day
+		expect(cycleCosts(rows, cyc).solarDays).toBe(
+			rows.filter((r) => r.day >= SOLAR_INSTALL_DAY && r.day >= cyc.startDay).length,
+		);
+	});
+
+	it("cycleForecast slices fc.days to the window", () => {
+		const mk = (d: number, kwh: number, on: number) => ({
+			day: d,
+			kwh,
+			kind: "fc" as const,
+			weekend: false,
+			on,
+			off: kwh - on,
+		});
+		const fcFake = {
+			days: [
+				mk(cyc.startDay - 1, 10, 5), // before window — excluded
+				mk(cyc.startDay, 12, 6),
+				mk(cyc.endDay, 8, 0),
+			],
+		} as unknown as Parameters<typeof cycleForecast>[0];
+		const r = cycleForecast(fcFake, cyc);
+		close(r.kwh, 20);
+		expect(r.days).toBe(2);
+		close(r.touBaht, 6 * C.TOU_ON + (6 + 8) * C.TOU_OFF + C.TOU_FIXED * (2 / 31));
 	});
 });
 

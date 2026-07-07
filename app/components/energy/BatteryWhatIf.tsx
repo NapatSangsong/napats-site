@@ -17,13 +17,13 @@ const RT_EFF = 0.9;
  *   offset   = min(usable, evening load 17–22)   (discharged into the peak)
  *   ฿/mo     = offset × (22 days on-peak + 8 days off-peak rates)
  */
-export function BatteryWhatIf({ a }: { a: Analysis }) {
+export function BatteryWhatIf({ a, solarPr }: { a: Analysis; solarPr: number }) {
 	const [solarKw, setSolarKw] = useState(2);
 	const [battKwh, setBattKwh] = useState(5);
 	const [costPerKwh, setCostPerKwh] = useState(8000);
 
-	// solarCurve() is shaped for the 2 kW reference system → scale linearly
-	const sol = solarCurve();
+	// solarCurve(solarPr) is shaped for the 2 kW reference system → scale linearly
+	const sol = solarCurve(solarPr);
 	const scale = solarKw / 2;
 	let direct = 0;
 	let surplus = 0;
