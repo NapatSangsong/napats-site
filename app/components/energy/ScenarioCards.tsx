@@ -3,7 +3,7 @@ import { ENERGY_CONST as C, batteryEveningSaving, flatAvgRate } from "~/lib/ener
 import { f0, f1, f2, money } from "~/lib/energy-format";
 
 const BATT_KWH = 5; // modelled battery size
-const BATT_COST_PER_KWH = 8000; // ฿/kWh (matches BatteryWhatIf default) — capital, NOT in the bill
+const BATT_COST_PER_KWH = 8000; // ฿/kWh battery capital (illustrative) — NOT in the bill
 
 /** Section 06 — Baseload & Evening Peak */
 export function BaseloadStats({ a }: { a: Analysis }) {
@@ -160,7 +160,7 @@ export function ScenarioCards({ f, a, solarPr }: { f: Finance; a: Analysis; sola
 						</div>
 						<div>
 							<span>⚠️ ยังไม่รวมค่าแบต ~{money(BATT_KWH * BATT_COST_PER_KWH)}</span>
-							<span className="mono">ดู “จำลองแบตเตอรี่”</span>
+							<span className="mono">เงินลงทุน · ไม่รวมในบิล</span>
 						</div>
 					</div>
 				</div>

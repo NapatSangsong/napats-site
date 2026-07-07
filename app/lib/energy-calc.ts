@@ -877,8 +877,8 @@ export const BATTERY_RT_EFF = 0.9;
 
 /** Monthly ฿ a battery saves by storing daytime solar SURPLUS (production beyond
  *  the same-hour load) and discharging it into the evening peak (17–22). Energy
- *  value only — does NOT include the battery's capital cost. Same model as the
- *  BatteryWhatIf section. */
+ *  value only — does NOT include the battery's capital cost. Feeds the
+ *  "TOU + Solar 4kW + Batt" scenario card. */
 export function batteryEveningSaving(
 	a: Analysis,
 	solarKw: number,
