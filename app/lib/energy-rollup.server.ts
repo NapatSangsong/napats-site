@@ -55,8 +55,8 @@ async function rollupOne(supabase: SupabaseClient, d: number): Promise<boolean> 
 		if (dk <= 0 || t - tPrev > ENERGY_CONST.MAX_GAP_MS) continue;
 		// Skip device-rebase jumps (meter recalibration), not real consumption.
 		if (dk > CALIBRATION.rebaseDeltaUnits * ENERGY_CONST.SCALE) continue;
-		// Meter calibration: scale pre-boundary consumption (mirrors calibratePoints)
-		if (t < CALIBRATION.boundaryMs) dk *= CALIBRATION.factor;
+		// Meter calibration: per-segment factor (mirrors calibratePoints)
+		dk *= t < CALIBRATION.boundaryMs ? CALIBRATION.factor : CALIBRATION.factorAfter;
 		if (dayNum(t) !== d) continue;
 		const h = hourOf(t);
 		hourly.set(h, (hourly.get(h) ?? 0) + dk);

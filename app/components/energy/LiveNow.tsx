@@ -1,5 +1,5 @@
 import type { Analysis } from "~/lib/energy-calc";
-import { ENERGY_CONST, dayNum } from "~/lib/energy-calc";
+import { CALIBRATION, ENERGY_CONST, dayNum } from "~/lib/energy-calc";
 import { clockLabel, f1, f2 } from "~/lib/energy-format";
 import type { LiveData } from "./types";
 
@@ -19,10 +19,11 @@ export function LiveNow({ live, liveOffline, a, rawMeter, updatedAt }: Props) {
 	const todayBase = a.daily.get(today) ?? 0;
 	// live meter beyond the last synced point counts toward today only if the
 	// gap is within the profile rule (≤2h), mirroring analyze(). Compare against
-	// the RAW last meter — both live.meter_kwh and rawMeter are uncalibrated.
+	// the RAW last meter — both live.meter_kwh and rawMeter are uncalibrated —
+	// then scale the delta like any post-boundary consumption.
 	const liveExtra =
 		live && live.ts - a.t1 <= ENERGY_CONST.MAX_GAP_MS
-			? Math.max(0, live.meter_kwh - rawMeter)
+			? Math.max(0, live.meter_kwh - rawMeter) * CALIBRATION.factorAfter
 			: 0;
 	const todayKwh = todayBase + liveExtra;
 	const dash = "—";

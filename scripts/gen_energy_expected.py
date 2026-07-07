@@ -25,7 +25,7 @@ THAI_TZ = datetime.timezone(datetime.timedelta(hours=7))
 MAX_GAP_MS = 2 * 3600 * 1000
 FORECAST_END = datetime.date(2026, 6, 27)  # pinned
 
-USE_MEA_BASELINE = True
+USE_MEA_BASELINE = False  # 2026-07-07: measured is calibrated to the MEA meter now
 MEA_MONTHLY_KWH = 1100.0
 # flat tariff = MEA Type 1.1.2 tiered ladder + Ft + VAT (must mirror energy-calc.ts)
 FT_RATE = 0.1623   # ฿/kWh Ft งวด พ.ค.–ส.ค. 2569

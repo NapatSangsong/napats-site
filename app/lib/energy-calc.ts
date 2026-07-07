@@ -30,28 +30,44 @@ export const ENERGY_CONST = {
 	WEEKDAYS_MO: 22, // weekdays per month (solar offsets on-peak)
 	WEEKENDS_MO: 8, // weekend days per month (solar offsets off-peak)
 	METER_COST: 3350.0, // ฿ one-time TOU meter cost
-	MEA_MONTHLY_KWH: 1100.0, // whole-house billing baseline (MEA bill)
-	USE_MEA_BASELINE: true,
+	MEA_MONTHLY_KWH: 1100.0, // whole-house billing baseline (MEA bill; 12-mo avg 1,071)
+	// false since 2026-07-07: measured×CALIBRATION now matches the MEA meter
+	// (658 kWh register check), so scenarios use real measured usage directly.
+	USE_MEA_BASELINE: false,
 } as const;
 
 const C = ENERGY_CONST;
 
 /**
- * Meter calibration. The Tuya forward-energy sensor under-reported consumption
- * before it was recalibrated at source on 2026-06-13 14:50 BKK. Readings at/after
- * that instant are accurate; earlier consumption is scaled up by `factor`.
+ * Meter calibration. The Tuya forward-energy sensor under-reports consumption.
+ * Two segments, both scaled at read-time (stored raw counter is never mutated):
  *
- * Applied at read-time via calibratePoints() — the stored raw counter is never
- * mutated, so re-tuning `factor` after a longer comparison is a one-line change
- * and fully reversible. Set factor to 1 to disable.
+ *  - BEFORE 2026-06-13 14:50 BKK (Tuya-app recalibration): ×`factor` (1.569,
+ *    tuned vs the old front-door meter).
+ *  - AT/AFTER the boundary: ×`factorAfter` (2.029). Derived 2026-07-07 from the
+ *    MEA TOU meter registers (photo): real 658 kWh (on 258 / off 400) over
+ *    19 Jun 10:30 → 7 Jul 10:30 vs raw-attributed 324.32 (on 123.75 / off
+ *    200.57) → 658/324.32 = 2.029, near-uniform across TOU bands (on 2.085 /
+ *    off 1.994). Cross-check: June bill (2/6–2/7) 1,069 kWh vs this model's
+ *    1,056 — within 1.2%.
+ *
+ * Re-tuning either factor is a one-line change and fully reversible, but
+ * energy_daily bakes calibrated values at rollup time — re-rollup after tuning.
  */
-export const CALIBRATION: { factor: number; boundaryMs: number; rebaseDeltaUnits: number } = {
+export const CALIBRATION: {
+	factor: number;
+	factorAfter: number;
+	boundaryMs: number;
+	rebaseDeltaUnits: number;
+} = {
 	factor: 1.569,
+	factorAfter: 2.029,
 	boundaryMs: 1781337000000, // 2026-06-13 14:50:00 +07  (= 07:50:00 UTC)
-	// Recalibrating the meter in the Tuya app rebased its cumulative counter by a
-	// one-time jump (+1785 units at 14:51:44). Any single positive delta above
-	// this is a device rebase, not consumption, and is skipped. The largest real
-	// interval delta in the data is ~70, so 500 cleanly separates the two.
+	// Device rebases move the cumulative counter in one jump without consumption:
+	// +1785 units (Tuya-app recalibration, 2026-06-13 14:51:44) and −4254 units
+	// (2026-06-20 00:21:15). Any single |delta| above this is a rebase and is
+	// skipped. The largest real interval delta in the data is ~70, so 500
+	// cleanly separates the two.
 	rebaseDeltaUnits: 500,
 };
 
@@ -319,15 +335,16 @@ export function toPoints(raw: Iterable<readonly [number | string, number | strin
 }
 
 /**
- * Rebuild the cumulative counter so that consumption (positive deltas) occurring
- * BEFORE the calibration boundary is scaled by `cal.factor`. Intervals ending
- * at/after the boundary pass through unchanged. The result stays a monotonic
- * cumulative series, so every downstream calc (analyze/rollup) stays internally
- * consistent and there is no boundary "cliff". Non-positive deltas (meter resets)
- * are never scaled. Returns the input unchanged when factor === 1.
+ * Rebuild the cumulative counter so that consumption (positive deltas) is
+ * scaled by the segment factor: `cal.factor` before the boundary, `factorAfter`
+ * at/after it. The result stays a monotonic cumulative series, so every
+ * downstream calc (analyze/rollup) stays internally consistent and there is no
+ * boundary "cliff". Non-positive deltas (meter resets) are never scaled, and
+ * device rebases (|delta| > rebaseDeltaUnits, both directions) carry flat.
+ * Returns the input unchanged when both factors === 1.
  */
 export function calibratePoints(pts: Point[], cal = CALIBRATION): Point[] {
-	if (cal.factor === 1 || pts.length === 0) return pts;
+	if ((cal.factor === 1 && cal.factorAfter === 1) || pts.length === 0) return pts;
 	const out: [number, number][] = [];
 	const base = pts[0][0] < cal.boundaryMs ? pts[0][1] * cal.factor : pts[0][1];
 	let acc = base;
@@ -335,12 +352,12 @@ export function calibratePoints(pts: Point[], cal = CALIBRATION): Point[] {
 	for (let i = 1; i < pts.length; i++) {
 		const [t, v] = pts[i];
 		let delta = v - pts[i - 1][1];
-		// Device rebase (meter recalibrated) — not consumption; carry cumulative flat.
-		if (delta > cal.rebaseDeltaUnits) {
+		// Device rebase (either direction) — not consumption; carry cumulative flat.
+		if (Math.abs(delta) > cal.rebaseDeltaUnits) {
 			out.push([t, acc]);
 			continue;
 		}
-		if (delta > 0 && t < cal.boundaryMs) delta *= cal.factor;
+		if (delta > 0) delta *= t < cal.boundaryMs ? cal.factor : cal.factorAfter;
 		acc += delta;
 		out.push([t, acc]);
 	}

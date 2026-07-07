@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Analysis } from "~/lib/energy-calc";
-import { ENERGY_CONST, dayNum, hourOf, isOnPeakHour, weekdayOf } from "~/lib/energy-calc";
+import { CALIBRATION, ENERGY_CONST, dayNum, hourOf, isOnPeakHour, weekdayOf } from "~/lib/energy-calc";
 import { f1, f2, money } from "~/lib/energy-format";
 import type { LiveData } from "./types";
 
@@ -60,7 +60,7 @@ export function HouseFlow({
 	const today = dayNum(Date.now());
 	const liveExtra =
 		live && live.ts - a.t1 <= ENERGY_CONST.MAX_GAP_MS
-			? Math.max(0, live.meter_kwh - rawMeter)
+			? Math.max(0, live.meter_kwh - rawMeter) * CALIBRATION.factorAfter
 			: 0;
 	const todayKwh = (a.daily.get(today) ?? 0) + liveExtra;
 

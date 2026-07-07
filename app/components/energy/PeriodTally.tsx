@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Analysis } from "~/lib/energy-calc";
-import { ENERGY_CONST as C, dayNum, hourOf, isOnPeakHour, minuteOf, weekdayOf } from "~/lib/energy-calc";
+import { CALIBRATION, ENERGY_CONST as C, dayNum, hourOf, isOnPeakHour, minuteOf, weekdayOf } from "~/lib/energy-calc";
 import { f2, money } from "~/lib/energy-format";
 import type { LiveData } from "./types";
 
@@ -38,7 +38,7 @@ export function PeriodTally({ a, live, rawMeter }: { a: Analysis; live: LiveData
 	// live tail beyond the last synced point — only when viewing the current hour
 	const liveExtra =
 		isLive && live && live.ts - a.t1 <= C.MAX_GAP_MS
-			? Math.max(0, live.meter_kwh - rawMeter)
+			? Math.max(0, live.meter_kwh - rawMeter) * CALIBRATION.factorAfter
 			: 0;
 	const liveIsOn = isOnPeakHour(wdT, hour);
 

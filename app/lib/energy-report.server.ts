@@ -82,7 +82,7 @@ export async function fetchCycleHourly(
 		let dk = (v - raw[i - 1][1]) * ENERGY_CONST.SCALE;
 		if (dk <= 0 || t - tPrev > ENERGY_CONST.MAX_GAP_MS) continue;
 		if (dk > CALIBRATION.rebaseDeltaUnits * ENERGY_CONST.SCALE) continue;
-		if (t < CALIBRATION.boundaryMs) dk *= CALIBRATION.factor;
+		dk *= t < CALIBRATION.boundaryMs ? CALIBRATION.factor : CALIBRATION.factorAfter;
 		const d = dayNum(t);
 		if (d < cycle.startDay || d > cycle.endDay) continue;
 		let hours = byDay.get(d);
