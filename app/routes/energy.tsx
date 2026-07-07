@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { data, redirect } from "react-router";
 import type { Route } from "./+types/energy";
 import "~/styles/energy.css";
-import { BatteryWhatIf } from "~/components/energy/BatteryWhatIf";
 import { BillToDate } from "~/components/energy/BillToDate";
 import { EnergyChat } from "~/components/energy/EnergyChat";
 import { Inspector } from "~/components/energy/Inspector";
@@ -14,7 +13,6 @@ import { LoadCurve } from "~/components/energy/LoadCurve";
 import { LoadingOverlay, type StepState } from "~/components/energy/LoadingOverlay";
 import { PeriodTally } from "~/components/energy/PeriodTally";
 import { EnergyHeader, ProfileBars } from "~/components/energy/ProfileBars";
-import { SavingsChart } from "~/components/energy/SavingsChart";
 import { ScenarioCards, BaseloadStats } from "~/components/energy/ScenarioCards";
 import { SolarForecast } from "~/components/energy/SolarForecast";
 import { Verdict } from "~/components/energy/Verdict";
@@ -22,7 +20,7 @@ import { ForecastChart } from "~/components/energy/ForecastChart";
 import { GridQuality } from "~/components/energy/GridQuality";
 import { Heatmap } from "~/components/energy/Heatmap";
 import type { ApiStats, LiveData } from "~/components/energy/types";
-import { calcAll, type CalcResult, ENERGY_CONST as C, touSolarScenario, flatEnergyBaht } from "~/lib/energy-calc";
+import { calcAll, type CalcResult, ENERGY_CONST as C, flatEnergyBaht } from "~/lib/energy-calc";
 import { f0, f1, f2, pc, money } from "~/lib/energy-format";
 import { ENERGY_PUBLIC, gateCookie, keyHash, requireEnergyAuth, safeEqual } from "~/lib/energy-gate.server";
 
@@ -35,7 +33,7 @@ function buildEnergyContext(
 ): string {
 	const { a, f, fc } = calc;
 	// Every tariff/solar combo the AI might be asked about — same model as the cards.
-	const yield2 = C.SOLAR_KWP * C.SOLAR_PSH * solarPr; // 2kW kWh/day @ chosen PR
+	// The house runs a single 4kW array (installed 21 ก.ค.); cost3 = TOU + that solar.
 	const yield4 = C.SOLAR_4K_KWP * C.SOLAR_PSH * solarPr; // 4kW kWh/day @ chosen PR
 	const flatSolar = (yieldKwhD: number, sub: number) => {
 		const usable = Math.min(yieldKwhD, f.daytimeLoadD);
@@ -45,18 +43,14 @@ function buildEnergyContext(
 	const opts: Array<[string, number]> = [
 		["Flat (มิเตอร์ปกติ)", f.cost1],
 		["TOU เดี่ยว", f.cost2],
-		["TOU + Solar 2kW", f.cost3],
-		["TOU + Solar 4kW", touSolarScenario(f, yield4, C.SOLAR_4K_SUB).cost],
-		["Flat + Solar 2kW", flatSolar(yield2, C.BLUERING)],
+		["TOU + Solar 4kW", f.cost3],
 		["Flat + Solar 4kW", flatSolar(yield4, C.SOLAR_4K_SUB)],
 	];
 	const sc = {
 		flat: f.cost1,
 		tou: f.cost2,
-		tou2: f.cost3,
-		tou4: opts[3][1],
-		flat2: opts[4][1],
-		flat4: opts[5][1],
+		tou4: f.cost3,
+		flat4: opts[3][1],
 		cheapest: opts.reduce((b, o) => (o[1] < b[1] ? o : b)),
 	};
 	const lines = [
@@ -73,17 +67,15 @@ function buildEnergyContext(
 		`## เปรียบเทียบค่าไฟรายเดือน (ฐาน ${f0(f.monthlyKwh)} หน่วย/เดือน · PR โซลาร์ ${solarPr})`,
 		`Flat (มิเตอร์ปกติ): ${money(sc.flat)}`,
 		`TOU เดี่ยว: ${money(sc.tou)}`,
-		`TOU + Solar 2kW: ${money(sc.tou2)}`,
 		`TOU + Solar 4kW: ${money(sc.tou4)}`,
-		`Flat + Solar 2kW: ${money(sc.flat2)}`,
 		`Flat + Solar 4kW: ${money(sc.flat4)}`,
 		`→ ถูกสุด: ${sc.cheapest[0]} ที่ ${money(sc.cheapest[1] as number)}`,
 		"",
 		"## พารามิเตอร์โมเดล (ใช้คำนวณคอมโบอื่นเองได้ เช่น flat+battery, 6kW ฯลฯ)",
 		"- Flat ขั้นบันได: ≤150 @3.2484, 151–400 @4.2218, >400 @4.4217 ฿/kWh, + Ft 0.1623/หน่วย, ×VAT 1.07, + ค่าบริการ 40.9",
 		`- TOU: on-peak (จ–ศ 09:00–21:59) 5.81, off-peak 2.99 ฿/kWh, + ค่าบริการ 40.9 · บ้านนี้ on ${f1(f.onKwh)} / off ${f1(f.offKwh)} หน่วย/เดือน`,
-		`- โซลาร์ผลิต PSH ${C.SOLAR_PSH} × PR ${solarPr} = ${f2(C.SOLAR_PSH * solarPr)} kWh/kWp/วัน → 2kW=${f2(yield2)}, 4kW=${f2(yield4)} · ตัดได้ไม่เกินโหลดกลางวัน ${f2(f.daytimeLoadD)} kWh/วัน`,
-		"- ค่า subscription โซลาร์: 2kW=699, 4kW=1399 ฿/เดือน · โซลาร์ตัด on-peak จ–ศ 22วัน + off-peak ส–อา 8วัน (flat ตัดทุกวัน 30)",
+		`- โซลาร์ 4kW ผลิต PSH ${C.SOLAR_PSH} × PR ${solarPr} = ${f2(C.SOLAR_PSH * solarPr)} kWh/kWp/วัน → ${f2(yield4)} kWh/วัน · ตัดได้ไม่เกินโหลดกลางวัน ${f2(f.daytimeLoadD)} kWh/วัน`,
+		"- ค่า subscription โซลาร์ 4kW = 1399 ฿/เดือน · โซลาร์ตัด on-peak จ–ศ 22วัน + off-peak ส–อา 8วัน (flat ตัดทุกวัน 30)",
 		"- โซลาร์ช่วยพีคเย็น 17–22 ไม่ได้ — ต้องมีแบตเตอรี่ (RT eff 0.9) ถึงจะตัดได้",
 		"",
 		"## โหลด",
@@ -574,15 +566,7 @@ export default function EnergyPage() {
 								<Verdict a={calc.a} f={calc.f} fc={calc.fc} solarPr={SOLAR_PR_BY_CASE[solarCase]} />
 							</div>
 							<div className={sectionCls(7)} style={sectionStyle(7)}>
-								<InstallGauge f={calc.f} solarPr={SOLAR_PR_BY_CASE[solarCase]} />
-							</div>
-						</div>
-						<div className="e-row">
-							<div className={sectionCls(8)} style={sectionStyle(8)}>
-								<BatteryWhatIf a={calc.a} solarPr={SOLAR_PR_BY_CASE[solarCase]} />
-							</div>
-							<div className={sectionCls(9)} style={sectionStyle(9)}>
-								<SavingsChart sv={calc.sv} fc={calc.fc} />
+								<InstallGauge f={calc.f} />
 							</div>
 						</div>
 						{/* ── 3) รูปแบบการใช้ไฟ (ทำไม) ── */}

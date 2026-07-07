@@ -34,13 +34,13 @@ function dayLabel(date: string, idx: number): string {
 	return DOW[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
 }
 
-/** Section — SIMULATED 2 kWp rooftop-solar production forecast.
- *  Not installed, not wired to the house — a weather-driven preview of how
- *  much a future system would make, hour by hour, for the next few days. */
+/** Section — SIMULATED 4 kWp rooftop-solar production forecast (the system
+ *  installed 21 ก.ค. 2569). A weather-driven preview of how much it makes,
+ *  hour by hour, for the next few days. */
 export function SolarForecast({ a, solarPr }: { a: Analysis; solarPr: number }) {
 	const [data, setData] = useState<SolarResp | null>(null);
 	const [sel, setSel] = useState(1); // default พรุ่งนี้
-	const [kw, setKw] = useState(4); // ขนาดระบบที่จำลอง — default 4kW
+	const kw = 4; // ระบบที่ติดจริง 4kW (ไม่มีตัวเลือก 2kW แล้ว)
 	const { tip, point, surface, wrapRef } = useChartTip();
 
 	useEffect(() => {
@@ -88,7 +88,7 @@ export function SolarForecast({ a, solarPr }: { a: Analysis; solarPr: number }) 
 	};
 	const hrs = day.hours.filter((h) => h.hour >= 6 && h.hour <= 18);
 
-	// ---- on-peak offset: how much of the solar a 2kW system could actually
+	// ---- on-peak offset: how much of the solar the 4kW system could actually
 	// cancel against this house's typical hourly load (no export, so only the
 	// concurrent min(solar, load) is useful). ฿ saved at the TOU rate per hour.
 	const [yy, mm, dd] = day.date.split("-").map(Number);
@@ -139,33 +139,6 @@ export function SolarForecast({ a, solarPr }: { a: Analysis; solarPr: number }) 
 
 			<div className="solar-note">
 				🔌 ภาพจำลอง — <b>ยังไม่ได้ติดตั้ง/ต่อเข้าบ้าน</b> ขณะนี้ใช้ไฟการไฟฟ้า 100% · ดูไว้ว่าถ้าติดโซลาร์ {kw}kW จะผลิตได้เท่าไหร่
-			</div>
-
-			<div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-				{[2, 4].map((k) => {
-					const on = kw === k;
-					return (
-						<button
-							key={k}
-							type="button"
-							onClick={() => setKw(k)}
-							style={{
-								appearance: "none",
-								border: `1px solid ${on ? "var(--sun)" : "var(--line)"}`,
-								background: on ? "rgba(255,180,84,0.14)" : "var(--night-2)",
-								color: on ? "var(--sun)" : "var(--ink-dim)",
-								borderRadius: 99,
-								padding: "5px 16px",
-								font: "inherit",
-								fontSize: "0.82rem",
-								fontWeight: 600,
-								cursor: "pointer",
-							}}
-						>
-							{k}kW
-						</button>
-					);
-				})}
 			</div>
 
 			<div className="solar-days">

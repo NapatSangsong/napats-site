@@ -1,30 +1,26 @@
 import type { Analysis, Finance, Forecast } from "~/lib/energy-calc";
-import { ENERGY_CONST as C, touSolarScenario } from "~/lib/energy-calc";
+import { ENERGY_CONST as C } from "~/lib/energy-calc";
 import { dayMonth, f0, f2, money, timeLabel } from "~/lib/energy-format";
 
-const SOLAR_4K_SUB = 1399; // ฿/mo subscription for the 4kW plan
-
-/** Section 08 — verdict: which of the four tariffs is cheapest THIS month, all
+/** Section 08 — verdict: which of the three tariffs is cheapest THIS month, all
  *  data-driven (recomputes with the basis toggle), consistent with the scenario
- *  cards. No fixed/rate-only numbers. */
+ *  cards. Solar = the 4kW system installed 21 ก.ค. (cost3). No fixed numbers. */
 export function Verdict({
 	a,
 	f,
 	fc,
 	solarPr,
 }: { a: Analysis; f: Finance; fc: Forecast; solarPr: number }) {
-	const cost4k = touSolarScenario(f, 4 * C.SOLAR_PSH * solarPr, SOLAR_4K_SUB).cost;
 	const opts = [
 		{ k: "Flat (มิเตอร์ปกติ)", cost: f.cost1, solar: false },
 		{ k: "TOU เดี่ยว", cost: f.cost2, solar: false },
-		{ k: "TOU + Solar 2kW", cost: f.cost3, solar: true },
-		{ k: "TOU + Solar 4kW", cost: cost4k, solar: true },
+		{ k: "TOU + Solar 4kW", cost: f.cost3, solar: true },
 	];
 	const sorted = [...opts].sort((x, y) => x.cost - y.cost);
 	const best = sorted[0];
 	const runnerUp = sorted[1];
 	const vsFlat = f.cost1 - best.cost; // ฿/mo saved vs the default flat meter
-	const solar4Cheaper = cost4k <= f.cost3;
+	const solar4kKwhD = C.SOLAR_4K_KWP * C.SOLAR_PSH * solarPr;
 
 	return (
 		<>
@@ -52,11 +48,11 @@ export function Verdict({
 						</div>
 						<div className="vstat">
 							<span className="mono">
-								{solar4Cheaper ? "−" : "+"}
-								{money(Math.abs(cost4k - f.cost3))} ฿/ด.
+								{f.saveSolar >= 0 ? "−" : "+"}
+								{money(Math.abs(f.saveSolar))} ฿/ด.
 							</span>
 							<span>
-								4kW {solar4Cheaper ? "ถูกกว่า" : "แพงกว่า"} 2kW (โหลดกลางวัน {f2(f.daytimeLoadD)} kWh/วัน)
+								Solar 4kW {f.saveSolar >= 0 ? "ประหยัดกว่า" : "แพงกว่า"} TOU เดี่ยว (ผลิต {f2(solar4kKwhD)} · โหลดกลางวัน {f2(f.daytimeLoadD)} kWh/วัน)
 							</span>
 						</div>
 						<div className="vstat">
@@ -79,7 +75,7 @@ export function Verdict({
 						ครอบคลุมทั้งบ้านหรือไม่
 					</li>
 					<li>
-						โซลาร์ {f2(C.SOLAR_KWP * C.SOLAR_PSH * solarPr)} (2kW) / {f2(4 * C.SOLAR_PSH * solarPr)} (4kW) kWh/วัน · จ–ศ{" "}
+						โซลาร์ 4kW ผลิต {f2(solar4kKwhD)} kWh/วัน · จ–ศ{" "}
 						{C.WEEKDAYS_MO} วันตัด On-Peak · ส–อา {C.WEEKENDS_MO} วันตัด Off-Peak · cap ด้วย load กลางวันจริง
 					</li>
 				</ul>

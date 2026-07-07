@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import type { TooltipPayload } from "recharts";
 import type { Finance, Analysis } from "~/lib/energy-calc";
-import { touSolarScenario, batteryEveningSaving, ENERGY_CONST as C } from "~/lib/energy-calc";
+import { batteryEveningSaving, ENERGY_CONST as C } from "~/lib/energy-calc";
 import { money } from "~/lib/energy-format";
 import type { ChartTheme } from "./theme";
 import { ChartFrame } from "./ChartFrame";
@@ -37,23 +37,21 @@ function CustomTooltip({ active, payload, ct }: { active?: boolean; payload?: To
 }
 
 export function ScenarioBars({ f, a, solarPr, ct }: Props) {
-	const yield4 = 4 * C.SOLAR_PSH * solarPr;
-	const s4 = touSolarScenario(f, yield4, 1399);
+	// cost3 is now the 4kW TOU+solar scenario (finance()); no separate 2kW model.
 	const battSave = batteryEveningSaving(a, 4, 5, solarPr);
-	const cost5 = Math.max(0, s4.cost - battSave);
+	const cost5 = Math.max(0, f.cost3 - battSave);
 
-	const costs = [f.cost1, f.cost2, f.cost3, s4.cost, cost5];
-	const minCost = Math.min(f.cost1, f.cost2, f.cost3, s4.cost);
+	const costs = [f.cost1, f.cost2, f.cost3, cost5];
+	const minCost = Math.min(f.cost1, f.cost2, f.cost3);
 
 	const scenarios = [
 		{ name: "Flat", cost: f.cost1, highlight: f.cost1 === minCost },
 		{ name: "TOU", cost: f.cost2, highlight: f.cost2 === minCost },
-		{ name: "TOU+2kW", cost: f.cost3, highlight: f.cost3 === minCost },
-		{ name: "TOU+4kW", cost: s4.cost, highlight: s4.cost === minCost },
+		{ name: "TOU+4kW", cost: f.cost3, highlight: f.cost3 === minCost },
 		{ name: "+4kW+Batt", cost: cost5, highlight: false },
 	];
 
-	const colors = [ct.flat, ct.tou, ct.tou2, ct.tou4, ct.batt];
+	const colors = [ct.flat, ct.tou, ct.tou4, ct.batt];
 	const maxCost = Math.max(...costs) * 1.05;
 
 	return (

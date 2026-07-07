@@ -1,6 +1,6 @@
 import { Battery, BarChart2, TrendingDown, TrendingUp, Zap } from "lucide-react";
 import type { CalcResult } from "~/lib/energy-calc";
-import { touSolarScenario, ENERGY_CONST as C, dayNum, billingCycleOf } from "~/lib/energy-calc";
+import { ENERGY_CONST as C, dayNum, billingCycleOf } from "~/lib/energy-calc";
 import { money, f0, f1, f2, dayMonthYear } from "~/lib/energy-format";
 import type { LiveData } from "~/components/energy/types";
 import { KpiCard } from "./KpiCard";
@@ -15,14 +15,11 @@ interface Props {
 export function KpiRow({ calc, live, liveOffline, solarPr }: Props) {
 	const { a, f, fc, sv } = calc;
 
-	// Cheapest scenario (same logic as ScenarioCards / Verdict)
-	const yield4 = C.SOLAR_4K_KWP * C.SOLAR_PSH * solarPr;
-	const s4 = touSolarScenario(f, yield4, C.SOLAR_4K_SUB);
+	// Cheapest scenario (same logic as ScenarioCards / Verdict); cost3 = TOU+4kW
 	const scenarios: [string, number][] = [
 		["Flat", f.cost1],
 		["TOU", f.cost2],
-		["TOU+2kW", f.cost3],
-		["TOU+4kW", s4.cost],
+		["TOU+4kW", f.cost3],
 	];
 	const cheapest = scenarios.reduce((b, o) => (o[1] < b[1] ? o : b));
 	const savingsVsFlat = f.cost1 - cheapest[1];

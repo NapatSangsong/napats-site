@@ -330,10 +330,33 @@
 	.edash-kpi-row { grid-template-columns: repeat(2, 1fr); }
 	.edash-charts { grid-template-columns: 1fr; }
 	.edash-charts > * { grid-column: 1 / -1; }
+
+	/* Topbar: the fixed 58px height clipped wrapped controls on phones. Let it
+	   grow, drop the sticky (a 3-row bar shouldn't eat the viewport), and give
+	   the controls their own full-width rows below the title + live pill. */
+	.edash-topbar {
+		position: static;
+		height: auto;
+		gap: 8px 10px;
+		padding-top: 10px;
+		padding-bottom: 10px;
+	}
+	.edash-topbar-spacer { display: none; }
+	.edash-topbar-controls {
+		width: 100%;
+		gap: 8px;
+	}
+	/* larger tap targets on touch */
+	.edash-seg button { padding: 7px 12px; }
+	.edash-icon-btn { padding: 8px 11px; }
 }
 
 @media (max-width: 420px) {
 	.edash-kpi-row { grid-template-columns: 1fr; }
+	/* stack each labelled control on its own row so nothing crams edge-to-edge */
+	.edash-seg { flex: 1; }
+	.edash-seg button { flex: 1; text-align: center; }
+	.edash-seg-label { width: 100%; margin-bottom: -2px; }
 }
 
 /* ── panel frame ── */

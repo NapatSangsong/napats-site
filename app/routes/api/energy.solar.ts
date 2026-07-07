@@ -6,17 +6,15 @@ const LAT = 13.8225;
 const LON = 100.406;
 
 /**
- * SIMULATED rooftop-PV production forecast for a hypothetical 2 kWp system.
- * Nothing is installed or wired to the house yet — this is a what-if preview
+ * Rooftop-PV production forecast for the 4 kWp system (installed 21 ก.ค. 2569),
  * driven by Open-Meteo hourly shortwave radiation (GHI).
  *
  * Model (transparent, GHI-based):
  *   hourly kWh = (GHI[W/m²] / 1000) × kWp × PR
  * where 1000 W/m² = STC and PR (performance ratio) folds in inverter, thermal
- * and soiling losses. A clear Bangkok day lands ~8 kWh/day — consistent with
- * the dashboard's SOLAR_KWH_D assumption.
+ * and soiling losses. A clear Bangkok day lands ~16 kWh/day for 4 kWp.
  */
-const KWP = 2.0;
+const KWP = 4.0;
 const PR = 0.75;
 
 export async function loader({ request, context }: Route.LoaderArgs) {

@@ -44,7 +44,7 @@ function wmo(code: number | null, isDay: boolean): { icon: string; label: string
 /** Section — House energy flow (Atmoce-inspired, theme-native line art).
  *  Blue pulses run grid → house at a speed set by the real live wattage; the
  *  windows glow brighter with load. No fabricated solar production — the sun is
- *  a nod to the 2 kW recommendation, all numbers come straight from `live`. */
+ *  a nod to the 4 kW rooftop array, all numbers come straight from `live`. */
 export function HouseFlow({
 	live,
 	liveOffline,
@@ -250,14 +250,14 @@ export function HouseFlow({
 					{/* house */}
 					<g>
 						<polygon points="540,152 654,90 768,152" fill="#26345a" stroke="#3a4a74" strokeWidth="2" strokeLinejoin="round" />
-						{/* rooftop solar 2kW — physically there, but NOT wired to the house.
+						{/* rooftop solar 4kW — physically there, but NOT wired to the house.
 						    Glows while the sun is up (producing), idle/dark at night. */}
 						<g
 							className={producing ? "solar-panels active" : "solar-panels"}
 							style={{ ["--solar-glow" as string]: solarGlow }}
 							opacity="0.92"
 						>
-							<title>โซลาร์รูฟ 2kW (จำลอง · ยังไม่ต่อสายเข้าบ้าน)</title>
+							<title>โซลาร์รูฟ 4kW (จำลอง · ยังไม่ต่อสายเข้าบ้าน)</title>
 							<polygon points="672,100 740,137 748,150 680,113" fill="#1b3a6b" stroke="#4f74b3" strokeWidth="1.5" strokeLinejoin="round" />
 							<line x1="694.4" y1="112.2" x2="702.4" y2="125.2" stroke="#4f74b3" strokeWidth="1" />
 							<line x1="716.9" y1="124.4" x2="724.9" y2="137.4" stroke="#4f74b3" strokeWidth="1" />

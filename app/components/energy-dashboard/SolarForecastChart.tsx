@@ -58,7 +58,7 @@ export function SolarForecastChart({ a, solarPr, ct }: Props) {
 		const dayN = dayNumFromYmd(y, m, d);
 		const wd = weekdayOf(dayN);
 		const profile = wd < 5 ? a.wdProf : a.prof;
-		const scale = 4 / (day.kwp || 2); // scale to 4kW from API data size
+		const scale = 4 / (day.kwp || 4); // scale to 4kW from API data size
 		const prScale = solarPr / (day.pr || 0.75);
 		for (let h = 6; h <= 17; h++) {
 			const prod = (day.hours[h]?.kwh ?? 0) * scale * prScale;

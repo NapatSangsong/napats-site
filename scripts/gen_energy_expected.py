@@ -35,8 +35,8 @@ FLAT_TIERS = [(150.0, 3.2484), (400.0, 4.2218), (float("inf"), 4.4217)]
 TOU_ON = 5.81
 TOU_OFF = 2.99
 TOU_FIXED = 40.90
-BLUERING = 699.00
-SOLAR_KWH_D = 2.0 * 5.3 * 0.75  # 2kWp × PSH 5.3 × PR 0.75 = 7.95 kWh/day (keep identical to TS)
+BLUERING = 1399.00  # ฿/mo — the 4kW plan actually installed 21 Jul 2026 (2kW cancelled)
+SOLAR_KWH_D = 4.0 * 5.3 * 0.75  # 4kWp × PSH 5.3 × PR 0.75 = 15.9 kWh/day (keep identical to TS)
 WEEKDAYS_MO, WEEKENDS_MO = 22, 8
 METER_COST = 3350.00
 # TOU meter installation — savings only accrue from here (mirrors TOU_INSTALL_MS/DAY)

@@ -1,5 +1,5 @@
 import type { Analysis, Finance } from "~/lib/energy-calc";
-import { ENERGY_CONST as C, FLAT_TIERS, flatEnergyBaht, dayNum, weekdayOf, touSolarScenario, billingCycleOf } from "~/lib/energy-calc";
+import { ENERGY_CONST as C, FLAT_TIERS, flatEnergyBaht, dayNum, weekdayOf, billingCycleOf } from "~/lib/energy-calc";
 import { dayMonth, f0, f1, money } from "~/lib/energy-format";
 import type { LiveData } from "./types";
 
@@ -15,7 +15,6 @@ export function BillToDate({
 	live,
 	solarPr,
 }: { a: Analysis; f: Finance; live: LiveData | null; solarPr: number }) {
-	const solar2k = C.SOLAR_KWP * C.SOLAR_PSH * solarPr; // 2kWp × PSH × PR(case)
 	const solar4k = C.SOLAR_4K_KWP * C.SOLAR_PSH * solarPr; // 4kWp × PSH × PR(case)
 
 	// ── accumulate the current billing cycle [2nd … 1st] (actual, calibrated) ──
@@ -25,8 +24,6 @@ export function BillToDate({
 	let off = 0;
 	let days = 0;
 	// solar offset accrued over elapsed days (weekday → on-peak, weekend → off-peak)
-	let offOn2k = 0;
-	let offOff2k = 0;
 	let offOn4k = 0;
 	let offOff4k = 0;
 	for (const [d, v] of a.daily) {
@@ -38,10 +35,8 @@ export function BillToDate({
 		off += dOff;
 		days += 1;
 		if (weekdayOf(d) >= 5) {
-			offOff2k += Math.min(solar2k, dOff);
 			offOff4k += Math.min(solar4k, dOff);
 		} else {
-			offOn2k += Math.min(solar2k, dOn);
 			offOn4k += Math.min(solar4k, dOn);
 		}
 	}
@@ -54,19 +49,13 @@ export function BillToDate({
 	const fixedF = cycleLen > 0 ? days / cycleLen : 0; // share of the cycle elapsed
 	const flat = flatEnergyBaht(kwh) + C.FLAT_FIXED * fixedF;
 	const tou = on * C.TOU_ON + off * C.TOU_OFF + C.TOU_FIXED * fixedF;
-	const touSolar2k =
-		(on - offOn2k) * C.TOU_ON + (off - offOff2k) * C.TOU_OFF + (C.TOU_FIXED + C.BLUERING) * fixedF;
 	const touSolar4k =
 		(on - offOn4k) * C.TOU_ON + (off - offOff4k) * C.TOU_OFF + (C.TOU_FIXED + C.SOLAR_4K_SUB) * fixedF;
-
-	// ── full-month projection (mirrors finance(); 4k uses the same solar model) ──
-	const month4k = touSolarScenario(f, solar4k, C.SOLAR_4K_SUB).cost;
 
 	const rows = [
 		{ k: "Flat", soFar: flat, month: f.cost1, desc: `ขั้นบันได (${FLAT_TIERS.map(([, r]) => r).join("/")}) + Ft + VAT + ค่าบริการ` },
 		{ k: "TOU", soFar: tou, month: f.cost2, desc: `On ${f1(on)}×${C.TOU_ON} + Off ${f1(off)}×${C.TOU_OFF} + ค่าบริการ` },
-		{ k: "TOU + Solar 2kW", soFar: touSolar2k, month: f.cost3, desc: `solar ${f1(solar2k)} หน่วย/วัน + sub ${f0(C.BLUERING)}/ด` },
-		{ k: "TOU + Solar 4kW", soFar: touSolar4k, month: month4k, desc: `solar ${f1(solar4k)} หน่วย/วัน + sub ${f0(C.SOLAR_4K_SUB)}/ด` },
+		{ k: "TOU + Solar 4kW", soFar: touSolar4k, month: f.cost3, desc: `solar ${f1(solar4k)} หน่วย/วัน + sub ${f0(C.SOLAR_4K_SUB)}/ด` },
 	];
 	const cheapestSoFar = rows.reduce((b, o) => (o.soFar < b.soFar ? o : b)).k;
 
@@ -88,7 +77,6 @@ export function BillToDate({
 	const todayRows = [
 		{ k: "Flat", v: flatToday },
 		{ k: "TOU", v: touToday },
-		{ k: "TOU + Solar 2kW", v: touSolarToday(solar2k, C.BLUERING) },
 		{ k: "TOU + Solar 4kW", v: touSolarToday(solar4k, C.SOLAR_4K_SUB) },
 	];
 	const cheapestToday = todayRows.reduce((b, o) => (o.v < b.v ? o : b)).k;
@@ -151,7 +139,7 @@ export function BillToDate({
 			<p className="pt-note">
 				* “สะสมแล้ว” = ยอดจริงถึงตอนนี้ (ค่าบริการ/sub เฉลี่ยตามวันที่ผ่าน {days}/{cycleLen} วัน · รอบบิลตัดวันที่ 2) · “ทั้งเดือน” = ประมาณการอิงฐาน{" "}
 				{f0(f.monthlyKwh)} หน่วย/เดือน (สลับ บิล MEA / วัดจริง ที่ปุ่มด้านบน) · วันนี้ = เฉพาะค่าพลังงาน ·
-				Solar คิดที่ PSH {C.SOLAR_PSH} × PR {Math.round(solarPr * 100)}%: 2kW {f1(solar2k)} / 4kW{" "}
+				Solar คิดที่ PSH {C.SOLAR_PSH} × PR {Math.round(solarPr * 100)}% (4kW) ={" "}
 				{f1(solar4k)} หน่วย/วัน, offset {weekendToday ? "off-peak (วันหยุด)" : "on-peak (วันธรรมดา)"} · ทุกค่าผ่าน calibration แล้ว
 			</p>
 		</section>

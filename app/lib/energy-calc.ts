@@ -20,13 +20,10 @@ export const ENERGY_CONST = {
 	TOU_ON: 5.81, // ฿/kWh TOU on-peak (Mon–Fri 09:00–21:59)
 	TOU_OFF: 2.99, // ฿/kWh TOU off-peak
 	TOU_FIXED: 40.9, // ฿/mo TOU service fee (Type 1.2: 38.22 + VAT 7%)
-	BLUERING: 699.0, // ฿/mo solar subscription
-	SOLAR_4K_KWP: 4.0, // แผนที่จะติดจริง 21 ก.ค. 2569 (kWp)
+	SOLAR_4K_KWP: 4.0, // ระบบที่ติดตั้งจริง 21 ก.ค. 2569 (kWp) — ระบบเดียว ไม่มี 2kW แล้ว
 	SOLAR_4K_SUB: 1399.0, // ฿/mo subscription แผน 4kW
-	SOLAR_KWP: 2.0, // โมเดลขนาดโซลาร์ (kWp)
 	SOLAR_PSH: 5.3, // peak sun hours/วัน (กรุงเทพฯ ติดตั้งเอียงคงที่)
 	SOLAR_PR: 0.75, // performance ratio — เผื่อ loss จริง (ไม่ใช่ 100% โลกสวย)
-	SOLAR_KWH_D: 2.0 * 5.3 * 0.75, // = 7.95 kWh/วัน ต่อ 2kWp (kWp × PSH × PR)
 	WEEKDAYS_MO: 22, // weekdays per month (solar offsets on-peak)
 	WEEKENDS_MO: 8, // weekend days per month (solar offsets off-peak)
 	METER_COST: 3350.0, // ฿ one-time TOU meter cost
@@ -495,12 +492,12 @@ export function finance(
 	const cost2 = onKwh * C.TOU_ON + offKwh * C.TOU_OFF + C.TOU_FIXED;
 	const scaleUp = measuredMo ? m / measuredMo : 1.0;
 	const daytimeLoadD = a.daytimeKwhD * scaleUp;
-	const usableD = Math.min(C.SOLAR_KWP * C.SOLAR_PSH * solarPr, daytimeLoadD);
+	const usableD = Math.min(C.SOLAR_4K_KWP * C.SOLAR_PSH * solarPr, daytimeLoadD);
 	const offsetOn = Math.min(usableD * C.WEEKDAYS_MO, onKwh);
 	const offsetOff = Math.min(usableD * C.WEEKENDS_MO, offKwh);
 	const remOn = onKwh - offsetOn;
 	const remOff = offKwh - offsetOff;
-	const cost3 = remOn * C.TOU_ON + remOff * C.TOU_OFF + C.TOU_FIXED + C.BLUERING;
+	const cost3 = remOn * C.TOU_ON + remOff * C.TOU_OFF + C.TOU_FIXED + C.SOLAR_4K_SUB;
 	const saveTou = cost1 - cost2;
 	const saveSolar = cost2 - cost3;
 	return {
@@ -527,24 +524,9 @@ export function finance(
 		saveTou,
 		saveSolar,
 		beMonths: saveTou > 0 ? C.METER_COST / saveTou : Infinity,
-		tipKwhD: C.BLUERING / (C.WEEKDAYS_MO * C.TOU_ON + C.WEEKENDS_MO * C.TOU_OFF),
+		tipKwhD: C.SOLAR_4K_SUB / (C.WEEKDAYS_MO * C.TOU_ON + C.WEEKENDS_MO * C.TOU_OFF),
 		viable: cost3 <= cost2,
 	};
-}
-
-/** TOU + solar monthly cost for an arbitrary array size — same model as
- *  finance()'s Scenario 3 (cost3), parameterised by daily yield + subscription
- *  so other sizes (e.g. 4kW) reuse the exact offset logic. */
-export function touSolarScenario(
-	f: Finance,
-	solarKwhD: number,
-	subMonthly: number,
-): { cost: number; remOn: number; remOff: number } {
-	const usableD = Math.min(solarKwhD, f.daytimeLoadD);
-	const remOn = f.onKwh - Math.min(usableD * C.WEEKDAYS_MO, f.onKwh);
-	const remOff = f.offKwh - Math.min(usableD * C.WEEKENDS_MO, f.offKwh);
-	const cost = remOn * C.TOU_ON + remOff * C.TOU_OFF + C.TOU_FIXED + subMonthly;
-	return { cost, remOn, remOff };
 }
 
 // ---------------- 2b) billing-cycle aggregation (report + bill-to-date) ----------------
@@ -880,14 +862,14 @@ export function savingsTrack(f: Finance, fc: Forecast): Savings {
 
 // ---------------- 3c) hourly solar production curve ----------------
 
-export function solarCurve(solarPr: number = C.SOLAR_PR): number[] {
+export function solarCurve(solarPr: number = C.SOLAR_PR, kwp: number = C.SOLAR_4K_KWP): number[] {
 	const shape: number[] = [];
 	for (let h = 0; h < 24; h++) {
 		const c = h + 0.5;
 		shape.push(c >= 6.5 && c <= 17.5 ? Math.max(Math.sin((Math.PI * (c - 6.5)) / 11.0), 0) : 0);
 	}
 	const s = shape.reduce((a, b) => a + b, 0);
-	return shape.map((x) => (x / s) * (C.SOLAR_KWP * C.SOLAR_PSH * solarPr));
+	return shape.map((x) => (x / s) * (kwp * C.SOLAR_PSH * solarPr));
 }
 
 /** Round-trip battery efficiency (charge → store → discharge). */
@@ -903,10 +885,9 @@ export function batteryEveningSaving(
 	battKwh: number,
 	solarPr: number = C.SOLAR_PR,
 ): number {
-	const sol = solarCurve(solarPr);
-	const scale = solarKw / 2; // solarCurve() is shaped for the 2kW reference
+	const sol = solarCurve(solarPr, solarKw);
 	let surplus = 0;
-	for (let h = 0; h < 24; h++) surplus += Math.max(0, sol[h] * scale - (a.prof[h] ?? 0));
+	for (let h = 0; h < 24; h++) surplus += Math.max(0, sol[h] - (a.prof[h] ?? 0));
 	const usable = Math.min(battKwh, surplus) * BATTERY_RT_EFF;
 	const offsetEvening = Math.min(usable, a.eveningKwhD);
 	return offsetEvening * (C.WEEKDAYS_MO * C.TOU_ON + C.WEEKENDS_MO * C.TOU_OFF);
@@ -965,7 +946,7 @@ export function traceLines(
 	sv: Savings,
 	solarPr: number = C.SOLAR_PR,
 ): string[] {
-	const solarYieldD = C.SOLAR_KWP * C.SOLAR_PSH * solarPr; // 2kW daily yield @ chosen PR
+	const solarYieldD = C.SOLAR_4K_KWP * C.SOLAR_PSH * solarPr; // 4kW daily yield @ chosen PR
 	return [
 		`onPct = on/total = ${tf(a.on)}/${tf(a.total)} = ${(f.onPct * 100).toFixed(1)}%`,
 		`offPct = off/total = ${tf(a.off)}/${tf(a.total)} = ${(f.offPct * 100).toFixed(1)}%`,
@@ -981,10 +962,10 @@ export function traceLines(
 		`usable = min(${tf(solarYieldD)}, ${tf(f.daytimeLoadD)}) = ${tf(f.usableD)} kWh/วัน`,
 		`offsetOn = min(${tf(f.usableD)}×${C.WEEKDAYS_MO}, ${tf(f.onKwh, 1)}) = ${tf(f.offsetOn, 1)} kWh`,
 		`offsetOff = min(${tf(f.usableD)}×${C.WEEKENDS_MO}, ${tf(f.offKwh, 1)}) = ${tf(f.offsetOff, 1)} kWh`,
-		`S3 = ${tf(f.remOn, 1)}×${C.TOU_ON} + ${tf(f.remOff, 1)}×${C.TOU_OFF} + ${C.TOU_FIXED} + ${C.BLUERING} = ${tf(f.cost3)} ฿`,
+		`S3 = ${tf(f.remOn, 1)}×${C.TOU_ON} + ${tf(f.remOff, 1)}×${C.TOU_OFF} + ${C.TOU_FIXED} + ${C.SOLAR_4K_SUB} = ${tf(f.cost3)} ฿`,
 		`saveTou = S1−S2 = ${tf(f.cost1)} − ${tf(f.cost2)} = ${tf(f.saveTou)} ฿/เดือน`,
 		`saveSolar = S2−S3 = ${tf(f.cost2)} − ${tf(f.cost3)} = ${tf(f.saveSolar)} ฿/เดือน`,
-		`tipping = ${C.BLUERING}/(${C.WEEKDAYS_MO}×${C.TOU_ON} + ${C.WEEKENDS_MO}×${C.TOU_OFF}) = ${tf(f.tipKwhD)} kWh/วัน`,
+		`tipping = ${C.SOLAR_4K_SUB}/(${C.WEEKDAYS_MO}×${C.TOU_ON} + ${C.WEEKENDS_MO}×${C.TOU_OFF}) = ${tf(f.tipKwhD)} kWh/วัน`,
 		`breakEven = ${tf(C.METER_COST)}/${tf(f.saveTou)} = ${Number.isFinite(f.beMonths) ? tf(f.beMonths) : "∞"} เดือน`,
 		`forecast wdAvg = ${tf(fc.wdAvg)} kWh/วัน · weAvg = ${tf(fc.weAvg)} kWh/วัน`,
 		`savings avg = cum/days = ${tf(sv.cumEnd)}/${sv.series.length} = ${tf(sv.avgD)} ฿/วัน (scaleUp ×${tf(sv.scaleUp)})`,

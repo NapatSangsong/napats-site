@@ -207,7 +207,7 @@ describe("solar curve — vs python", () => {
 		for (let h = 0; h < 24; h++) close(sol[h], expected.solar_curve[h]);
 		close(
 			sol.reduce((s, v) => s + v, 0),
-			ENERGY_CONST.SOLAR_KWH_D,
+			ENERGY_CONST.SOLAR_4K_KWP * ENERGY_CONST.SOLAR_PSH * ENERGY_CONST.SOLAR_PR,
 		);
 	});
 });

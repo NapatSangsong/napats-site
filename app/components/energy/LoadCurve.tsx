@@ -34,7 +34,7 @@ export function LoadCurve({ prof, sol }: { prof: number[]; sol: number[] }) {
 				<h2>Load Curve 24 ชม. + โซลาร์</h2>
 			</div>
 			<div className="bar-label">
-				<b>kWh เฉลี่ยรายชั่วโมง (เส้นทึบ) vs ผลิตโซลาร์ 2kW (เส้นประ)</b>
+				<b>kWh เฉลี่ยรายชั่วโมง (เส้นทึบ) vs ผลิตโซลาร์ 4kW (เส้นประ)</b>
 				<span className="mono">พื้นหลัง = โซน TOU</span>
 			</div>
 			<div ref={wrapRef} style={{ position: "relative" }} {...surface}>
@@ -126,7 +126,7 @@ export function LoadCurve({ prof, sol }: { prof: number[]; sol: number[] }) {
 							background: "repeating-linear-gradient(90deg,#FFB454 0 7px,transparent 7px 12px)",
 						}}
 					/>
-					โซลาร์ 2kW ({f0(solDailyKwh)} kWh/วัน)
+					โซลาร์ 4kW ({f0(solDailyKwh)} kWh/วัน)
 				</span>
 				<span>
 					<i style={{ background: "#2D5DB0", height: 10 }} />

@@ -1,8 +1,7 @@
 import type { Analysis, Finance } from "~/lib/energy-calc";
-import { ENERGY_CONST as C, batteryEveningSaving, flatAvgRate, touSolarScenario } from "~/lib/energy-calc";
+import { ENERGY_CONST as C, batteryEveningSaving, flatAvgRate } from "~/lib/energy-calc";
 import { f0, f1, f2, money } from "~/lib/energy-format";
 
-const SOLAR_4K_SUB = 1399; // ฿/mo subscription for the 4kW plan
 const BATT_KWH = 5; // modelled battery size
 const BATT_COST_PER_KWH = 8000; // ฿/kWh (matches BatteryWhatIf default) — capital, NOT in the bill
 
@@ -39,8 +38,7 @@ export function BaseloadStats({ a }: { a: Analysis }) {
 
 /** Section 07 — scenario cost cards */
 export function ScenarioCards({ f, a, solarPr }: { f: Finance; a: Analysis; solarPr: number }) {
-	const solar2kKwhD = C.SOLAR_KWP * C.SOLAR_PSH * solarPr; // 2kWp × PSH × PR(case)
-	const solar4kKwhD = 4 * C.SOLAR_PSH * solarPr; // 4kWp × PSH × PR(case)
+	const solar4kKwhD = C.SOLAR_4K_KWP * C.SOLAR_PSH * solarPr; // 4kWp × PSH × PR(case)
 	// surplus the 4kW array can't self-consume (no export/batt) — capped at the
 	// house's daytime load. This is "free" solar you could absorb by shifting more
 	// daytime load into the solar window. Grows as PR rises (more production, same cap).
@@ -50,14 +48,14 @@ export function ScenarioCards({ f, a, solarPr }: { f: Finance; a: Analysis; sola
 	// off-peak), so it's the marginal saving on top of the shown 4kW bill.
 	const shiftCoef = C.WEEKDAYS_MO * C.TOU_ON + C.WEEKENDS_MO * C.TOU_OFF;
 	const waste4Baht = waste4kD * shiftCoef;
-	const s4 = touSolarScenario(f, solar4kKwhD, SOLAR_4K_SUB);
-	const save4 = f.cost2 - s4.cost; // vs TOU baseline
-	// Scenario 5: 4kW + 5kWh battery — shifts daytime surplus into the evening
-	// peak. EXCLUDED from minCost / the "ถูกสุด" badge: this figure does NOT
-	// include the battery's ~฿40k capital, so flagging it cheapest is unfair.
+	// cost3 is now the 4kW TOU+solar scenario (finance()); no separate 2kW model.
+	const save4 = f.saveSolar; // f.cost2 − f.cost3, vs TOU baseline
+	// Battery scenario: 4kW + 5kWh — shifts daytime surplus into the evening peak.
+	// EXCLUDED from minCost / the "ถูกสุด" badge: this figure does NOT include the
+	// battery's ~฿40k capital, so flagging it cheapest is unfair.
 	const saveBatt = batteryEveningSaving(a, 4, BATT_KWH, solarPr);
-	const cost5 = s4.cost - saveBatt;
-	const minCost = Math.min(f.cost1, f.cost2, f.cost3, s4.cost);
+	const cost5 = f.cost3 - saveBatt;
+	const minCost = Math.min(f.cost1, f.cost2, f.cost3);
 	return (
 		<section>
 			<div className="sec-head">
@@ -112,14 +110,13 @@ export function ScenarioCards({ f, a, solarPr }: { f: Finance; a: Analysis; sola
 				<div className={`card${f.cost3 === minCost ? " best" : ""}`}>
 					{f.cost3 === minCost && <span className="best-badge">ถูกสุด</span>}
 					<div className="tag">Scenario 3</div>
-					<h3>TOU + Solar 2kW (BlueRing)</h3>
+					<h3>TOU + Solar 4kW</h3>
 					<div className="cost mono">
 						{money(f.cost3)}
 						<small>฿/เดือน</small>
 					</div>
-					<div className={`delta ${f.saveSolar >= 0 ? "plus" : "minus"}`}>
-						{f.saveSolar >= 0 ? `−${money(f.saveSolar)}` : `+${money(-f.saveSolar)}`} ฿ เทียบ TOU
-						อย่างเดียว
+					<div className={`delta ${save4 >= 0 ? "plus" : "minus"}`}>
+						{save4 >= 0 ? `−${money(save4)}` : `+${money(-save4)}`} ฿ เทียบ TOU อย่างเดียว
 					</div>
 					<div className="kv">
 						<div>
@@ -131,34 +128,8 @@ export function ScenarioCards({ f, a, solarPr }: { f: Finance; a: Analysis; sola
 							<span className="mono">{f0(f.remOff)} kWh</span>
 						</div>
 						<div>
-							<span>โซลาร์ 2kW ({f1(solar2kKwhD)} kWh/วัน) + sub</span>
-							<span className="mono">{f2(C.BLUERING)}</span>
-						</div>
-					</div>
-				</div>
-				<div className={`card${s4.cost === minCost ? " best" : ""}`}>
-					{s4.cost === minCost && <span className="best-badge">ถูกสุด</span>}
-					<div className="tag">Scenario 4</div>
-					<h3>TOU + Solar 4kW</h3>
-					<div className="cost mono">
-						{money(s4.cost)}
-						<small>฿/เดือน</small>
-					</div>
-					<div className={`delta ${save4 >= 0 ? "plus" : "minus"}`}>
-						{save4 >= 0 ? `−${money(save4)}` : `+${money(-save4)}`} ฿ เทียบ TOU อย่างเดียว
-					</div>
-					<div className="kv">
-						<div>
-							<span>On-Peak เหลือ</span>
-							<span className="mono">{f0(s4.remOn)} kWh</span>
-						</div>
-						<div>
-							<span>Off-Peak เหลือ</span>
-							<span className="mono">{f0(s4.remOff)} kWh</span>
-						</div>
-						<div>
 							<span>โซลาร์ 4kW ({f1(solar4kKwhD)} kWh/วัน) + sub</span>
-							<span className="mono">{f2(SOLAR_4K_SUB)}</span>
+							<span className="mono">{f2(C.SOLAR_4K_SUB)}</span>
 						</div>
 						<div>
 							<span>เหลือทิ้ง (ย้ายโหลดมาใช้กลางวันได้)</span>
@@ -175,7 +146,7 @@ export function ScenarioCards({ f, a, solarPr }: { f: Finance; a: Analysis; sola
 					</div>
 				</div>
 				<div className="card">
-					<div className="tag">Scenario 5</div>
+					<div className="tag">Scenario 4</div>
 					<h3>TOU + Solar 4kW + Batt {BATT_KWH}kWh</h3>
 					<div className="cost mono">
 						{money(cost5)}
