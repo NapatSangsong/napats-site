@@ -136,7 +136,7 @@ export function EnergyDashboard() {
 
 						{/* Forecast */}
 						<div className="edash-p-fore">
-							<ForecastBars fc={calc.fc} ct={ct} />
+							<ForecastBars fc={calc.fc} outlook={calc.outlook} cycle={calc.cycle} ct={ct} />
 						</div>
 
 						{/* TOU split donut */}

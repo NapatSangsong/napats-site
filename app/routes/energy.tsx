@@ -31,7 +31,7 @@ function buildEnergyContext(
 	measured: boolean,
 	solarPr: number,
 ): string {
-	const { a, f, fc } = calc;
+	const { a, f, fc, outlook } = calc;
 	// Every tariff/solar combo the AI might be asked about — same model as the cards.
 	// The house runs a single 4kW array (installed 21 ก.ค.); cost3 = TOU + that solar.
 	const yield4 = C.SOLAR_4K_KWP * C.SOLAR_PSH * solarPr; // 4kW kWh/day @ chosen PR
@@ -81,8 +81,8 @@ function buildEnergyContext(
 		"## โหลด",
 		`Baseload ${f2(a.baseloadKw)} kW · โหลดกลางวัน(08–16) ${f2(a.daytimeKwhD)} kWh/วัน · โหลดเย็น(พีค) ${f2(a.eveningKwhD)} kWh/วัน`,
 		"",
-		"## พยากรณ์สิ้นเดือน",
-		`คาดใช้ทั้งเดือน ${f0(fc.totalKwh)} kWh (เหลืออีก ${f0(fc.futureKwh)} kWh) · ค่าไฟคาด TOU ${money(fc.touCost)} / Flat ${money(fc.flatCost)}`,
+		"## พยากรณ์สิ้นรอบบิล (ตัดวันที่ 2)",
+		`คาดสิ้นรอบบิลนี้ ${f0(outlook.kwh)} kWh (เหลืออีก ${f0(fc.futureKwh)} kWh) · ค่าไฟคาด TOU ${money(outlook.touBaht)} / Flat ${money(outlook.flatBaht)}`,
 	];
 	if (live) {
 		lines.push(
@@ -587,7 +587,7 @@ export default function EnergyPage() {
 						{/* ── 4) พยากรณ์ ── */}
 						<div className="e-row">
 							<div className={sectionCls(14)} style={sectionStyle(14)}>
-								<ForecastChart fc={calc.fc} a={calc.a} />
+								<ForecastChart fc={calc.fc} a={calc.a} outlook={calc.outlook} cycle={calc.cycle} />
 							</div>
 							<div className={sectionCls(15)} style={sectionStyle(15)}>
 								<SolarForecast a={calc.a} solarPr={SOLAR_PR_BY_CASE[solarCase]} />

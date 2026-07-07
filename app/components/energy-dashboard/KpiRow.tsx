@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function KpiRow({ calc, live, liveOffline, solarPr }: Props) {
-	const { a, f, fc, sv } = calc;
+	const { a, f, fc, sv, outlook } = calc;
 
 	// Cheapest scenario (same logic as ScenarioCards / Verdict); cost3 = TOU+4kW
 	const scenarios: [string, number][] = [
@@ -55,7 +55,7 @@ export function KpiRow({ calc, live, liveOffline, solarPr }: Props) {
 			<KpiCard
 				label="Bill (accrued)"
 				value={`฿${money(accrued)}`}
-				sub={`คาดสิ้นรอบ ฿${money(fc.touCost)} (TOU) · ฿${money(fc.flatCost)} (Flat)`}
+				sub={`คาดสิ้นรอบ ฿${money(outlook.touBaht)} (TOU) · ฿${money(outlook.flatBaht)} (Flat)`}
 				accent="var(--sun)"
 				icon={<BarChart2 size={12} />}
 			/>

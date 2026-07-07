@@ -901,6 +901,27 @@ export interface CalcResult {
 	fc: Forecast;
 	sv: Savings;
 	sol: number[];
+	/** current billing cycle (cuts on the 2nd) */
+	cycle: BillingCycle;
+	/** one-cycle bill projection — SAME method as /energy/report (cycleOutlook),
+	 *  so the projected bill reads identically across all three pages. Distinct
+	 *  from forecast(), which sums the whole tracked span for its chart. */
+	outlook: CycleOutlook;
+}
+
+/** CycleDailyRow[] from an Analysis — the client has no server daily rows. */
+export function cycleRowsFromAnalysis(a: Analysis): CycleDailyRow[] {
+	const rows: CycleDailyRow[] = [];
+	for (const [day, totalKwh] of a.daily) {
+		rows.push({
+			day,
+			totalKwh,
+			onKwh: a.dailyOn.get(day) ?? 0,
+			offKwh: a.dailyOff.get(day) ?? 0,
+			hours: a.dayHours.get(day)?.size ?? 0,
+		});
+	}
+	return rows;
 }
 
 /** Returns null when there isn't enough data to analyze */
@@ -916,7 +937,9 @@ export function calcAll(
 	const f = finance(a, opts.useMeaBaseline ?? C.USE_MEA_BASELINE, solarPr);
 	const fc = forecast(a, opts.forecastEnd ?? endOfCurrentCycleBkk(opts.nowMs ?? a.t1));
 	const sv = savingsTrack(f, fc);
-	return { a, f, fc, sv, sol: solarCurve(solarPr) };
+	const cycle = billingCycleOf(opts.nowMs ?? a.t1);
+	const outlook = cycleOutlook(cycleRowsFromAnalysis(a), cycle);
+	return { a, f, fc, sv, sol: solarCurve(solarPr), cycle, outlook };
 }
 
 // ---------------- calculation trace (Technical Inspector) ----------------

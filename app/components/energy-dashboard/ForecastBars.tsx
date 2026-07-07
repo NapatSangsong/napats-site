@@ -9,7 +9,7 @@ import {
 	YAxis,
 } from "recharts";
 import type { TooltipPayload } from "recharts";
-import type { Forecast } from "~/lib/energy-calc";
+import type { BillingCycle, CycleOutlook, Forecast } from "~/lib/energy-calc";
 import { dayOnly, money } from "~/lib/energy-format";
 import type { ChartTheme } from "./theme";
 import { ChartFrame } from "./ChartFrame";
@@ -17,6 +17,10 @@ import { Panel } from "./Panel";
 
 interface Props {
 	fc: Forecast;
+	/** one-cycle bill projection (matches /energy/report + the KPI card) */
+	outlook: CycleOutlook;
+	/** current billing cycle — bars are scoped to this window */
+	cycle: BillingCycle;
 	ct: ChartTheme;
 }
 
@@ -44,9 +48,12 @@ function CustomTooltip({ active, payload, ct }: { active?: boolean; payload?: To
 	);
 }
 
-export function ForecastBars({ fc, ct }: Props) {
-	const today = fc.days.find((d) => d.kind === "today");
-	const data = fc.days.map((d) => ({
+export function ForecastBars({ fc, outlook, cycle, ct }: Props) {
+	// scope the bars to the current billing cycle so the chart is a "this bill"
+	// view — the totals below are the one-cycle projection, not the whole span.
+	const cycleDays = fc.days.filter((d) => d.day >= cycle.startDay && d.day <= cycle.endDay);
+	const today = cycleDays.find((d) => d.kind === "today");
+	const data = cycleDays.map((d) => ({
 		label: dayOnly(d.day),
 		kwh: d.kwh,
 		kind: d.kind,
@@ -55,7 +62,7 @@ export function ForecastBars({ fc, ct }: Props) {
 		off: d.off,
 	}));
 
-	const maxKwh = Math.max(...data.map((d) => d.kwh)) * 1.15;
+	const maxKwh = Math.max(...data.map((d) => d.kwh), 0.1) * 1.15;
 
 	return (
 		<Panel
@@ -68,13 +75,13 @@ export function ForecastBars({ fc, ct }: Props) {
 			<div className="edash-panel-body" style={{ paddingBottom: 6 }}>
 				<div style={{ display: "flex", gap: 20, marginBottom: 10, fontSize: "0.78rem", flexWrap: "wrap" }}>
 					<span style={{ color: "var(--ink-dim)" }}>
-						คาด <span className="edash-mono" style={{ color: "var(--ink)", fontWeight: 700 }}>{fc.totalKwh.toFixed(0)} kWh</span>/เดือน
+						คาดสิ้นรอบ <span className="edash-mono" style={{ color: "var(--ink)", fontWeight: 700 }}>{outlook.kwh.toFixed(0)} kWh</span>
 					</span>
 					<span style={{ color: "var(--ink-dim)" }}>
-						TOU <span className="edash-mono" style={{ color: "var(--ink)", fontWeight: 700 }}>฿{money(fc.touCost)}</span>
+						TOU <span className="edash-mono" style={{ color: "var(--ink)", fontWeight: 700 }}>฿{money(outlook.touBaht)}</span>
 					</span>
 					<span style={{ color: "var(--ink-dim)" }}>
-						Flat <span className="edash-mono" style={{ color: "var(--ink-dim)" }}>฿{money(fc.flatCost)}</span>
+						Flat <span className="edash-mono" style={{ color: "var(--ink-dim)" }}>฿{money(outlook.flatBaht)}</span>
 					</span>
 				</div>
 				<ChartFrame size="sm">

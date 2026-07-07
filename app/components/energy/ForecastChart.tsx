@@ -1,20 +1,28 @@
-import type { Analysis, Forecast } from "~/lib/energy-calc";
+import type { Analysis, BillingCycle, CycleOutlook, Forecast } from "~/lib/energy-calc";
 import { dayMonth, dayOnly, f0, f1 } from "~/lib/energy-format";
 import { ChartTip, useChartTip } from "./useChartTip";
 
 const KIND_CLS = { actual: "fb-actual", partial: "fb-partial", today: "fb-today", fc: "fb-fc" } as const;
 
-/** Section 04 — daily kWh forecast to end of month. Port of build_fchart() in v10. */
-export function ForecastChart({ fc, a }: { fc: Forecast; a: Analysis }) {
-	const mx = Math.max(...fc.days.map((x) => x.kwh)) || 1;
-	const start = fc.days[0]?.day ?? 0;
+/** Section 04 — daily kWh forecast for the CURRENT billing cycle (ตัดวันที่ 2).
+ *  Bars are scoped to this cycle; the totals are the one-cycle projection
+ *  (outlook), the same figure /energy/report and the dashboard show. */
+export function ForecastChart({
+	fc,
+	a,
+	outlook,
+	cycle,
+}: { fc: Forecast; a: Analysis; outlook: CycleOutlook; cycle: BillingCycle }) {
+	const days = fc.days.filter((x) => x.day >= cycle.startDay && x.day <= cycle.endDay);
+	const mx = Math.max(...days.map((x) => x.kwh), 0.1) || 1;
+	const start = days[0]?.day ?? cycle.startDay;
 	const { tip, point, surface, wrapRef } = useChartTip();
 
 	return (
 		<section>
 			<div className="sec-head">
 				<span className="mono">04</span>
-				<h2>Forecast รายวัน → {dayMonth(fc.forecastEnd)}</h2>
+				<h2>Forecast รายวัน — รอบบิลนี้ → {dayMonth(fc.forecastEnd)}</h2>
 			</div>
 			<div className="bar-label">
 				<b>การใช้ไฟรายวัน (kWh)</b>
@@ -23,7 +31,7 @@ export function ForecastChart({ fc, a }: { fc: Forecast; a: Analysis }) {
 				</span>
 			</div>
 			<div className="fchart" ref={wrapRef} style={{ position: "relative" }} {...surface}>
-				{fc.days.map((x) => {
+				{days.map((x) => {
 					const h = Math.max((x.kwh / mx) * 100, 2);
 					const we = x.weekend && x.kind !== "today" ? " fb-we" : "";
 					return (
@@ -38,7 +46,7 @@ export function ForecastChart({ fc, a }: { fc: Forecast; a: Analysis }) {
 				<ChartTip tip={tip} />
 			</div>
 			<div className="flabels">
-				{fc.days.map((x) => (
+				{days.map((x) => (
 					<div key={x.day} className={`flabel${x.weekend ? " we" : ""}`}>
 						{dayOnly(x.day)}
 					</div>
@@ -69,9 +77,9 @@ export function ForecastChart({ fc, a }: { fc: Forecast; a: Analysis }) {
 			</div>
 			<div className="vstats" style={{ marginTop: 24 }}>
 				<div className="vstat">
-					<span className="mono">{f0(fc.totalKwh)} kWh</span>
+					<span className="mono">~{f0(outlook.kwh)} kWh</span>
 					<span>
-						รวมทั้งช่วง {dayMonth(start)} → {dayMonth(fc.forecastEnd)} ({fc.nDays} วัน)
+						คาดสิ้นรอบบิลนี้ {dayMonth(start)} → {dayMonth(fc.forecastEnd)}
 					</span>
 				</div>
 				<div className="vstat">
@@ -81,8 +89,8 @@ export function ForecastChart({ fc, a }: { fc: Forecast; a: Analysis }) {
 					</span>
 				</div>
 				<div className="vstat">
-					<span className="mono">~{f0(fc.touCost)} ฿</span>
-					<span>ค่าไฟช่วงนี้ถ้าเป็น TOU (Flat จะ ~{f0(fc.flatCost)} ฿)</span>
+					<span className="mono">~{f0(outlook.touBaht)} ฿</span>
+					<span>ค่าไฟสิ้นรอบถ้าเป็น TOU (Flat จะ ~{f0(outlook.flatBaht)} ฿)</span>
 				</div>
 			</div>
 		</section>
