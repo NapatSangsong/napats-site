@@ -180,10 +180,11 @@ export default function EnergyPage() {
 	});
 	const pointsRef = useRef<[number, number][]>([]);
 	const reducedRef = useRef(false);
-	// finance basis: false = MEA bill baseline (default), true = measured/realtime.
-	// Ephemeral (not persisted) — resets to default on reload, by design.
-	const [measured, setMeasured] = useState(false);
-	const measuredRef = useRef(false);
+	// finance basis: true = measured/realtime (default since the meter was
+	// calibrated to the MEA bill), false = MEA 1100 baseline. Ephemeral (not
+	// persisted) — resets to default on reload, by design.
+	const [measured, setMeasured] = useState(true);
+	const measuredRef = useRef(true);
 	// solar PR scenario: worst (default) / best / ideal. Same ephemeral pattern as
 	// `measured` — ref mirrors state so the polling closures read the latest value.
 	const [solarCase, setSolarCase] = useState<SolarCase>("worst");
@@ -587,7 +588,7 @@ export default function EnergyPage() {
 						{/* ── 4) พยากรณ์ ── */}
 						<div className="e-row">
 							<div className={sectionCls(14)} style={sectionStyle(14)}>
-								<ForecastChart fc={calc.fc} a={calc.a} outlook={calc.outlook} cycle={calc.cycle} />
+								<ForecastChart fc={calc.fc} rawMeter={rawMeter} outlook={calc.outlook} cycle={calc.cycle} />
 							</div>
 							<div className={sectionCls(15)} style={sectionStyle(15)}>
 								<SolarForecast a={calc.a} solarPr={SOLAR_PR_BY_CASE[solarCase]} />

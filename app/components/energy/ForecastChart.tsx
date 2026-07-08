@@ -1,4 +1,5 @@
-import type { Analysis, BillingCycle, CycleOutlook, Forecast } from "~/lib/energy-calc";
+import type { BillingCycle, CycleOutlook, Forecast } from "~/lib/energy-calc";
+import { CALIBRATION } from "~/lib/energy-calc";
 import { dayMonth, dayOnly, f0, f1 } from "~/lib/energy-format";
 import { ChartTip, useChartTip } from "./useChartTip";
 
@@ -9,13 +10,18 @@ const KIND_CLS = { actual: "fb-actual", partial: "fb-partial", today: "fb-today"
  *  (outlook), the same figure /energy/report and the dashboard show. */
 export function ForecastChart({
 	fc,
-	a,
+	rawMeter,
 	outlook,
 	cycle,
-}: { fc: Forecast; a: Analysis; outlook: CycleOutlook; cycle: BillingCycle }) {
+}: { fc: Forecast; rawMeter: number; outlook: CycleOutlook; cycle: BillingCycle }) {
 	const days = fc.days.filter((x) => x.day >= cycle.startDay && x.day <= cycle.endDay);
 	const mx = Math.max(...days.map((x) => x.kwh), 0.1) || 1;
 	const start = days[0]?.day ?? cycle.startDay;
+	// The physical Tuya meter reads RAW (it under-reads; calibration only scales
+	// our consumption estimate). So the meter-face displays use rawMeter, and the
+	// projection adds the remaining CALIBRATED kWh converted back to raw units
+	// (all future is post-boundary → divide by factorAfter).
+	const meterEndRaw = rawMeter + fc.futureKwh / CALIBRATION.factorAfter;
 	const { tip, point, surface, wrapRef } = useChartTip();
 
 	return (
@@ -83,9 +89,9 @@ export function ForecastChart({
 					</span>
 				</div>
 				<div className="vstat">
-					<span className="mono">~{f0(fc.meterEnd)} kWh</span>
+					<span className="mono">~{f0(meterEndRaw)} kWh</span>
 					<span>
-						เลขมิเตอร์ Tuya ที่คาดภายใน {dayMonth(fc.forecastEnd)} (ตอนนี้ {f1(a.lastMeter)})
+						เลขมิเตอร์ Tuya ที่คาดภายใน {dayMonth(fc.forecastEnd)} (ตอนนี้ {f1(rawMeter)})
 					</span>
 				</div>
 				<div className="vstat">

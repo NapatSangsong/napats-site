@@ -1,6 +1,6 @@
 import { Battery, BarChart2, TrendingDown, TrendingUp, Zap } from "lucide-react";
 import type { CalcResult } from "~/lib/energy-calc";
-import { ENERGY_CONST as C, dayNum, billingCycleOf } from "~/lib/energy-calc";
+import { ENERGY_CONST as C, cycleCosts, cycleRowsFromAnalysis } from "~/lib/energy-calc";
 import { money, f0, f1, f2, dayMonthYear } from "~/lib/energy-format";
 import type { LiveData } from "~/components/energy/types";
 import { KpiCard } from "./KpiCard";
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function KpiRow({ calc, live, liveOffline, solarPr }: Props) {
-	const { a, f, fc, sv, outlook } = calc;
+	const { a, f, sv, outlook, cycle } = calc;
 
 	// Cheapest scenario (same logic as ScenarioCards / Verdict); cost3 = TOU+4kW
 	const scenarios: [string, number][] = [
@@ -28,14 +28,10 @@ export function KpiRow({ calc, live, liveOffline, solarPr }: Props) {
 	const powerW = live && !liveOffline ? live.power_w : null;
 	const voltageV = live && !liveOffline ? live.voltage_v : null;
 
-	// Bill-to-date: accrue from a.daily for the current billing cycle (cuts on the 2nd)
-	const nowDay = dayNum(a.t1);
-	const cycleStart = billingCycleOf(a.t1).startDay;
-	const flatAvgPerKwh = f.cost1 / f.monthlyKwh;
-	let accrued = 0;
-	for (const [day, kwh] of a.daily) {
-		if (day >= cycleStart && day <= nowDay) accrued += kwh * flatAvgPerKwh;
-	}
+	// Bill-to-date: actual TOU accrual for the current cycle — SAME cycleCosts as
+	// /energy BillToDate + /report hero (was a flat-rate proxy that read ~11% high).
+	const cycleRows = cycleRowsFromAnalysis(a).filter((r) => r.day >= cycle.startDay && r.day <= cycle.endDay);
+	const accrued = cycleCosts(cycleRows, cycle).tou;
 
 	// Break-even
 	const beLabel = sv.beDay ? dayMonthYear(sv.beDay) : (f.saveTou > 0 ? `${f2(f.beMonths)} เดือน` : "—");

@@ -37,13 +37,14 @@ export function useEnergyData() {
 	const [rawMeter, setRawMeter] = useState(0);
 	const [status, setStatus] = useState<DataStatus>("loading");
 	const [stats, setStats] = useState<ApiStats>(INIT_STATS);
-	const [measured, setMeasuredState] = useState(false);
+	// default: measured/realtime basis (meter is calibrated to the MEA bill now)
+	const [measured, setMeasuredState] = useState(true);
 	const [solarCase, setSolarCaseState] = useState<SolarCase>("worst");
 	const [syncing, setSyncing] = useState(false);
 	const [syncedAt, setSyncedAt] = useState<number | null>(null);
 
 	const pointsRef = useRef<[number, number][]>([]);
-	const measuredRef = useRef(false);
+	const measuredRef = useRef(true);
 	const solarCaseRef = useRef<SolarCase>("worst");
 
 	const fetchLive = useCallback(async (timeoutMs: number): Promise<boolean> => {
