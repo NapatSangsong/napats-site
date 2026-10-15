@@ -201,3 +201,7 @@ dist
 ### React Router ###
 .react-router/
 /build/
+
+# Salaya House: intermediate bake outputs (regenerate with house/web/tools/bake_process.py)
+house/web/home3d/
+house/**/__pycache__/

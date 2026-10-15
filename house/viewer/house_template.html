@@ -1,0 +1,1099 @@
+<title>บ้าน Pave 95/118</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: full-bleed 3D canvas; one floating control sheet (top-left), plan inset (bottom-right), time strip (bottom-center) */
+:root {
+  --bg: #dfe4e6;
+  --sheet: rgba(248, 249, 249, 0.92);
+  --ink: #1b2124;
+  --muted: #5a666b;
+  --line: #ccd4d7;
+  --accent: #36586a;
+  --accent-ink: #ffffff;
+  --font-body: "IBM Plex Sans Thai", "Noto Sans Thai", "Leelawadee UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101416; --sheet: rgba(22, 27, 30, 0.9); --ink: #e3e9eb; --muted: #95a3a9;
+    --line: #2b353a; --accent: #8fb6c9; --accent-ink: #0d1316; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101416; --sheet: rgba(22, 27, 30, 0.9); --ink: #e3e9eb; --muted: #95a3a9;
+  --line: #2b353a; --accent: #8fb6c9; --accent-ink: #0d1316; color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); overflow: hidden; position: relative; }
+#view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; outline: none; }
+#view.walking { cursor: crosshair; }
+
+.sheet {
+  position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px));
+  width: min(296px, calc(100% - 24px)); background: var(--sheet); border: 1px solid var(--line); border-radius: 10px;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  max-height: calc(100% - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow: auto;
+}
+.sheet summary { list-style: none; cursor: pointer; padding: 12px 14px; display: flex; gap: 10px; align-items: baseline; justify-content: space-between; }
+.sheet summary::-webkit-details-marker { display: none; }
+.sheet h1 { font-size: 16px; font-weight: 600; margin: 0; line-height: 1.3; text-wrap: balance; }
+.sub { font-family: var(--font-data); font-size: 11px; color: var(--muted); margin-top: 2px; }
+.chev { font-family: var(--font-data); font-size: 12px; color: var(--muted); }
+details[open] > summary .chev { transform: rotate(180deg); }
+.body { padding: 0 14px 14px; display: grid; gap: 14px; }
+.label { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-family: var(--font-data); margin-bottom: 6px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 13px; padding: 8px 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.views { display: grid; gap: 1px; }
+.views .grp { font-size: 11px; color: var(--muted); margin: 6px 0 2px 8px; font-family: var(--font-data); }
+.views button {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border: 0; background: transparent; color: var(--ink);
+  font: inherit; font-size: 13.5px; padding: 6px 8px; border-radius: 6px; cursor: pointer; text-align: left;
+}
+.views button:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.views button.on { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+.views .lv { font-family: var(--font-data); font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.toggles { display: grid; gap: 6px; }
+.toggles label { display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer; }
+.toggles input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.help { font-size: 12px; color: var(--muted); line-height: 1.55; margin: 0; }
+.help kbd { font-family: var(--font-data); font-size: 11px; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.time {
+  position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 10px; background: var(--sheet); border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 14px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.time input { width: min(240px, 38vw); accent-color: var(--accent); }
+.time output { font-family: var(--font-data); font-size: 13px; min-width: 44px; font-variant-numeric: tabular-nums; }
+.time span { font-size: 12px; color: var(--muted); }
+
+.plan {
+  position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; padding: 8px;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+#plan { display: block; width: 176px; height: 200px; cursor: pointer; border-radius: 6px; }
+.readout { font-family: var(--font-data); font-size: 11px; color: var(--muted); margin-top: 6px; font-variant-numeric: tabular-nums; display: flex; justify-content: space-between; gap: 8px; }
+
+.pad { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  display: grid; grid-template-columns: repeat(3, 46px); grid-template-rows: repeat(2, 46px); gap: 6px; }
+.pad button { border: 1px solid var(--line); background: var(--sheet); color: var(--ink); border-radius: 8px; font-size: 16px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.pad .up { grid-column: 2; grid-row: 1; } .pad .left { grid-column: 1; grid-row: 2; } .pad .down { grid-column: 2; grid-row: 2; } .pad .right { grid-column: 3; grid-row: 2; }
+
+.loading { position: absolute; inset: 0; display: grid; place-items: center; background: var(--bg); z-index: 5; }
+.loading div { text-align: center; display: grid; gap: 8px; }
+.loading b { font-weight: 600; font-size: 15px; }
+.loading span { font-family: var(--font-data); font-size: 12px; color: var(--muted); }
+.err { color: var(--muted); padding: 24px; text-align: center; }
+
+@media (max-width: 600px) {
+  #plan { width: 132px; height: 150px; }
+  .sheet { width: calc(100% - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); }
+  .time { bottom: calc(180px + env(safe-area-inset-bottom, 0px)); left: auto; right: max(12px, env(safe-area-inset-right, 0px)); transform: none; padding: 6px 10px; }
+  .time input { width: 120px; }
+  .time span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<canvas id="view" tabindex="0" aria-label="โมเดลสามมิติบ้าน Pave 95/118 พร้อมส่วนต่อเติม"></canvas>
+
+<div class="loading" id="loading"><div><b>กำลังสร้างโมเดลบ้าน</b><span id="load-step">เตรียมพื้นผิววัสดุ</span></div></div>
+
+<details class="sheet" id="sheet" open>
+  <summary>
+    <div>
+      <h1>บ้าน Pave ปิ่นเกล้า-ศาลายา 95/118</h1>
+      <div class="sub">แบบ PPY-SH202-L · ต่อเติม 2569-09-28</div>
+    </div>
+    <span class="chev" aria-hidden="true">▾</span>
+  </summary>
+  <div class="body">
+    <div>
+      <div class="label">โหมด</div>
+      <div class="seg" role="group" aria-label="โหมดการดู">
+        <button id="m-orbit" aria-pressed="true">หมุนดูรอบ</button>
+        <button id="m-walk" aria-pressed="false">เดินชม</button>
+      </div>
+    </div>
+    <div>
+      <div class="label">ไปที่</div>
+      <div class="views" id="views"></div>
+    </div>
+    <div>
+      <div class="label">แสดง</div>
+      <div class="toggles">
+        <label><input type="checkbox" id="t-roof" checked> หลังคาและฝ้า</label>
+        <label><input type="checkbox" id="t-upper" checked> ชั้นบน</label>
+        <label><input type="checkbox" id="t-ext" checked> ส่วนต่อเติม</label>
+        <label><input type="checkbox" id="t-furn" checked> เฟอร์นิเจอร์</label>
+        <label><input type="checkbox" id="t-hq" checked> แสงเงาละเอียด</label>
+      </div>
+    </div>
+    <p class="help" id="help"></p>
+  </div>
+</details>
+
+<div class="time">
+  <span>เวลา</span>
+  <input type="range" id="tod" min="6" max="20.5" step="0.25" value="15.5" aria-label="เวลาของวัน">
+  <output id="tod-out" for="tod">15:30</output>
+</div>
+
+<div class="plan">
+  <canvas id="plan" width="352" height="400" aria-label="แปลนย่อ คลิกเพื่อย้ายไปจุดนั้น"></canvas>
+  <div class="readout"><span id="ro-a">—</span><span id="ro-b">—</span></div>
+</div>
+
+<div class="pad" id="pad" hidden>
+  <button class="up" data-k="w" aria-label="เดินหน้า">▲</button>
+  <button class="left" data-k="a" aria-label="ซ้าย">◀</button>
+  <button class="down" data-k="s" aria-label="ถอยหลัง">▼</button>
+  <button class="right" data-k="d" aria-label="ขวา">▶</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/objects/Sky.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/SSAOShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/FXAAShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/math/SimplexNoise.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/SSAOPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script>
+const DATA = __DATA__;
+
+(async function () {
+  const stepEl = document.getElementById('load-step');
+  const tick = (msg) => new Promise(r => { stepEl.textContent = msg; requestAnimationFrame(() => setTimeout(r, 0)); });
+  if (!window.THREE || !THREE.OrbitControls || !THREE.Sky) {
+    document.getElementById('loading').innerHTML = '<p class="err">โหลดไลบรารี 3 มิติไม่สำเร็จ ลองรีเฟรชหน้านี้อีกครั้ง</p>';
+    return;
+  }
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
+  const isSmall = () => window.innerWidth < 600;
+  const small = coarse && isSmall();
+
+  // ======================================================================
+  // พื้นผิววัสดุแบบ procedural (สร้างบน canvas)
+  // ======================================================================
+  function rng(seed) { let s = seed >>> 0; return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; }
+  function noiseGrid(seed, P) {
+    const r = rng(seed), g = new Float32Array(P * P);
+    for (let i = 0; i < P * P; i++) g[i] = r();
+    return (x, y) => {                     // x,y ใน [0,P) วนซ้ำได้
+      const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+      const sx = xf * xf * (3 - 2 * xf), sy = yf * yf * (3 - 2 * yf);
+      const x0 = ((xi % P) + P) % P, y0 = ((yi % P) + P) % P, x1 = (x0 + 1) % P, y1 = (y0 + 1) % P;
+      const a = g[y0 * P + x0], b = g[y0 * P + x1], c = g[y1 * P + x0], d = g[y1 * P + x1];
+      return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
+    };
+  }
+  const NZ = [noiseGrid(11, 8), noiseGrid(23, 16), noiseGrid(37, 32), noiseGrid(51, 64), noiseGrid(71, 128)];
+  // fbm วนซ้ำได้ (u,v ใน 0..1)
+  function fbm(u, v, base = 0, oct = 4) {
+    let s = 0, a = 0.5, n = 0;
+    for (let o = 0; o < oct; o++) { const k = Math.min(4, base + o), P = 8 << k; s += a * NZ[k](u * P, v * P); n += a; a *= 0.5; }
+    return s / n;
+  }
+  function makeTex(size, fn, opts = {}) {
+    const cm = document.createElement('canvas'), cb = document.createElement('canvas');
+    cm.width = cm.height = cb.width = cb.height = size;
+    const im = cm.getContext('2d').createImageData(size, size), ib = cb.getContext('2d').createImageData(size, size);
+    const out = [1, 0];
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      fn(x / size, y / size, out, x, y);
+      const i = (y * size + x) * 4, L = Math.max(0, Math.min(255, out[0] * 255)), B = Math.max(0, Math.min(255, out[1] * 255));
+      im.data[i] = im.data[i + 1] = im.data[i + 2] = L; im.data[i + 3] = 255;
+      ib.data[i] = ib.data[i + 1] = ib.data[i + 2] = B; ib.data[i + 3] = 255;
+    }
+    cm.getContext('2d').putImageData(im, 0, 0); cb.getContext('2d').putImageData(ib, 0, 0);
+    const mk = c => { const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; };
+    return { map: mk(cm), bump: mk(cb), bumpScale: opts.bump ?? 0.01 };
+  }
+  const frac = x => x - Math.floor(x);
+  function grid(u, v, cols, rows, gw, stagger = 0) {
+    const vy = v * rows, row = Math.floor(vy);
+    const ux = u * cols + (row % 2 ? stagger : 0), col = Math.floor(ux);
+    const fx = frac(ux), fy = frac(vy);
+    const edge = Math.min(fx, 1 - fx, (fy) * cols / rows, (1 - fy) * cols / rows);
+    return { col: ((col % cols) + cols) % cols, row, fx, fy, edge, grout: Math.min(fx, 1 - fx) < gw || Math.min(fy, 1 - fy) < gw * cols / rows * (rows / cols) };
+  }
+  const T = {};
+  const S = coarse ? 256 : 512;
+  const gens = {
+    plaster: () => makeTex(S, (u, v, o) => { const n = fbm(u, v, 1, 4); o[0] = 0.93 + 0.07 * n; o[1] = n; }, { bump: 0.004 }),
+    concrete: () => makeTex(S, (u, v, o, x, y) => { const n = fbm(u, v, 1, 5), sp = NZ[4](u * 128 + 3.3, v * 128) > 0.86 ? -0.08 : 0; o[0] = 0.82 + 0.16 * n + sp; o[1] = n; }, { bump: 0.006 }),
+    siding: () => makeTex(S, (u, v, o) => {
+      const k = u * 12, f = frac(k), n = fbm(u, v, 2, 3);
+      const groove = f < 0.035 ? 0.45 : f < 0.07 ? 0.8 : 1.0;
+      o[0] = (0.9 + 0.1 * n) * groove; o[1] = f < 0.05 ? 0 : 1;
+    }, { bump: 0.012 }),
+    tile60: () => makeTex(S, (u, v, o) => {
+      const cx = Math.floor(u * 2), cy = Math.floor(v * 2), fx = frac(u * 2), fy = frac(v * 2);
+      const gw = 0.006, gr = fx < gw || fx > 1 - gw || fy < gw || fy > 1 - gw;
+      const tone = 0.95 + 0.05 * rng(cx * 7 + cy * 13 + 5)();
+      const m = fbm(u, v, 1, 4);
+      o[0] = gr ? 0.78 : tone * (0.95 + 0.05 * m); o[1] = gr ? 0 : 1;
+    }, { bump: 0.004 }),
+    tile3060: () => makeTex(S, (u, v, o) => {
+      const fx = frac(u * 2), fy = frac(v * 4), gw = 0.008;
+      const gr = fx < gw || fx > 1 - gw || fy < gw * 2 || fy > 1 - gw * 2;
+      const tone = 0.93 + 0.07 * rng(Math.floor(u * 2) * 7 + Math.floor(v * 4) * 13)();
+      o[0] = gr ? 0.85 : tone * (0.96 + 0.04 * fbm(u, v, 2, 3)); o[1] = gr ? 0 : 1;
+    }, { bump: 0.004 }),
+    tile3030: () => makeTex(S, (u, v, o) => {
+      const fx = frac(u * 2), fy = frac(v * 2), gw = 0.012;
+      const gr = fx < gw || fx > 1 - gw || fy < gw || fy > 1 - gw;
+      o[0] = gr ? 1.6 : 0.9 + 0.1 * fbm(u, v, 2, 3); o[1] = gr ? 0 : 1;
+    }, { bump: 0.004 }),
+    laminate: () => makeTex(S, (u, v, o) => {
+      const rows = 12, row = Math.floor(v * rows), off = rng(row * 31 + 7)();
+      const uu = u * 2 + off, plank = Math.floor(uu), fu = frac(uu), fv = frac(v * rows);
+      const seam = fv < 0.03 || fv > 0.97 || fu < 0.004 || fu > 0.996;
+      const tone = 0.78 + 0.22 * rng(row * 17 + plank * 3 + 1)();
+      const grain = 0.85 + 0.15 * Math.sin((v * rows * 8 + 6 * fbm(u * 0.5 + off, v, 1, 3)) * Math.PI);
+      o[0] = seam ? 0.45 : tone * grain; o[1] = seam ? 0 : 0.6 + 0.4 * grain;
+    }, { bump: 0.003 }),
+    paver: () => makeTex(S, (u, v, o) => {
+      const fx = frac(u * 4), fy = frac(v * 2), gw = 0.012;
+      const gr = fx < gw || fx > 1 - gw || fy < gw * 0.5 || fy > 1 - gw * 0.5;
+      const n = fbm(u, v, 1, 5), sp = NZ[4](u * 128, v * 128 + 1.7) > 0.88 ? -0.07 : 0;
+      o[0] = gr ? 0.55 : 0.84 + 0.14 * n + sp + 0.04 * rng(Math.floor(u * 4) + Math.floor(v * 2) * 9)(); o[1] = gr ? 0 : n;
+    }, { bump: 0.006 }),
+    grass: () => makeTex(S, (u, v, o) => {
+      const n = fbm(u, v, 1, 4), b = NZ[4](u * 128, v * 128), c = NZ[4](u * 128 + 0.5, v * 128 + 0.3);
+      o[0] = 0.92 + 0.18 * (n - 0.5) + 0.30 * (b - 0.5) + 0.15 * (c - 0.5); o[1] = b;
+    }, { bump: 0.01 }),
+    asphalt: () => makeTex(S, (u, v, o) => { const b = NZ[4](u * 128, v * 128), n = fbm(u, v, 1, 4); o[0] = 0.8 + 0.25 * n + (b > 0.8 ? 0.35 : b < 0.15 ? -0.2 : 0); o[1] = b; }, { bump: 0.004 }),
+    rooftile: () => makeTex(S, (u, v, o) => {
+      const cols = 3, rows = 3, r = Math.floor(v * rows), uu = u * cols + (r % 2 ? 0.5 : 0);
+      const c = Math.floor(uu), fx = frac(uu), fy = frac(v * rows);
+      const prof = 0.72 + 0.28 * Math.pow(Math.abs(Math.cos(Math.PI * (fx * 2))), 0.6);     // ลอนคู่
+      const lap = fy > 0.86 ? 0.55 + 0.45 * (1 - (fy - 0.86) / 0.14) : 1;                // เงาซ้อนทับ
+      const tone = 0.88 + 0.12 * rng(c * 13 + r * 7 + 3)();
+      const n = fbm(u, v, 2, 3);
+      o[0] = prof * lap * tone * (0.92 + 0.08 * n) * 1.1; o[1] = prof * (fy > 0.86 ? 0.3 : 1);
+    }, { bump: 0.03 }),
+    metalsheet: () => makeTex(S, (u, v, o) => { const f = frac(u * 4); const rib = f < 0.12 ? 0.8 + 0.2 * Math.sin(f / 0.12 * Math.PI) : 0.92; o[0] = rib + 0.04 * fbm(u, v, 2, 2); o[1] = f < 0.12 ? Math.sin(f / 0.12 * Math.PI) : 0; }, { bump: 0.015 }),
+    woodgrain: () => makeTex(S, (u, v, o) => {
+      const g = Math.sin((v * 40 + 7 * fbm(u * 0.25, v, 1, 4)) * Math.PI);
+      const n = fbm(u, v, 2, 3);
+      o[0] = 0.78 + 0.14 * g + 0.12 * n; o[1] = 0.5 + 0.5 * g;
+    }, { bump: 0.002 }),
+    fabric: () => makeTex(S, (u, v, o, x, y) => { const w = ((x >> 1) + (y >> 1)) % 2 ? 1 : 0.9; const n = fbm(u, v, 2, 3); o[0] = w * (0.9 + 0.1 * n); o[1] = w; }, { bump: 0.002 }),
+    shag: () => makeTex(S, (u, v, o) => { const b = NZ[4](u * 128, v * 128), c = NZ[3](u * 64, v * 64); o[0] = 0.55 + 0.6 * b * c + 0.2; o[1] = b; }, { bump: 0.01 }),
+    marble: () => makeTex(S, (u, v, o) => {
+      const t = fbm(u, v, 0, 5), vein = Math.abs(Math.sin((u * 2 + v * 3 + 4 * t) * Math.PI));
+      o[0] = 0.96 + 0.04 * fbm(u, v, 3, 2) - 0.35 * Math.pow(1 - vein, 14) - 0.08 * Math.pow(1 - vein, 3); o[1] = 0.5;
+    }, { bump: 0.0 }),
+    stone: () => makeTex(S, (u, v, o) => {
+      // กระเบื้องพอร์ซเลนลายทรเวอร์ทีนโทนอุ่น 60x120 ซม. ปูแบบสลับแนว ร่องยาแนวบาง สีใกล้เนื้อกระเบื้อง
+      const rows = 4, row = Math.floor(v * rows), off = (row % 2) * 0.5 + rng(row * 17 + 3)() * 0.12;
+      const uu = u * 2 + off, col = Math.floor(uu), fx = frac(uu), fy = frac(v * rows);
+      const gw = 0.0022, gr = fx < gw || fx > 1 - gw || fy < gw * 2 || fy > 1 - gw * 2;
+      const r = rng(((col % 2) + 2) * 31 + row * 7 + 1)();
+      const tone = 0.90 + 0.10 * r;
+      const band = 0.5 + 0.5 * Math.sin((v * 26 + 3.5 * fbm(u * 0.6 + r, v * 0.6, 0, 4)) * Math.PI);
+      const pore = NZ[4](u * 128 + r * 9, v * 128) > 0.9 ? -0.10 : 0;
+      const grit = NZ[4](u * 128 + 0.3, v * 128 + 0.7);                // ผิวทรายหยาบเล็กน้อยแบบกันลื่น
+      o[0] = gr ? 0.86 : tone * (0.93 + 0.05 * band + 0.04 * fbm(u, v, 2, 3) + 0.03 * (grit - 0.5)) + pore;
+      o[1] = gr ? 0.2 : 0.75 + 0.25 * grit + pore;
+    }, { bump: 0.004 }),
+    woodplank: () => makeTex(S, (u, v, o) => {
+      const rows = 12, row = Math.floor(v * rows), off = rng(row * 29 + 5)();
+      const uu = u * 2 + off, plank = Math.floor(uu), fu = frac(uu), fv = frac(v * rows);
+      const seam = fv < 0.025 || fv > 0.975 || fu < 0.004 || fu > 0.996;
+      const tone = 0.72 + 0.28 * rng(row * 13 + plank * 7 + 2)();
+      const grain = 0.86 + 0.14 * Math.sin((v * rows * 10 + 5 * fbm(u * 0.4 + off, v, 1, 3)) * Math.PI);
+      o[0] = seam ? 0.42 : tone * grain; o[1] = seam ? 0 : 0.5 + 0.5 * grain;
+    }, { bump: 0.002 }),
+    pebble: () => makeTex(S, (u, v, o) => {
+      // หินกรวดกลมขาวอมเทา (Worley)
+      const N = 14, gx = u * N, gy = v * N, ix = Math.floor(gx), iy = Math.floor(gy);
+      let d1 = 9, d2 = 9, id = 0;
+      for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+        const cx = ((ix + i) % N + N) % N, cy = ((iy + j) % N + N) % N, rr = rng(cx * 97 + cy * 13 + 7);
+        const px = ix + i + 0.15 + 0.7 * rr(), py = iy + j + 0.15 + 0.7 * rr();
+        const d = Math.hypot(gx - px, gy - py);
+        if (d < d1) { d2 = d1; d1 = d; id = cx * 31 + cy; } else if (d < d2) d2 = d;
+      }
+      const edge = Math.min(1, (d2 - d1) * 5);
+      const t = 0.75 + 0.35 * rng(id + 11)();
+      o[0] = t * (0.45 + 0.55 * edge) * (0.9 + 0.2 * (1 - d1)); o[1] = edge * (1 - d1 * 0.6);
+    }, { bump: 0.02 }),
+    solar: () => makeTex(S, (u, v, o) => {
+      const fx = frac(u * 6), fy = frac(v * 6), gw = 0.03;
+      const line = fx < gw || fx > 1 - gw || fy < gw || fy > 1 - gw;
+      const bus = Math.abs(frac(u * 6) - 0.33) < 0.006 || Math.abs(frac(u * 6) - 0.66) < 0.006;
+      o[0] = line ? 3.5 : bus ? 2.2 : 0.9 + 0.1 * fbm(u, v, 2, 2); o[1] = line ? 1 : 0;
+    }, { bump: 0.001 }),
+    leaves: () => makeTex(S, (u, v, o) => { const n = fbm(u, v, 1, 5), b = NZ[4](u * 128, v * 128); o[0] = 0.35 + 1.1 * n * (0.6 + 0.6 * b); o[1] = n * b; }, { bump: 0.03 }),
+  };
+  await tick('เตรียมพื้นผิววัสดุ');
+  for (const k of Object.keys(gens)) T[k] = gens[k]();
+
+  // ======================================================================
+  // renderer / scene / sky
+  // ======================================================================
+  await tick('สร้างฉาก');
+  const canvas = document.getElementById('view');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, coarse ? 1.25 : 1.5));
+  renderer.autoClear = true;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.62;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.autoUpdate = false;          // ฉากนิ่ง: คำนวณเงาเฉพาะตอนเปลี่ยนเวลา/ซ่อนชิ้นส่วน
+  let dirty = true, lastMove = 0;
+  const invalidate = (shadows) => { dirty = true; lastMove = performance.now(); if (shadows) renderer.shadowMap.needsUpdate = true; };
+  const maxAniso = renderer.capabilities.getMaxAnisotropy();
+  for (const t of Object.values(T)) { t.map.anisotropy = t.bump.anisotropy = Math.min(8, maxAniso); }
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 600);
+  scene.fog = new THREE.Fog(0xc8d6e2, 140, 560);
+
+  const sky = new THREE.Sky(); sky.scale.setScalar(3000); scene.add(sky);
+  const envScene = new THREE.Scene(); const sky2 = new THREE.Sky(); sky2.scale.setScalar(3000); envScene.add(sky2);
+  // พื้นโลกในแผนที่แสงสะท้อน: ให้ฝ้าและชายคาได้แสงสะท้อนจากพื้นเหมือนจริง
+  const envGround = new THREE.Mesh(new THREE.CircleGeometry(2000, 32), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.30, 0.27, 0.22), side: THREE.DoubleSide }));
+  envGround.rotation.x = -Math.PI / 2; envGround.position.y = -2; envScene.add(envGround);
+  for (const s of [sky, sky2]) {
+    const u = s.material.uniforms;
+    u.turbidity.value = 6; u.rayleigh.value = 1.6; u.mieCoefficient.value = 0.004; u.mieDirectionalG.value = 0.82;
+  }
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  let envRT = null;
+
+  const sun = new THREE.DirectionalLight(0xfff0dc, 3.0);
+  sun.castShadow = true;
+  const SH = coarse ? 2048 : 4096;
+  sun.shadow.mapSize.set(SH, SH);
+  Object.assign(sun.shadow.camera, { left: -17, right: 17, top: 17, bottom: -17, near: 1, far: 120 });
+  sun.shadow.bias = -0.00025; sun.shadow.normalBias = 0.03; sun.shadow.radius = 2;
+  sun.target.position.set(7.4, 0, 7.2);
+  scene.add(sun, sun.target);
+  const fill = new THREE.HemisphereLight(0xcfe0ff, 0x6a6458, 0.0);
+  scene.add(fill);
+  const amb = new THREE.AmbientLight(0xffeedd, 0.15); scene.add(amb);
+  // พื้นดินไกลๆ ถึงขอบฟ้า
+  const far = new THREE.Mesh(new THREE.CircleGeometry(560, 48), new THREE.MeshStandardMaterial({ color: new THREE.Color(0.060, 0.140, 0.030), roughness: 1 }));
+  far.rotation.x = -Math.PI / 2; far.position.set(7.4, -0.06, 7.2); far.receiveShadow = true; scene.add(far);
+
+  // ======================================================================
+  // วัสดุ
+  // ======================================================================
+  const INTERIOR = new Set(['Int_Wall', 'Int_Olive', 'Moulding', 'Floor_Tile', 'Laminate', 'Bath_Tile', 'Bath_Floor', 'Ceiling',
+    'Velvet_Teal', 'Tile_Grey', 'Fabric_Beige', 'Fabric_Grey', 'Fabric_Navy', 'Fabric_Olive', 'Fabric_Pink', 'Linen_White', 'Rug_Shag',
+    'Curtain_Beige', 'Curtain_Sheer', 'Marble', 'Sage', 'Dark_Cabinet', 'White_Gloss', 'Ceramic', 'Oak', 'Door_Grey', 'Door_White', 'Wood_Tread']);
+  const SMOOTH = new Set(['Leaves', 'Leaves_Light', 'Ceramic', 'Smoke_Glass', 'Tank', 'Plant_Pot', 'Bark', 'Chrome', 'Brass', 'Mirror']);
+  const mats = {};
+  const ENV_EXT = 0.5, ENV_INT = 0.24;
+  for (const [name, d] of Object.entries(DATA.mats)) {
+    const c = new THREE.Color(d.c[0], d.c[1], d.c[2]);
+    let m;
+    if (d.glass) {
+      m = new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.03, metalness: 0.0, transparent: true, opacity: name === 'Glass_Rail' ? 0.22 : 0.16,
+        side: THREE.DoubleSide, depthWrite: false, envMapIntensity: 1.6, reflectivity: 0.9 });
+    } else if (d.sheer) {
+      m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.95, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
+    } else {
+      m = new THREE.MeshStandardMaterial({ color: c, roughness: d.r, metalness: d.m, side: THREE.DoubleSide });
+      if (d.tex && T[d.tex]) { m.map = T[d.tex].map; m.bumpMap = T[d.tex].bump; m.bumpScale = T[d.tex].bumpScale; }
+    }
+    if (d.emit) { m.emissive = c.clone(); m.emissiveIntensity = 0.3; m.userData.emit = d.emit; }
+    m.envMapIntensity = d.glass ? 1.1 : INTERIOR.has(name) ? ENV_INT : (name.startsWith('Roof') || name === 'Ridge') ? 0.3 : ENV_EXT;
+    if (name === 'Ceiling' || name === 'Soffit') m.envMapIntensity = 1.3;      // ฝ้าได้แสงสะท้อนจากพื้นห้อง
+    if (name === 'Paving' || name === 'Wood_Tile' || name === 'Step_Stone') m.envMapIntensity = 0.35;   // กระเบื้องนอกบ้านผิวด้าน กันลื่น ไม่สะท้อนเงา
+    m.userData.rep = d.rep || 1; m.userData.uv = d.uv || 'box';
+    mats[name] = m;
+  }
+  mats.Deck_Wood.vertexColors = true; mats.Wood_Tread.vertexColors = true;
+  mats.Laminate.roughness = 0.35;
+
+  // ======================================================================
+  // สร้าง mesh จากข้อมูลรูปทรง (x, y=สูง, z=ทิศใต้ของแปลน)
+  // ======================================================================
+  await tick('ประกอบตัวบ้าน');
+  const nrm = new THREE.Vector3();
+  function polyNormal(V, poly) {
+    nrm.set(0, 0, 0);
+    for (let i = 0; i < poly.length; i++) {
+      const a = poly[i] * 3, b = poly[(i + 1) % poly.length] * 3;
+      nrm.x += (V[a + 1] - V[b + 1]) * (V[a + 2] + V[b + 2]);
+      nrm.y += (V[a + 2] - V[b + 2]) * (V[a] + V[b]);
+      nrm.z += (V[a] - V[b]) * (V[a + 1] + V[b + 1]);
+    }
+    return nrm.lengthSq() > 0 ? nrm.normalize() : nrm.set(0, 1, 0);
+  }
+  function tris(V, poly, n) {
+    if (poly.length === 3) return [[0, 1, 2]];
+    if (poly.length === 4) return [[0, 1, 2], [0, 2, 3]];
+    const ax = Math.abs(n.x), ay = Math.abs(n.y), az = Math.abs(n.z);
+    const [i0, i1] = ay >= ax && ay >= az ? [0, 2] : ax >= az ? [1, 2] : [0, 1];
+    const contour = poly.map(i => new THREE.Vector2(V[i * 3 + i0], V[i * 3 + i1]));
+    return THREE.ShapeUtils.triangulateShape(contour, []);
+  }
+  function uvFor(x, y, z, n, mode, rep) {
+    const ax = Math.abs(n.x), ay = Math.abs(n.y), az = Math.abs(n.z);
+    if (mode === 'roof' && ay > 0.3 && ay < 0.98) {
+      const k = 1 / ay;
+      return ax > az ? [z / rep, x * k / rep] : [x / rep, z * k / rep];
+    }
+    if (ay >= ax && ay >= az) return [x / rep, z / rep];
+    if (ax >= az) return [z / rep, y / rep];
+    return [x / rep, y / rep];
+  }
+  function rand1(n) { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+
+  // จัดกลุ่มชิ้นส่วนตามการใช้งาน แล้วรวมเป็น mesh เดียวต่อวัสดุ เพื่อลด draw call
+  const WALKABLE = new Set(['Floor_Tile', 'Tile_Grey', 'Wood_Tile', 'Pebble', 'Step_Stone', 'Laminate', 'Bath_Floor', 'Porch_Tile', 'Concrete', 'Paver_Dark', 'Grass', 'Stone_Step',
+    'Wood_Tread', 'Asphalt', 'Kerb', 'Rug_Shag', 'Paving']);
+  const NOCOLLIDE = new Set(['Glass', 'Curtain_Sheer', 'Curtain_Beige', 'Light_Warm', 'LED_Strip', 'Ceiling', 'Roof_Tile', 'Ridge', 'Soffit',
+    'Fascia', 'Roof_Metal', 'Door_Grey', 'Door_White', 'Alu_Dark', 'Chrome', 'Brass', 'Smoke_Glass', 'Rug_Shag', 'Grass', 'Bark',
+    'Agave', 'Leaves', 'Leaves_Light', 'Soil']);
+  const FURN_SKIP = ['Floor_Tile', 'Ext_White', 'Ext_Wall', 'Ext_Dark', 'Glass', 'Alu_Dark', 'Int_Wall'];
+  function flagsOf(p) {
+    const l = p.l, o = p.o, mt = p.m;
+    const roof = l === 'roof' || l === 'ext_roof' || o === 'U_Ceiling' || o === 'X_Ceiling';
+    const upper = l === 'house_u' || l === 'furn_u' || l === 'roof' || o === 'G_Ceiling';
+    const ext = l === 'ext' || l === 'ext_roof' || o === 'Yard' || o === 'Tank';
+    const furn = l === 'furn_g' || l === 'furn_u' || ((o === 'X_Kitchen' || o === 'X_Multi') && !FURN_SKIP.includes(mt));
+    const walk = WALKABLE.has(mt);
+    const collide = !walk && !NOCOLLIDE.has(mt) && !roof && !['Stair', 'Stair_Tread', 'Lawn', 'Road', 'Drive', 'Trees', 'Plants', 'Planter'].includes(o);
+    const lvl = (l === 'house_u' || l === 'furn_u') ? 'u' : 'g';
+    return { roof, upper, ext, furn, walk, collide, lvl };
+  }
+  function partGeometry(part) {
+    const V = part.v, m = mats[part.m], rep = m.userData.rep, mode = m.userData.uv;
+    let g = new THREE.BufferGeometry();
+    if (SMOOTH.has(part.m)) {
+      const idx = [];
+      for (const poly of part.p) {
+        const n = polyNormal(V, poly);
+        for (const t of tris(V, poly, n)) idx.push(poly[t[0]], poly[t[1]], poly[t[2]]);
+      }
+      g.setAttribute('position', new THREE.Float32BufferAttribute(V, 3));
+      g.setIndex(idx);
+      g.computeVertexNormals();
+      const N = g.attributes.normal.array, uv = new Float32Array(V.length / 3 * 2), tn = new THREE.Vector3();
+      for (let i = 0; i < V.length / 3; i++) {
+        tn.set(N[i * 3], N[i * 3 + 1], N[i * 3 + 2]);
+        const [a, b] = uvFor(V[i * 3], V[i * 3 + 1], V[i * 3 + 2], tn, 'box', rep); uv[i * 2] = a; uv[i * 2 + 1] = b;
+      }
+      g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+      g = g.toNonIndexed();
+    } else {
+      const pos = [], nor = [], uv = [], col = [];
+      const woody = part.m === 'Wood_Tread';
+      part.p.forEach((poly, pi) => {
+        const n = polyNormal(V, poly);
+        const shade = woody ? 0.8 + rand1(Math.floor(pi / 6) + part.o.length) * 0.35 : 1;
+        for (const t of tris(V, poly, n)) for (const k of t) {
+          const i = poly[k] * 3, x = V[i], y = V[i + 1], z = V[i + 2];
+          pos.push(x, y, z); nor.push(n.x, n.y, n.z);
+          const [a, b] = uvFor(x, y, z, n, mode, rep); uv.push(a, b);
+          if (woody) col.push(shade, shade * 0.98, shade * 0.95);
+        }
+      });
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      if (woody) g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    }
+    return g;
+  }
+  function mergeGeoms(list) {
+    const out = new THREE.BufferGeometry();
+    for (const name of ['position', 'normal', 'uv', 'color']) {
+      if (!list.every(g => g.attributes[name])) continue;
+      const size = list[0].attributes[name].itemSize;
+      let len = 0; for (const g of list) len += g.attributes[name].array.length;
+      const arr = new Float32Array(len); let o = 0;
+      for (const g of list) { arr.set(g.attributes[name].array, o); o += g.attributes[name].array.length; }
+      out.setAttribute(name, new THREE.BufferAttribute(arr, size));
+    }
+    out.computeBoundingSphere();
+    return out;
+  }
+  const groups = new Map();
+  for (const part of DATA.parts) {
+    const f = flagsOf(part);
+    const key = [part.m, f.roof, f.upper, f.ext, f.furn, f.collide, f.lvl, part.o === 'Lawn' || part.o === 'Road'].join('|');
+    if (!groups.has(key)) groups.set(key, { mat: part.m, f, flat: part.o === 'Lawn' || part.o === 'Road' || part.o === 'Paving', geoms: [] });
+    groups.get(key).geoms.push(partGeometry(part));
+  }
+  const meshes = [];
+  for (const grp of groups.values()) {
+    const d = DATA.mats[grp.mat];
+    const mesh = new THREE.Mesh(mergeGeoms(grp.geoms), mats[grp.mat]);
+    mesh.userData = { ...grp.f, mat: grp.mat };
+    const glassy = !!(d.glass || d.sheer || d.emit);
+    mesh.castShadow = !glassy && !grp.flat;
+    mesh.receiveShadow = !d.glass;
+    if (glassy) mesh.renderOrder = 2;
+    mesh.matrixAutoUpdate = false; mesh.updateMatrix();
+    scene.add(mesh); meshes.push(mesh);
+  }
+  const by = f => meshes.filter(f);
+  const G_ROOF = by(m => m.userData.roof), G_UPPER = by(m => m.userData.upper);
+  const G_EXT = by(m => m.userData.ext), G_FURN = by(m => m.userData.furn);
+  const GROUND = by(m => m.userData.walk), COLLIDE = by(m => m.userData.collide);
+  const NOAO = by(m => DATA.mats[m.userData.mat].glass || DATA.mats[m.userData.mat].sheer);
+  let GROUND_V = GROUND, COLLIDE_V = COLLIDE;
+
+  // แนวต้นไม้รอบนอก (instanced) ให้ขอบฟ้าดูเป็นหมู่บ้านร่มรื่น แทนพื้นเปล่า
+  {
+    const crownGeo = (() => {
+      const parts = [], R = rng(5);
+      for (const [x, y, z, r] of [[0, 0, 0, 1], [0.55, -0.15, 0.2, 0.75], [-0.5, -0.1, -0.25, 0.7], [0.1, 0.45, -0.1, 0.65]]) {
+        const g = new THREE.IcosahedronGeometry(r, 2);
+        const a = g.attributes.position, nrmA = new Float32Array(a.count * 3);
+        for (let i = 0; i < a.count; i++) {
+          const px = a.getX(i), py = a.getY(i), pz = a.getZ(i), L = Math.hypot(px, py, pz) || 1;
+          nrmA[i * 3] = px / L; nrmA[i * 3 + 1] = py / L; nrmA[i * 3 + 2] = pz / L;     // นอร์มอลทรงกลม ให้ทรงพุ่มนุ่ม
+          const k = 1 + 0.10 * Math.sin(px * 7.1 + pz * 5.3) * Math.cos(py * 6.7);
+          a.setXYZ(i, px * k + x, py * k * 0.85 + y, pz * k + z);
+        }
+        g.setAttribute('normal', new THREE.BufferAttribute(nrmA, 3)); parts.push(g);
+      }
+      return mergeGeoms(parts);
+    })();
+    const trunkGeo = new THREE.CylinderGeometry(0.07, 0.11, 1, 6).translate(0, 0.5, 0);
+    const N = coarse ? 70 : 150, R = rng(77);
+    const crowns = new THREE.InstancedMesh(crownGeo, new THREE.MeshStandardMaterial({ color: 0xffffff, map: T.leaves.map, roughness: 0.9 }), N);
+    const trunks = new THREE.InstancedMesh(trunkGeo, mats.Bark, N);
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3(), col = new THREE.Color();
+    const cx = 7.4, cz = 7.2;
+    for (let i = 0; i < N; i++) {
+      const ring = i < N * 0.45 ? 0 : 1;
+      const a = R() * Math.PI * 2, r = ring ? 38 + R() * 60 : 21 + R() * 16;
+      const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r;
+      const h = 3.5 + R() * (ring ? 6 : 4), cr = 1.3 + R() * 1.6 + h * 0.12;
+      q.setFromAxisAngle(ps.set(0, 1, 0), R() * 6.28);
+      m4.compose(ps.set(x, h * 0.62, z), q, sc.set(cr, cr * (0.8 + R() * 0.35), cr)); crowns.setMatrixAt(i, m4);
+      m4.compose(ps.set(x, 0, z), q, sc.set(1.4, h * 0.62, 1.4)); trunks.setMatrixAt(i, m4);
+      col.setHSL(0.24 + R() * 0.07, 0.45 + R() * 0.25, 0.10 + R() * 0.07); crowns.setColorAt(i, col);
+    }
+    crowns.instanceColor.needsUpdate = true;
+    for (const im of [crowns, trunks]) { im.castShadow = false; im.receiveShadow = true; scene.add(im); }
+  }
+
+  // ไฟกลางคืน: รวมดวงไฟใกล้กันเป็นกลุ่ม (เปิดใช้เฉพาะกลางคืน)
+  const clusters = new Map();
+  for (const L of DATA.lights) {
+    const key = [Math.round(L.p[0] / 3.2), Math.round(L.p[1] / 3), Math.round(L.p[2] / 3.2)].join(',');
+    const c = clusters.get(key) || { x: 0, y: 0, z: 0, w: 0, n: 0, l: L.l };
+    c.x += L.p[0]; c.y += L.p[1]; c.z += L.p[2]; c.w += L.w; c.n++;
+    clusters.set(key, c);
+  }
+  const nightLights = [];
+  for (const c of clusters.values()) {
+    const l = new THREE.PointLight(0xffd29a, 1, 8, 2);
+    l.position.set(c.x / c.n, c.y / c.n - 0.1, c.z / c.n);
+    l.userData = { w: Math.min(2.4, 0.4 + c.w / 35), layer: c.l };
+    l.visible = false;
+    scene.add(l); nightLights.push(l);
+  }
+  // ไฟผนังส่องขึ้น-ลง: แสงบนผนังแบบ additive (ไม่เพิ่มดวงไฟจริง)
+  const washTex = (() => {
+    const c = document.createElement('canvas'); c.width = 128; c.height = 256;
+    const ctx = c.getContext('2d'), im = ctx.createImageData(128, 256);
+    for (let y = 0; y < 256; y++) for (let x = 0; x < 128; x++) {
+      const v = y / 255, u = (x - 63.5) / 64;
+      const spread = 0.10 + 0.55 * v;
+      const a = Math.pow(1 - v, 1.4) * Math.exp(-(u * u) / (2 * spread * spread)) * Math.min(1, v * 12);
+      const i = (y * 128 + x) * 4;
+      im.data[i] = 255; im.data[i + 1] = 214; im.data[i + 2] = 150; im.data[i + 3] = Math.round(255 * Math.min(1, a));
+    }
+    ctx.putImageData(im, 0, 0);
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
+  })();
+  const washMat = new THREE.MeshBasicMaterial({ map: washTex, transparent: true, blending: THREE.AdditiveBlending,
+    depthWrite: false, opacity: 0.9, side: THREE.DoubleSide, fog: false });
+  const WASH = new THREE.Group(); WASH.visible = false; scene.add(WASH);
+  for (const w of DATA.washes || []) {
+    const [x, y, z, nx, nz] = w;
+    for (const dir of [1, -1]) {
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 1.05), washMat);
+      pl.position.set(x + nx * 0.012, y + dir * 0.58, z + nz * 0.012);
+      pl.rotation.y = Math.atan2(nx, nz);
+      if (dir > 0) pl.scale.y = -1;          // ให้ปลายสว่างอยู่ชิดโคมเสมอ
+      pl.matrixAutoUpdate = false; pl.updateMatrix();
+      WASH.add(pl);
+    }
+  }
+
+  // ======================================================================
+  // post processing
+  // ======================================================================
+  // เรนเดอร์ 2 แบบ
+  //  - ขณะขยับ: วาดเร็วลง render target แบบ MSAA แล้วปรับโทนสีหนึ่งรอบ
+  //  - ขณะหยุดนิ่ง: สะสมภาพหลายรอบ (สุ่มทิศแดดเล็กน้อย + เลื่อนกล้องระดับซับพิกเซล + AO) ได้เงานุ่ม ขอบเนียน แล้วหยุดเอง
+  const isGL2 = renderer.capabilities.isWebGL2;
+  const halfOK = isGL2 ? renderer.extensions.has('EXT_color_buffer_float') || renderer.extensions.has('EXT_color_buffer_half_float')
+                       : renderer.extensions.has('EXT_color_buffer_half_float');
+  const ACC_TYPE = halfOK ? THREE.HalfFloatType : THREE.UnsignedByteType;
+  const rtOpts = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, depthBuffer: true };
+  let rtLive, rtSample, accA, accB, rtBloom;
+  function makeTargets(w, h) {
+    for (const t of [rtLive, rtSample, accA, accB, rtBloom]) if (t) t.dispose();
+    if (isGL2 && THREE.WebGLMultisampleRenderTarget) {
+      rtLive = new THREE.WebGLMultisampleRenderTarget(w, h, rtOpts); rtLive.samples = 4;
+    } else rtLive = new THREE.WebGLRenderTarget(w, h, rtOpts);
+    rtLive.texture.encoding = THREE.sRGBEncoding;                 // ภาพเร็วเก็บเป็น sRGB 8 บิต (ไม่มีแถบสี)
+    rtSample = new THREE.WebGLRenderTarget(w, h, { ...rtOpts, type: ACC_TYPE });
+    accA = new THREE.WebGLRenderTarget(w, h, { ...rtOpts, type: ACC_TYPE, depthBuffer: false });
+    accB = accA.clone();
+    rtBloom = new THREE.WebGLRenderTarget(w, h, { ...rtOpts, type: ACC_TYPE, depthBuffer: false });
+  }
+  const quad = new THREE.FullScreenQuad(null);
+  const accMat = new THREE.ShaderMaterial({
+    uniforms: { tPrev: { value: null }, tNew: { value: null }, tAO: { value: null }, w: { value: 1 }, aoAmt: { value: 0 } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+    fragmentShader: `uniform sampler2D tPrev, tNew, tAO; uniform float w, aoAmt; varying vec2 vUv;
+      void main(){ vec3 c = texture2D(tNew, vUv).rgb; float ao = texture2D(tAO, vUv).r; c *= mix(1.0, ao, aoAmt);
+        gl_FragColor = vec4(mix(texture2D(tPrev, vUv).rgb, c, w), 1.0); }`,
+    depthTest: false, depthWrite: false
+  });
+  const gradeMat = new THREE.ShaderMaterial({
+    uniforms: { tSrc: { value: null }, srcSRGB: { value: 1 }, sat: { value: 1.06 }, warm: { value: 0.015 }, vig: { value: 0.32 },
+                lift: { value: 0.0 }, seed: { value: 0 } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+    fragmentShader: `uniform sampler2D tSrc; uniform float srcSRGB, sat, warm, vig, lift, seed; varying vec2 vUv;
+      vec3 toSRGB(vec3 c){ c = max(c, 0.0); return mix(c * 12.92, 1.055 * pow(c, vec3(1.0/2.4)) - 0.055, step(0.0031308, c)); }
+      float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233)) + seed) * 43758.5453); }
+      void main(){
+        vec3 c = texture2D(tSrc, vUv).rgb;
+        if (srcSRGB < 0.5) c = toSRGB(c);
+        float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+        c = mix(vec3(l), c, sat);
+        c *= vec3(1.0 + warm, 1.0 + warm * 0.25, 1.0 - warm);
+        c = c * (1.0 - lift) + lift;
+        c = mix(c, c * c * (3.0 - 2.0 * c), 0.12);                    // S-curve เบาๆ
+        vec2 d = vUv - 0.5; c *= 1.0 - vig * dot(d, d) * 1.4;
+        c += (hash(gl_FragCoord.xy) - 0.5) / 255.0;                     // dither กันแถบสี
+        gl_FragColor = vec4(c, 1.0);
+      }`,
+    depthTest: false, depthWrite: false
+  });
+  function blit(mat, target) { quad.material = mat; renderer.setRenderTarget(target); quad.render(renderer); }
+  function display(tex, isSRGB) {
+    gradeMat.uniforms.tSrc.value = tex; gradeMat.uniforms.srcSRGB.value = isSRGB ? 1 : 0;
+    gradeMat.uniforms.seed.value = (gradeMat.uniforms.seed.value + 1.618) % 100;
+    blit(gradeMat, null);
+  }
+  // AO (ใช้ส่วนคำนวณ AO ของ SSAOPass อย่างเดียว ภาพหลักเรนเดอร์เอง)
+  let ssao = null, bloom = null;
+  function buildComposer() {
+    // ไม่ใช้ SSAO แล้ว (สร้างขอบสว่าง/ดำหลอกตาตามแนวผนัง) เงานุ่มได้จากการสะสมภาพแทน
+    if (bloom || !THREE.UnrealBloomPass) return;
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    bloom = new THREE.UnrealBloomPass(new THREE.Vector2(w, h), 0.6, 0.55, 0.82);
+    sizeComposer();
+  }
+  function renderAO() {
+    ssao.ssaoMaterial.uniforms.kernelRadius.value = ssao.kernelRadius;
+    ssao.ssaoMaterial.uniforms.minDistance.value = ssao.minDistance;
+    ssao.ssaoMaterial.uniforms.maxDistance.value = ssao.maxDistance;
+    const vis = NOAO.map(m => m.visible); NOAO.forEach(m => m.visible = false);
+    const sv = sky.visible; sky.visible = false;
+    ssao.renderOverride(renderer, ssao.normalMaterial, ssao.normalRenderTarget, 0x7777ff, 1.0);
+    NOAO.forEach((m, i) => m.visible = vis[i]); sky.visible = sv;
+    ssao.renderPass(renderer, ssao.ssaoMaterial, ssao.ssaoRenderTarget);
+    ssao.renderPass(renderer, ssao.blurMaterial, ssao.blurRenderTarget);
+    return ssao.blurRenderTarget.texture;
+  }
+  const whiteTex = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1); whiteTex.needsUpdate = true;
+  function sizeComposer() {
+    const w = canvas.clientWidth, h = canvas.clientHeight, pr = renderer.getPixelRatio();
+    makeTargets(Math.round(w * pr), Math.round(h * pr));
+    if (ssao) ssao.setSize(Math.round(w * pr), Math.round(h * pr));
+    if (bloom) bloom.setSize(Math.round(w * pr), Math.round(h * pr));
+  }
+  function renderLive() {
+    if (accN > 0 && accN < ACC_MAX && !isNight) {     // หยุดสะสมกลางทาง: คืนตำแหน่งแดด
+      sun.position.copy(sun.target.position).addScaledVector(sunDir, 50);
+      renderer.shadowMap.needsUpdate = true;
+    }
+    renderer.setRenderTarget(rtLive); renderer.clear(); renderer.render(scene, camera);
+    display(rtLive.texture, true);
+  }
+  // สุ่มแบบ Halton เพื่อกระจายตัวอย่างสม่ำเสมอ
+  const halton = (i, b) => { let f = 1, r = 0; while (i > 0) { f /= b; r += f * (i % b); i = Math.floor(i / b); } return r; };
+  const ACC_MAX = 40;
+  let accN = 0;
+  const sunBase = new THREE.Vector3(), tmpV = new THREE.Vector3(), tmpU = new THREE.Vector3();
+  function renderSample() {
+    const w = rtSample.width, h = rtSample.height, i = accN + 1;
+    const jx = halton(i, 2) - 0.5, jy = halton(i, 3) - 0.5;
+    camera.setViewOffset(w, h, jx, jy, w, h);
+    if (!isNight) {                                    // แดดเป็นแผ่นจานกว้าง ~1.4° ให้ขอบเงานุ่ม
+      const r = Math.sqrt(halton(i, 5)) * 0.024, a = halton(i, 7) * Math.PI * 2;
+      tmpU.set(0, 1, 0).cross(sunDir).normalize(); tmpV.copy(sunDir).cross(tmpU).normalize();
+      sun.position.copy(sun.target.position).addScaledVector(sunDir, 50)
+        .addScaledVector(tmpU, Math.cos(a) * r * 50).addScaledVector(tmpV, Math.sin(a) * r * 50);
+      renderer.shadowMap.needsUpdate = true;
+    }
+    renderer.setRenderTarget(rtSample); renderer.clear(); renderer.render(scene, camera);
+    const ao = whiteTex;
+    accMat.uniforms.tPrev.value = accA.texture; accMat.uniforms.tNew.value = rtSample.texture;
+    accMat.uniforms.tAO.value = ao; accMat.uniforms.aoAmt.value = 0;
+    accMat.uniforms.w.value = 1 / (accN + 1);
+    blit(accMat, accB);
+    [accA, accB] = [accB, accA];
+    accN++;
+    camera.clearViewOffset();
+    let out = accA.texture;
+    if (bloom && isNight) {
+      accMat.uniforms.tPrev.value = accA.texture; accMat.uniforms.tNew.value = accA.texture; accMat.uniforms.tAO.value = whiteTex;
+      accMat.uniforms.w.value = 1; accMat.uniforms.aoAmt.value = 0;
+      blit(accMat, rtBloom);
+      bloom.render(renderer, null, rtBloom, 0, false);
+      out = rtBloom.texture;
+    }
+    display(out, false);
+    if (accN >= ACC_MAX) {                             // เสร็จแล้ว คืนตำแหน่งแดดสำหรับการวาดแบบเร็ว
+      sun.position.copy(sun.target.position).addScaledVector(sunDir, 50);
+      renderer.shadowMap.needsUpdate = true;
+    }
+  }
+
+  // ======================================================================
+  // เวลาของวัน: แดด ท้องฟ้า แสงสะท้อน
+  // ======================================================================
+  const sunDir = new THREE.Vector3();
+  let isNight = false;
+  function setTime(h, rebuildEnv) {
+    const t = (h - 6.2) / 12.2;                         // 0 = เช้า 1 = ค่ำ
+    const el = Math.sin(Math.PI * Math.max(-0.08, Math.min(1.08, t))) * 72 * Math.PI / 180;
+    const az = Math.PI * Math.max(-0.1, Math.min(1.1, t));   // ตะวันออก -> ใต้ -> ตะวันตก
+    sunDir.set(Math.cos(az), Math.sin(el), 0.45 * Math.sin(az) + 0.15).normalize();
+    if (h > 18.6 || h < 6.1) sunDir.y = Math.min(sunDir.y, -0.06);
+    for (const s of [sky, sky2]) s.material.uniforms.sunPosition.value.copy(sunDir);
+    const day = Math.max(0, Math.min(1, sunDir.y * 6));
+    isNight = sunDir.y < 0.02;
+    sun.position.copy(sun.target.position).addScaledVector(sunDir, 50);
+    sun.intensity = 3.4 * day;
+    amb.intensity = isNight ? 0.02 : 0.10 + 0.08 * day;
+    const warm = Math.max(0, Math.min(1, 1 - sunDir.y * 2.5));
+    sun.color.setRGB(1, 0.93 - 0.25 * warm, 0.84 - 0.42 * warm);
+    renderer.toneMappingExposure = isNight ? 0.85 : 0.52 + 0.06 * day;
+    fill.intensity = isNight ? 0.04 : 0.0;
+    scene.fog.color.setRGB(isNight ? 0.02 : 0.70, isNight ? 0.025 : 0.78, isNight ? 0.04 : 0.86);
+    for (const m of Object.values(mats)) if (m.userData.emit) m.emissiveIntensity = isNight ? m.userData.emit * 0.5 : 0.25;
+    for (const l of nightLights) l.intensity = l.userData.w;
+    sun.castShadow = !isNight;
+    applyLights();
+    envGround.material.color.setRGB(0.30, 0.27, 0.22).multiplyScalar(isNight ? 0.02 : 0.25 + 0.75 * day);
+    if (rebuildEnv) {
+      if (envRT) envRT.dispose();
+      envRT = pmrem.fromScene(envScene, 0, 0.1, 5000);
+      scene.environment = envRT.texture;
+    }
+    invalidate(true);
+    const hh = Math.floor(h), mm = Math.round((h - hh) * 60);
+    todOut.textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  }
+  const tod = document.getElementById('tod'), todOut = document.getElementById('tod-out');
+  const hq = document.getElementById('t-hq');
+  tod.addEventListener('input', () => setTime(+tod.value, false));
+  tod.addEventListener('change', () => setTime(+tod.value, true));
+
+  // ======================================================================
+  // การควบคุม: หมุนดู / เดินชม
+  // ======================================================================
+  const orbit = new THREE.OrbitControls(camera, canvas);
+  orbit.enableDamping = true; orbit.dampingFactor = 0.08;
+  orbit.maxPolarAngle = Math.PI * 0.49; orbit.minDistance = 1.0; orbit.maxDistance = 80;
+  const walk = { x: 0, z: 0, yaw: 0, pitch: 0, floor: 0 };
+  let mode = 'orbit';
+  const keys = {};
+  const ray = new THREE.Raycaster(), DOWN = new THREE.Vector3(0, -1, 0);
+  const visible = arr => arr.filter(m => m.visible);
+  function floorAt(x, z, from) {
+    ray.set(new THREE.Vector3(x, from, z), DOWN); ray.far = from + 2;
+    const hit = ray.intersectObjects(GROUND_V, false)[0];
+    return hit ? hit.point.y : null;
+  }
+  const dirTmp = new THREE.Vector3(), oTmp = new THREE.Vector3();
+  function blocked(x, z, dx, dz) {
+    const len = Math.hypot(dx, dz); if (!len) return false;
+    dirTmp.set(dx / len, 0, dz / len);
+    const cols = COLLIDE_V;
+    for (const h of [0.4, 1.2]) {
+      oTmp.set(x, walk.floor + h, z); ray.set(oTmp, dirTmp); ray.far = len + 0.25;
+      if (ray.intersectObjects(cols, false).length) return true;
+    }
+    return false;
+  }
+  function placeWalk(x, z, tx, tz, from) {
+    walk.x = x; walk.z = z; walk.yaw = Math.atan2(-(tx - x), -(tz - z)); walk.pitch = -0.04;
+    const f = floorAt(x, z, from); walk.floor = f === null ? 0.15 : f;
+    camera.position.set(x, walk.floor + 1.6, z);
+  }
+  let drag = null;
+  canvas.addEventListener('pointerdown', e => { if (mode !== 'walk') return; drag = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointermove', e => {
+    if (mode !== 'walk' || !drag) return;
+    walk.yaw -= (e.clientX - drag.x) * 0.0042;
+    walk.pitch = Math.max(-1.25, Math.min(1.25, walk.pitch - (e.clientY - drag.y) * 0.0042));
+    drag = { x: e.clientX, y: e.clientY };
+    invalidate();
+  });
+  for (const ev of ['pointerup', 'pointercancel']) canvas.addEventListener(ev, () => { drag = null; });
+  canvas.addEventListener('wheel', e => {
+    if (mode !== 'walk') return;
+    e.preventDefault(); camera.fov = Math.max(35, Math.min(80, camera.fov + e.deltaY * 0.02)); camera.updateProjectionMatrix(); invalidate();
+  }, { passive: false });
+  const KEYMAP = { KeyW: 'w', ArrowUp: 'w', KeyS: 's', ArrowDown: 's', KeyA: 'a', ArrowLeft: 'a', KeyD: 'd', ArrowRight: 'd' };
+  window.addEventListener('keydown', e => {
+    if (mode !== 'walk' || e.target.tagName === 'INPUT') return;
+    if (KEYMAP[e.code]) { keys[KEYMAP[e.code]] = true; e.preventDefault(); }
+    if (e.key === 'Shift') keys.run = true;
+  });
+  window.addEventListener('keyup', e => { if (KEYMAP[e.code]) keys[KEYMAP[e.code]] = false; if (e.key === 'Shift') keys.run = false; });
+  window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+  document.querySelectorAll('#pad button').forEach(b => {
+    const k = b.dataset.k;
+    b.addEventListener('pointerdown', e => { keys[k] = true; b.setPointerCapture(e.pointerId); e.preventDefault(); });
+    for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => { keys[k] = false; });
+  });
+  function stepWalk(dt) {
+    const f = (keys.w ? 1 : 0) - (keys.s ? 1 : 0), s = (keys.d ? 1 : 0) - (keys.a ? 1 : 0);
+    if (f || s) {
+      const sp = (keys.run ? 3.4 : 1.6) * dt, sy = Math.sin(walk.yaw), cy = Math.cos(walk.yaw);
+      let dx = (-sy * f + cy * s) * sp, dz = (-cy * f - sy * s) * sp;
+      if (blocked(walk.x, walk.z, dx, dz)) {
+        if (!blocked(walk.x, walk.z, dx, 0)) dz = 0; else if (!blocked(walk.x, walk.z, 0, dz)) dx = 0; else dx = dz = 0;
+      }
+      if (dx || dz) {
+        const nf = floorAt(walk.x + dx, walk.z + dz, walk.floor + 0.5);
+        if (nf !== null && nf - walk.floor < 0.45 && walk.floor - nf < 0.6) { walk.x += dx; walk.z += dz; walk.floor = nf; }
+      }
+    }
+    const ty = walk.floor + 1.6;
+    const settling = Math.abs(ty - camera.position.y) > 0.002;
+    camera.position.set(walk.x, camera.position.y + (ty - camera.position.y) * Math.min(1, dt * 9), walk.z);
+    camera.rotation.set(walk.pitch, walk.yaw, 0, 'YXZ');
+    if (f || s || settling) invalidate();
+  }
+
+  // ======================================================================
+  // มุมมองสำเร็จรูป (พิกัด: x, z = แปลน x, y)
+  // ======================================================================
+  const VIEWS = [
+    { g: 'ภายนอก', name: 'หน้าบ้าน', lv: '', mode: 'orbit', cam: [7.0, 9.5, 27], tgt: [7, 2.6, 6.0] },
+    { g: 'ภายนอก', name: 'มุมสวนท้ายบ้าน', lv: '', mode: 'orbit', cam: [4.0, 7.0, 24.0], tgt: [12.5, 1.8, 9.5] },
+    { g: 'ภายนอก', name: 'หลังบ้าน / ส่วนต่อเติม', lv: '', mode: 'orbit', cam: [19, 11, -12], tgt: [7, 2, 0.5] },
+    { g: 'ภายนอก', name: 'มุมบน ชั้นล่าง', lv: '', mode: 'orbit', cam: [7.4, 31, 7.6], tgt: [7.4, 0, 7.0], roof: false, upper: false },
+    { g: 'ชั้นล่าง', name: 'ลานจอดรถ', lv: '+0.20', mode: 'walk', at: [2.6, 10.2], look: [4.9, 3.6], from: 2 },
+    { g: 'ชั้นล่าง', name: 'เฉลียงหน้าบ้าน', lv: '+0.50', mode: 'walk', at: [9.1, 9.6], look: [8.6, 5.5], from: 2 },
+    { g: 'ชั้นล่าง', name: 'ห้องรับแขก', lv: '+0.60', mode: 'walk', at: [9.6, 2.6], look: [8.4, 5.6], from: 2 },
+    { g: 'ชั้นล่าง', name: 'ทานอาหาร', lv: '+0.60', mode: 'walk', at: [10.4, 3.3], look: [6.6, 0.6], from: 2 },
+    { g: 'ชั้นล่าง', name: 'ครัวไทย', lv: '+0.60', mode: 'walk', at: [2.05, -0.8], look: [0.4, -1.9], from: 2 },
+    { g: 'ชั้นล่าง', name: 'ห้องซักรีด', lv: '+0.60', mode: 'walk', at: [4.9, -0.75], look: [2.9, -1.9], from: 2 },
+    { g: 'ชั้นล่าง', name: 'ห้องน้องแมว', lv: '+0.60', mode: 'walk', at: [5.0, -1.1], look: [7.2, -1.2], from: 2 },
+    { g: 'ชั้นล่าง', name: 'เทอเรส', lv: '+0.50', mode: 'walk', at: [14.6, 3.0], look: [9.5, -1.2], from: 2 },
+    { g: 'ชั้นล่าง', name: 'สวนท้าย', lv: '+0.50', mode: 'walk', at: [13.3, 16.2], look: [13.8, 6.5], from: 2 },
+    { g: 'ชั้นล่าง', name: 'ห้องอเนกประสงค์', lv: '+0.60', mode: 'walk', at: [11.3, 3.9], look: [13.5, 6.4], from: 2 },
+    { g: 'ชั้นล่าง', name: 'บันได', lv: '+0.60', mode: 'walk', at: [5.95, 3.4], look: [5.95, 5.5], from: 2 },
+    { g: 'ชั้นบน', name: 'ห้องนอนใหญ่', lv: '+3.70', mode: 'walk', at: [10.4, 2.2], look: [7.7, 4.9], from: 5.5 },
+    { g: 'ชั้นบน', name: 'ห้องนอน 2 (เหนือโรงรถ)', lv: '+3.70', mode: 'walk', at: [5.0, 4.0], look: [3.3, 6.6], from: 5.5 },
+    { g: 'ชั้นบน', name: 'โถงชั้นบน', lv: '+3.70', mode: 'walk', at: [6.1, 2.4], look: [6.0, 5.0], from: 5.5 },
+  ];
+  const viewsEl = document.getElementById('views');
+  let lastG = '';
+  for (const v of VIEWS) {
+    if (v.g !== lastG) { const d = document.createElement('div'); d.className = 'grp'; d.textContent = v.g; viewsEl.appendChild(d); lastG = v.g; }
+    const b = document.createElement('button');
+    b.innerHTML = `<span>${v.name}</span><span class="lv">${v.lv}</span>`;
+    b.addEventListener('click', () => goView(v));
+    v.btn = b; viewsEl.appendChild(b);
+  }
+  const tRoof = document.getElementById('t-roof'), tUpper = document.getElementById('t-upper'),
+        tExt = document.getElementById('t-ext'), tFurn = document.getElementById('t-furn');
+  function goView(v) {
+    VIEWS.forEach(o => o.btn.classList.toggle('on', o === v));
+    if (v.roof === false) tRoof.checked = false;
+    if (v.upper === false) tUpper.checked = false;
+    if (v.mode === 'walk') { tRoof.checked = true; tUpper.checked = true; }
+    applyToggles();
+    setMode(v.mode, true);
+    if (v.mode === 'orbit') { camera.position.set(...v.cam); orbit.target.set(...v.tgt); orbit.update(); }
+    else placeWalk(v.at[0], v.at[1], v.look[0], v.look[1], v.from);
+    if (isSmall()) document.getElementById('sheet').open = false;
+    invalidate();
+  }
+  const help = document.getElementById('help'), pad = document.getElementById('pad');
+  function setMode(m, quiet) {
+    if (m === 'walk' && mode !== 'walk' && !quiet) {
+      const t = orbit.target, inSite = t.x > -1 && t.x < 15.7 && t.z > -2.5 && (t.z < 10.8 || (t.x > 11.2 && t.z < 16.9));
+      if (inSite) placeWalk(t.x, t.z, t.x + (t.x - camera.position.x), t.z + (t.z - camera.position.z), 2);
+      else placeWalk(9.1, 9.6, 8.6, 5.5, 2);
+    }
+    if (m === 'orbit' && mode === 'walk' && !quiet) {
+      const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
+      orbit.target.copy(camera.position).addScaledVector(dir, 4);
+      camera.fov = isSmall() ? 62 : 55; camera.updateProjectionMatrix();
+    }
+    mode = m; orbit.enabled = m === 'orbit'; invalidate();
+    canvas.classList.toggle('walking', m === 'walk');
+    document.getElementById('m-orbit').setAttribute('aria-pressed', String(m === 'orbit'));
+    document.getElementById('m-walk').setAttribute('aria-pressed', String(m === 'walk'));
+    pad.hidden = !(m === 'walk' && coarse);
+    help.innerHTML = m === 'walk'
+      ? (coarse ? 'ลากหน้าจอเพื่อหันมอง ใช้ปุ่มลูกศรเพื่อเดิน เดินขึ้นบันไดได้ แตะแปลนย่อเพื่อย้ายไปจุดนั้น'
+                : 'ลากเมาส์เพื่อหันมอง เดินด้วย <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> กด <kbd>Shift</kbd> ค้างเพื่อเดินเร็ว เดินขึ้นบันไดได้ เลื่อนล้อเพื่อซูม')
+      : (coarse ? 'ลากนิ้วเดียวเพื่อหมุน สองนิ้วเพื่อซูมและเลื่อน' : 'ลากเพื่อหมุน คลิกขวาลากเพื่อเลื่อน เลื่อนล้อเพื่อซูม');
+  }
+  document.getElementById('m-orbit').addEventListener('click', () => setMode('orbit'));
+  document.getElementById('m-walk').addEventListener('click', () => setMode('walk'));
+
+  function applyToggles() {
+    for (const m of meshes) m.visible = true;
+    if (!tRoof.checked) G_ROOF.forEach(m => m.visible = false);
+    if (!tUpper.checked) G_UPPER.forEach(m => m.visible = false);
+    if (!tFurn.checked) G_FURN.forEach(m => m.visible = false);
+    if (!tExt.checked) G_EXT.forEach(m => m.visible = false);
+    applyLights();
+    GROUND_V = GROUND.filter(m => m.visible); COLLIDE_V = COLLIDE.filter(m => m.visible);
+    invalidate(true);
+  }
+  function applyLights() {
+    for (const l of nightLights) l.visible = isNight && !(l.userData.layer === 'ext' && !tExt.checked) &&
+      !((l.userData.layer === 'house_u' || l.userData.layer === 'furn_u') && !tUpper.checked);
+    WASH.visible = isNight;
+  }
+  [tRoof, tUpper, tExt, tFurn].forEach(t => t.addEventListener('change', applyToggles));
+  hq.addEventListener('change', () => { if (hq.checked) buildComposer(); invalidate(); });
+
+  // ======================================================================
+  // แปลนย่อ (วาดจากรูปทรงจริง แยกชั้นล่าง/ชั้นบน)
+  // ======================================================================
+  const planC = document.getElementById('plan'), pctx = planC.getContext('2d');
+  const PB = { x0: -1.5, x1: 16.2, z0: -2.9, z1: 17.4 };
+  const planImgs = {};
+  const sc = Math.min(planC.width / (PB.x1 - PB.x0), planC.height / (PB.z1 - PB.z0));
+  const ox = (planC.width - (PB.x1 - PB.x0) * sc) / 2, oy = (planC.height - (PB.z1 - PB.z0) * sc) / 2;
+  const toPlan = (x, z) => [ox + (x - PB.x0) * sc, oy + (z - PB.z0) * sc];
+  const fromPlan = (px, py) => [(px - ox) / sc + PB.x0, (py - oy) / sc + PB.z0];
+  const srgb = c => Math.round(255 * Math.min(1, Math.pow(c, 1 / 2.2)));
+  function drawPlanBase(level) {
+    const off = document.createElement('canvas'); off.width = planC.width; off.height = planC.height;
+    const c = off.getContext('2d');
+    c.fillStyle = '#6d8a55'; c.fillRect(0, 0, off.width, off.height);
+    const ymax = level === 'u' ? 5.2 : 2.6, ymin = level === 'u' ? 3.2 : -1;
+    const items = [];
+    for (const p of DATA.parts) {
+      if (['Lawn', 'Trees'].includes(p.o) || p.l === 'roof' || p.l === 'ext_roof') continue;
+      if (level === 'g' && (p.l === 'house_u' || p.l === 'furn_u')) continue;
+      const col = DATA.mats[p.m].c;
+      for (const poly of p.p) {
+        let hmax = -9, hmin = 99, area = 0;
+        for (let k = 0; k < poly.length; k++) {
+          const i = poly[k] * 3, j = poly[(k + 1) % poly.length] * 3;
+          hmax = Math.max(hmax, p.v[i + 1]); hmin = Math.min(hmin, p.v[i + 1]);
+          area += p.v[i] * p.v[j + 2] - p.v[j] * p.v[i + 2];
+        }
+        if (Math.abs(area) < 1e-4 || hmax > ymax || hmin < ymin) continue;
+        items.push([hmax, p, poly, col]);
+      }
+    }
+    items.sort((a, b) => a[0] - b[0]);
+    for (const [, p, poly, col] of items) {
+      c.fillStyle = `rgb(${srgb(col[0])},${srgb(col[1])},${srgb(col[2])})`;
+      c.beginPath();
+      poly.forEach((i, k) => { const [x, y] = toPlan(p.v[i * 3], p.v[i * 3 + 2]); k ? c.lineTo(x, y) : c.moveTo(x, y); });
+      c.closePath(); c.fill();
+    }
+    planImgs[level] = off;
+  }
+  const fwd = new THREE.Vector3();
+  function currentLevel() {
+    const y = mode === 'walk' ? walk.floor : orbit.target.y;
+    return y > (mode === 'walk' ? 2.4 : 3.4) ? 'u' : 'g';
+  }
+  function drawPlan() {
+    const lv = currentLevel();
+    pctx.drawImage(planImgs[lv], 0, 0);
+    const p = mode === 'walk' ? camera.position : orbit.target;
+    camera.getWorldDirection(fwd);
+    const [px, py] = toPlan(p.x, p.z), a = Math.atan2(fwd.z, fwd.x);
+    pctx.fillStyle = 'rgba(255,255,255,0.35)';
+    pctx.beginPath(); pctx.moveTo(px, py); pctx.arc(px, py, 30, a - 0.55, a + 0.55); pctx.closePath(); pctx.fill();
+    pctx.fillStyle = '#ffffff'; pctx.strokeStyle = '#1b2124'; pctx.lineWidth = 2;
+    pctx.beginPath(); pctx.arc(px, py, 6.5, 0, Math.PI * 2); pctx.fill(); pctx.stroke();
+  }
+  planC.addEventListener('click', e => {
+    const r = planC.getBoundingClientRect();
+    const [x, z] = fromPlan((e.clientX - r.left) * planC.width / r.width, (e.clientY - r.top) * planC.height / r.height);
+    if (mode === 'walk') {
+      const from = currentLevel() === 'u' ? 5.5 : 2.4;
+      const fl = floorAt(x, z, from); if (fl === null) return;
+      walk.x = x; walk.z = z; walk.floor = fl;
+    } else {
+      const d = new THREE.Vector3(x, orbit.target.y, z).sub(orbit.target);
+      orbit.target.add(d); camera.position.add(d);
+    }
+    invalidate();
+  });
+  const roA = document.getElementById('ro-a'), roB = document.getElementById('ro-b');
+  let lastRO = 0;
+  function readout(now) {
+    const p = mode === 'walk' ? camera.position : orbit.target;
+    roA.textContent = currentLevel() === 'u' ? 'ชั้นบน' : 'ชั้นล่าง';
+    roB.textContent = mode === 'walk' ? `พื้น +${walk.floor.toFixed(2)} ม.` : `กริด ${(p.x).toFixed(1)}, ${(p.z).toFixed(1)}`;
+  }
+
+  // ======================================================================
+  // วนเรนเดอร์
+  // ======================================================================
+  function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / h;
+    if (mode !== 'walk') camera.fov = w < 600 ? 62 : 55;
+    camera.updateProjectionMatrix(); sizeComposer(); invalidate();
+  }
+  window.addEventListener('resize', resize);
+  let last = performance.now();
+  orbit.addEventListener('change', () => invalidate());
+  // วาดใหม่เฉพาะเมื่อมีการเปลี่ยนแปลง: ระหว่างขยับใช้ภาพแบบเร็ว พอหยุดนิ่งจึงคำนวณแสงเงาละเอียดหนึ่งครั้ง
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (mode === 'walk') stepWalk(dt); else orbit.update();
+    if (dirty) {
+      renderLive();
+      dirty = false; accN = 0;
+      drawPlan(); readout(now);
+    } else if (hq.checked && accN < ACC_MAX && now - lastMove > 200 && !document.hidden) {
+      renderSample();
+    }
+    requestAnimationFrame(frame);
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) invalidate(); });
+
+  await tick('จัดแสงและเงา');
+  if (coarse) { hq.checked = false; }
+  if (hq.checked) buildComposer();
+  drawPlanBase('g'); drawPlanBase('u');
+  resize();
+  setTime(+tod.value, true);
+  if (isSmall()) document.getElementById('sheet').open = false;
+  goView(VIEWS[0]);
+  document.getElementById('loading').hidden = true;
+  requestAnimationFrame(frame);
+})();
+</script>

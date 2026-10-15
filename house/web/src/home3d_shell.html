@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Salaya House | Rendered</title>
+<meta name="description" content="Salaya House with its light rendered in Blender: soft daylight, bounced light and contact shadows baked into every surface, explorable in the browser.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ecebe7">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500&family=Newsreader:opsz,wght@6..72,300;6..72,400&display=swap">
+<link rel="stylesheet" href="/house-kit/house.css?v=__V__">
+</head>
+<body class="intro">
+<canvas id="view" tabindex="0" aria-label="Rendered 3D model of Salaya House"></canvas>
+
+<div class="loading" id="loading" role="status">
+  <div class="inner">
+    <h1>Salaya House</h1>
+    <p id="load-step">Loading the house</p>
+    <div class="bar"><i id="load-bar"></i></div>
+  </div>
+</div>
+
+<header class="mast ui">
+  <div class="title glass">
+    <h1>Salaya House</h1>
+    <p>Two-storey home in Pinklao–Salaya, with the 2026 extension</p>
+  </div>
+  <nav class="switch glass" aria-label="Choose a viewer">
+    <a href="/home/">Model<small>Live sunlight</small></a>
+    <a href="/home3d/" aria-current="page">Rendered<small>Light baked in Blender</small></a>
+  </nav>
+</header>
+
+<nav class="places glass ui" id="places" aria-label="Places"></nav>
+
+<div class="dock glass ui">
+  <button class="btn only-small" id="b-places" aria-expanded="false" aria-controls="places">Places</button>
+  <div class="seg" role="group" aria-label="How to move">
+    <button id="m-orbit" aria-pressed="true">Orbit</button>
+    <button id="m-walk" aria-pressed="false">Walk</button>
+  </div>
+  <span class="sep" aria-hidden="true"></span>
+  <div class="seg" role="group" aria-label="Light" id="lightseg">
+    <button id="l-day" aria-pressed="true">Day</button>
+    <button id="l-night" aria-pressed="false">Evening</button>
+  </div>
+  <span class="sep" aria-hidden="true"></span>
+  <button class="btn" id="b-layers" aria-expanded="false" aria-controls="layers">Layers</button>
+</div>
+
+<div class="layers glass ui" id="layers" hidden>
+  <label>Roof and ceilings <input type="checkbox" id="t-roof" checked></label>
+  <label>Upper floor <input type="checkbox" id="t-upper" checked></label>
+  <label>Extension <input type="checkbox" id="t-ext" checked></label>
+  <label>Furniture <input type="checkbox" id="t-furn" checked></label>
+</div>
+
+<div class="plan glass ui">
+  <canvas id="plan" width="336" height="382" aria-label="Floor plan. Click a spot to move there."></canvas>
+  <div class="ro"><span id="ro-a">Ground floor</span><span id="ro-b"></span></div>
+</div>
+
+<p class="hint ui" id="help"></p>
+
+<div class="pad" id="pad" hidden>
+  <button class="glass up" data-k="w" aria-label="Walk forward">▲</button>
+  <button class="glass left" data-k="a" aria-label="Step left">◀</button>
+  <button class="glass down" data-k="s" aria-label="Walk back">▼</button>
+  <button class="glass right" data-k="d" aria-label="Step right">▶</button>
+</div>
+
+<script src="/house-kit/three/three.min.js"></script>
+<script src="/house-kit/three/OrbitControls.js"></script>
+<script src="/house-kit/ui.js?v=__V__"></script>
+<script>
+__SCRIPT__
+</script>
+</body>
+</html>
