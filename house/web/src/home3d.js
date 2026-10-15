@@ -219,7 +219,7 @@
   const adapt = { inside: 0, target: 0 };
   function applyGains() {
     const k = adapt.inside;
-    const gIn = 0.62 + 0.38 * k, gOut = 1.0 + 1.5 * k;      // looking out from a room the garden reads bright
+    const gIn = 0.62 + 0.38 * k, gOut = 1.0 + 0.8 * k;      // looking out from a room the garden reads bright
     for (const m of bakedMats) {
       m.uniforms.gain.value = m.userData.interior ? gIn : gOut;
       m.uniforms.mixN.value = mixN;
@@ -380,10 +380,17 @@
 
   // inside a room? (something solid overhead) -> eyes adapt over ~0.8 s
   let lastCheck = 0;
+  // inside = a ceiling overhead and an indoor floor underfoot (eaves over the terrace do not count)
+  const INDOOR_FLOOR = new Set(['Floor_Tile', 'Tile_Grey', 'Laminate', 'Bath_Floor', 'Wood_Tread', 'Rug_Shag']);
   function checkInside(now) {
-    const p = mode === 'walk' ? camera.position : camera.position;
+    const p = camera.position;
     ray.set(p, UP); ray.far = 7;
-    const hit = ray.intersectObjects(CANOPY.filter(m => m.visible), false).length > 0;
+    let hit = ray.intersectObjects(CANOPY.filter(m => m.visible), false).length > 0;
+    if (hit) {
+      ray.set(p, DOWN); ray.far = 4;
+      const f = ray.intersectObjects(GROUND_V, false)[0];
+      hit = !!f && INDOOR_FLOOR.has(f.object.userData.mat);
+    }
     adapt.target = hit ? 1 : 0;
     if (now === true) { adapt.inside = adapt.target; applyGains(); }
   }
