@@ -48,6 +48,21 @@ export const thinkpadPayloadSchema = z.strictObject({
 		has_ipv4: z.boolean(),
 	}),
 	checks: z.array(thinkpadCheckSchema).max(20),
+	/** Windows Update restart state (read from the registry); optional for older reporters */
+	windows_update: z
+		.strictObject({
+			reboot_required: z.boolean(),
+			active_hours: z.strictObject({ start: z.number().int().min(0).max(23), end: z.number().int().min(0).max(23) }).nullable(),
+		})
+		.optional(),
+	/** Wi-Fi link (no SSID); optional for older reporters */
+	wifi: z
+		.strictObject({
+			connected: z.boolean(),
+			signal_pct: z.number().int().min(0).max(100).nullable(),
+			rx_mbps: z.number().int().min(0).max(100_000).nullable(),
+		})
+		.optional(),
 	duration_ms: ms,
 });
 
@@ -96,6 +111,8 @@ export type DeviceSource = "thinkpad" | "mac";
 
 /** Label of the check whose failure counts toward the "VPN/KBS down" alert. */
 export const KEY_CHECK_LABEL = "KBS QAS API";
+/** Optional public-internet check; tells "home internet down" from "VPN down". */
+export const INTERNET_CHECK_LABEL = "Internet";
 
 /** Max accepted request body (bytes). A real payload is well under 2 KB. */
 export const MAX_BODY_BYTES = 16 * 1024;

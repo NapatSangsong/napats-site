@@ -140,10 +140,11 @@ function Body({ view, now }: { view: StatusView; now: number }) {
 			<Hero view={view} now={now} />
 			<div className="tp-grid">
 				{tp && <ThinkpadCard tp={tp} now={now} />}
-				{tp && <VpnCard tp={tp} now={now} />}
-				{tp && <ReachCard tp={tp} now={now} />}
+				{tp && <VpnCard tp={tp} now={now} pred={view.history.prediction} />}
+				{tp && <ReachCard tp={tp} now={now} latency={view.history.latency} />}
 				<MacCard mac={view.mac} now={now} />
 			</div>
+			<StatsCard view={view} />
 			<Timeline view={view} />
 		</>
 	);
@@ -160,6 +161,8 @@ function Hero({ view, now }: { view: StatusView; now: number }) {
 			tone = "bad";
 			title = "ThinkPad ออฟไลน์";
 			sub = `heartbeat ล่าสุด ${when(tp.last_seen, now)} (${ago(age)})`;
+			if (view.home_meter_online === false) sub += " · มิเตอร์ไฟบ้านก็ offline → น่าจะไฟดับหรือเน็ตบ้านล่ม";
+			else if (view.home_meter_online === true) sub += " · มิเตอร์ไฟบ้านยัง online → บ้านมีไฟ ปัญหาอยู่ที่ ThinkPad";
 		} else {
 			const vpnOk = tp.data.vpn.up && tp.data.vpn.has_ipv4;
 			const failing = tp.data.checks.filter((c) => !c.ok);
@@ -220,6 +223,32 @@ function ThinkpadCard({ tp, now }: { tp: Tp; now: number }) {
 					)}
 				</Row>
 				<Row k="Sleep เมื่อเสียบไฟ">{sleep}</Row>
+				{tp.data.windows_update && (
+					<Row k="Windows Update">
+						{tp.data.windows_update.reboot_required ? (
+							<Pill tone="warn">
+								รอ restart
+								{tp.data.windows_update.active_hours
+									? ` · อาจ restart เอง ${two(tp.data.windows_update.active_hours.end)}:00–${two(tp.data.windows_update.active_hours.start)}:00`
+									: ""}
+							</Pill>
+						) : (
+							"ไม่มีค้าง"
+						)}
+					</Row>
+				)}
+				{tp.data.wifi && (
+					<Row k="Wi-Fi">
+						{tp.data.wifi.connected ? (
+							<>
+								<span>{tp.data.wifi.signal_pct ?? "—"}%</span>
+								{tp.data.wifi.rx_mbps != null && <span className="tp-mono">{tp.data.wifi.rx_mbps} Mbps</span>}
+							</>
+						) : (
+							<span className="tp-mono">ไม่ได้ใช้ Wi-Fi</span>
+						)}
+					</Row>
+				)}
 				{p.hibernate_ac_s != null && p.hibernate_ac_s !== 0 && (
 					<Row k="Hibernate เมื่อเสียบไฟ">
 						<Pill tone="warn">{dur(p.hibernate_ac_s)} · ควรเป็น Never</Pill>
@@ -230,7 +259,7 @@ function ThinkpadCard({ tp, now }: { tp: Tp; now: number }) {
 	);
 }
 
-function VpnCard({ tp, now }: { tp: Tp; now: number }) {
+function VpnCard({ tp, now, pred }: { tp: Tp; now: number; pred: StatusView["history"]["prediction"] }) {
 	const v = tp.data.vpn;
 	const up = v.up && v.has_ipv4;
 	return (
@@ -247,12 +276,15 @@ function VpnCard({ tp, now }: { tp: Tp; now: number }) {
 						? `${tp.vpn_since.truncated ? "ก่อน " : ""}${when(tp.vpn_since.since, now)} (${dur((now - tp.vpn_since.since) / 1000)}${tp.vpn_since.truncated ? "+" : ""})`
 						: "—"}
 				</Row>
+				<Row k="คาดว่าจะหลุด">
+					<Prediction pred={pred} now={now} />
+				</Row>
 			</div>
 		</div>
 	);
 }
 
-function ReachCard({ tp, now }: { tp: Tp; now: number }) {
+function ReachCard({ tp, now, latency }: { tp: Tp; now: number; latency: StatusView["history"]["latency"] }) {
 	const checks = tp.data.checks;
 	return (
 		<div className={`tp-card${tp.online ? "" : " dim"}`}>
@@ -272,6 +304,7 @@ function ReachCard({ tp, now }: { tp: Tp; now: number }) {
 							</>
 						}
 					>
+						<Spark s={latency.series[c.label]} />
 						{!c.ok && <Pill tone="bad">{!c.dns_ok ? "DNS" : !c.tcp_ok ? "TCP" : (c.http_status ?? "HTTP")}</Pill>}
 						{c.ok && c.http_status != null && <span className="tp-mono">{c.http_status}</span>}
 						<Ms v={c.latency_ms} />
@@ -401,6 +434,103 @@ function Timeline({ view }: { view: StatusView }) {
 				<span>
 					<Dot tone="off" /> ไม่มี heartbeat
 				</span>
+			</div>
+		</div>
+	);
+}
+
+const two = (h: number) => String(h).padStart(2, "0");
+
+function Prediction({ pred, now }: { pred: StatusView["history"]["prediction"]; now: number }) {
+	if (pred.n < 2) return <span className="tp-mono">ยังมีข้อมูลไม่พอ ({pred.n}/2 session)</span>;
+	const typical = pred.typical_ms != null ? dur(pred.typical_ms / 1000) : "—";
+	if (!pred.consistent) return <span className="tp-mono">ไม่สม่ำเสมอ (ปกติ ~{typical})</span>;
+	if (pred.predicted_end == null) return <span className="tp-mono">session ปกติ ~{typical}</span>;
+	const left = pred.predicted_end - now;
+	return left > 0 ? (
+		<Pill tone={left <= 30 * 60_000 ? "warn" : "ok"}>
+			ราว {when(pred.predicted_end, now)} · อีก {dur(left / 1000)}
+		</Pill>
+	) : (
+		<Pill tone="warn">เกินเวลาปกติแล้ว ({typical})</Pill>
+	);
+}
+
+/** 24 h latency sparkline (15-min averages); red ticks = failures in that slot */
+function Spark({ s }: { s: StatusView["history"]["latency"]["series"][string] | undefined }) {
+	if (!s) return null;
+	const W = 84;
+	const H = 18;
+	const vals = s.avg.filter((v): v is number => v != null);
+	if (vals.length < 2) return null;
+	const sorted = [...vals].sort((a, b) => a - b);
+	const cap = Math.max(1, sorted[Math.floor(sorted.length * 0.95)] ?? sorted[sorted.length - 1]);
+	const n = s.avg.length;
+	const x = (i: number) => (i / (n - 1)) * W;
+	const y = (v: number) => H - 2 - (Math.min(v, cap) / cap) * (H - 5);
+	const paths: string[] = [];
+	let d = "";
+	s.avg.forEach((v, i) => {
+		if (v == null) {
+			if (d) paths.push(d);
+			d = "";
+			return;
+		}
+		d += `${d ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`;
+	});
+	if (d) paths.push(d);
+	return (
+		<svg className="tp-spark" width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
+			{paths.map((p, i) => (
+				<path key={i} d={p} />
+			))}
+			{s.fails.map((f, i) => (f > 0 ? <rect key={`f${i}`} x={x(i) - 0.75} y={H - 3} width={1.5} height={3} className="tp-spark-fail" /> : null))}
+		</svg>
+	);
+}
+
+function StatsCard({ view }: { view: StatusView }) {
+	const st = view.history.stats;
+	if (!st) return null;
+	const pctTone = (p: number): Tone => (p >= 99 ? "ok" : p >= 90 ? "warn" : "bad");
+	const dayLabel = (d: number) => new Date(d).toLocaleDateString("th-TH", { timeZone: TZ, weekday: "short" });
+	return (
+		<div className="tp-card tp-tl">
+			<h2>
+				สถิติ 7 วัน
+				<span className="tp-mono">ตั้งแต่ {when(st.since, view.now)}</span>
+			</h2>
+			<div className="tp-stats">
+				<div>
+					<b className={`t-${pctTone(st.online_pct)}`}>{st.online_pct.toFixed(1)}%</b>
+					<span>online</span>
+				</div>
+				<div>
+					<b className={`t-${pctTone(st.vpn_pct)}`}>{st.vpn_pct.toFixed(1)}%</b>
+					<span>VPN ต่ออยู่</span>
+				</div>
+				<div>
+					<b>{st.vpn_drops}</b>
+					<span>VPN หลุด (ครั้ง)</span>
+				</div>
+				<div>
+					<b>{st.offline_events}</b>
+					<span>ออฟไลน์ (ครั้ง)</span>
+				</div>
+				<div>
+					<b>{st.longest_offline_ms ? dur(st.longest_offline_ms / 1000) : "—"}</b>
+					<span>หายนานสุด</span>
+				</div>
+			</div>
+			<div className="tp-days">
+				{st.days.map((d) => (
+					<div key={d.day} title={d.vpn_pct == null ? "ไม่มีข้อมูล" : `VPN ${d.vpn_pct.toFixed(1)}% · online ${d.online_pct?.toFixed(1)}%`}>
+						<div className="tp-day-bar">
+							<span className={d.vpn_pct == null ? "c-off" : `c-${pctTone(d.vpn_pct)}`} style={{ height: `${d.vpn_pct ?? 100}%` }} />
+						</div>
+						<span className="tp-mono">{dayLabel(d.day)}</span>
+					</div>
+				))}
 			</div>
 		</div>
 	);

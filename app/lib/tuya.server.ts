@@ -192,6 +192,22 @@ export async function getLive(env: TuyaEnv, kv: KVNamespace): Promise<LiveReadin
 	};
 }
 
+/**
+ * Is the house meter connected to Tuya cloud right now? The meter runs on
+ * mains + home Wi-Fi, so "offline" means a power cut or the home internet is
+ * down (used by /thinkpad to explain why the ThinkPad vanished).
+ * null = couldn't tell (API error).
+ */
+export async function getDeviceOnline(env: TuyaEnv, kv: KVNamespace): Promise<boolean | null> {
+	const v2 = await authedGet(env, kv, `/v2.0/cloud/thing/${env.TUYA_DEVICE_ID}`);
+	const r2 = v2.result as { is_online?: unknown } | undefined;
+	if (v2.success && typeof r2?.is_online === "boolean") return r2.is_online;
+	const v1 = await authedGet(env, kv, `/v1.0/devices/${env.TUYA_DEVICE_ID}`);
+	const r1 = v1.result as { online?: unknown } | undefined;
+	if (v1.success && typeof r1?.online === "boolean") return r1.online;
+	return null;
+}
+
 // ---------------- report-logs (history) ----------------
 
 interface LogSource {

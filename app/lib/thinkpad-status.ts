@@ -3,6 +3,7 @@
  * All times are ms epoch on the SERVER clock (received_at), so a drifting
  * reporter clock can't make a dead machine look alive.
  */
+import { latencySeries, predictVpnEnd, stats, type LatencyRow, type LatencySeries, type Prediction, type Run, type Stats } from "./thinkpad-history";
 import type { MacPayload, ThinkpadPayload } from "./thinkpad-schema";
 import type { HistoryPoint, StoredRow } from "./thinkpad-store.server";
 
@@ -64,9 +65,22 @@ export interface AlertState {
 	/** first bad heartbeat of the "VPN down / KBS fail" incident */
 	degraded_since: number | null;
 	degraded_kind: "vpn" | "kbs" | null;
+	/** first time a Windows Update restart was seen pending */
+	reboot_pending_since: number | null;
+	/** last known boot time (received_at − uptime), to spot restarts */
+	boot_at: number | null;
+	/** start of the VPN run we already sent the "session ending soon" warning for */
+	vpn_warned_run: number | null;
 }
 
-export const EMPTY_ALERT_STATE: AlertState = { offline_since: null, degraded_since: null, degraded_kind: null };
+export const EMPTY_ALERT_STATE: AlertState = {
+	offline_since: null,
+	degraded_since: null,
+	degraded_kind: null,
+	reboot_pending_since: null,
+	boot_at: null,
+	vpn_warned_run: null,
+};
 
 export interface StatusView {
 	now: number;
@@ -85,6 +99,13 @@ export interface StatusView {
 	};
 	timeline: { start: number; bucketMs: number; states: BucketState[] };
 	alerts: AlertState;
+	history: {
+		stats: Stats | null;
+		prediction: Prediction;
+		latency: LatencySeries;
+	};
+	/** house meter on Tuya cloud — only looked up while the ThinkPad is offline */
+	home_meter_online?: boolean | null;
 }
 
 export function buildView(args: {
@@ -93,6 +114,9 @@ export function buildView(args: {
 	mac: StoredRow | null;
 	history: HistoryPoint[];
 	alerts: AlertState | null;
+	runs?: Run[];
+	latency?: LatencyRow[];
+	homeMeterOnline?: boolean | null;
 }): StatusView {
 	const { now, thinkpad, mac, history } = args;
 	const start = timelineStart(now);
@@ -114,6 +138,12 @@ export function buildView(args: {
 			? { reporting: isOnline(mac.received_at, now), last_seen: mac.received_at, data: mac.payload as MacPayload }
 			: null,
 		timeline: timeline(history, now),
-		alerts: args.alerts ?? EMPTY_ALERT_STATE,
+		alerts: { ...EMPTY_ALERT_STATE, ...(args.alerts ?? {}) },
+		history: {
+			stats: stats(args.runs ?? [], now),
+			prediction: predictVpnEnd(args.runs ?? [], now),
+			latency: latencySeries(args.latency ?? [], now),
+		},
+		...(args.homeMeterOnline !== undefined ? { home_meter_online: args.homeMeterOnline } : {}),
 	};
 }

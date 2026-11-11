@@ -17,6 +17,8 @@ needs a reporter token.
 | Piece | Where |
 |---|---|
 | Table `device_status` | `docs/migrations/010_device_status.sql` |
+| SQL `thinkpad_runs` / `thinkpad_latency` (service role only) | `docs/migrations/011_device_status_functions.sql` |
+| History math (runs, 7-day stats, VPN session prediction, latency) | `app/lib/thinkpad-history.ts` |
 | Ingest `POST /api/thinkpad/report` | `app/routes/api/thinkpad.report.ts` |
 | Page + poll `GET /api/thinkpad/status` | `app/routes/thinkpad.tsx`, `app/routes/api/thinkpad.status.ts` |
 | Payload schema (zod, strict) | `app/lib/thinkpad-schema.ts` |
@@ -44,15 +46,30 @@ needs a reporter token.
   (gap > 3 min breaks it); `+` when the run reaches the 24 h window edge.
 - 24 h bar: 288 × 5-min slots — online+VPN / VPN partly / online without VPN / no heartbeat.
 - Mac: no report for > 3 min shows "Mac ไม่ได้รายงาน" (grey), not an error.
+- 7-day stats: % online, % VPN up, VPN drops, offline events, longest outage, per-day bars
+  (from `thinkpad_runs`, which breaks runs on a VPN change or a gap > 3 min).
+- Latency sparkline per check: 24 h of 15-min averages, red ticks = failures (`thinkpad_latency`).
+- "VPN likely to drop at": needs ≥ 2 sessions ≥ 30 min that ended with the VPN dropping
+  while the ThinkPad stayed online, and those must be within 15 % of each other (a fixed
+  session limit). Prediction = current session start + median length.
+- ThinkPad offline: the page asks Tuya whether the house meter is online.
+  Meter offline too → power cut or home internet down. Meter online → the problem is the ThinkPad.
+- Windows Update: restart pending (registry) + active hours, Wi-Fi signal/rate (no SSID).
 
 ## Alerts (LINE, via `pushLine` from energy)
 
 Checked every 5 min. Each incident pushes once when it starts and once when it clears
 (state in KV `thinkpad:alert-state`):
 
-- no ThinkPad heartbeat for > 10 min
+- no ThinkPad heartbeat for > 10 min, with the house-meter hint (power cut / home internet vs ThinkPad)
 - VPN adapter down **or** the `KBS QAS API` check failing on every heartbeat for ≥ 10 min
-  (not evaluated while the ThinkPad is offline)
+  (not evaluated while the ThinkPad is offline). Mentions home internet when the optional
+  `Internet` check fails too
+- Windows Update restart pending (once until it clears), with the window Windows may restart in
+- ThinkPad restarted (boot time moved), with whether the VPN is back
+- VPN session ~30 min before its usual length runs out (once per session; see prediction rules)
+- weekday digest at 08:00 Bangkok: ready or not, VPN since, failing checks, pending restart,
+  predicted drop, 7-day numbers
 
 Rows older than 14 days are deleted hourly by the same cron.
 

@@ -76,3 +76,17 @@
 .tp-ticks > span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .tp-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--muted); margin-top: 6px; }
 .tp-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.tp-spark { flex: none; }
+.tp-spark path { fill: none; stroke: var(--muted); stroke-width: 1.3; stroke-linejoin: round; }
+.tp-spark-fail { fill: var(--bad); }
+.tp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin: 4px 0 12px; }
+.tp-stats > div { display: flex; flex-direction: column; gap: 2px; }
+.tp-stats b { font-size: 20px; font-weight: 700; }
+.tp-stats span { color: var(--muted); font-size: 12.5px; }
+.t-ok { color: var(--ok); }
+.t-warn { color: var(--warn); }
+.t-bad { color: var(--bad); }
+.tp-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.tp-days > div { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.tp-day-bar { width: 100%; max-width: 36px; height: 48px; background: var(--off); border-radius: 4px; display: flex; align-items: flex-end; overflow: hidden; }
+.tp-day-bar > span { width: 100%; display: block; }
