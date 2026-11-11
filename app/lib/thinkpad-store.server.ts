@@ -5,6 +5,7 @@
  * so the page/ingest can be exercised under `pnpm dev` without Supabase.
  * Production never sets it.
  */
+import { computeRuns, type LatencyRow, type Run } from "./thinkpad-history";
 import { createServiceClient } from "./supabase.server";
 import type { DeviceSource, MacPayload, ThinkpadPayload } from "./thinkpad-schema";
 
@@ -33,6 +34,10 @@ export interface DeviceStatusStore {
 	/** ascending by time, received_at >= sinceMs */
 	history(source: DeviceSource, sinceMs: number): Promise<HistoryPoint[]>;
 	purge(beforeMs: number): Promise<void>;
+	/** thinkpad VPN/online runs since sinceMs (SQL thinkpad_runs) */
+	runs(sinceMs: number): Promise<Run[]>;
+	/** per-check latency buckets since sinceMs (SQL thinkpad_latency) */
+	latency(sinceMs: number, bucketS: number): Promise<LatencyRow[]>;
 }
 
 export interface StoreEnv {
@@ -59,6 +64,30 @@ export const memoryStore: DeviceStatusStore = {
 	},
 	async purge(beforeMs) {
 		for (let i = mem.length - 1; i >= 0; i--) if (mem[i].received_at < beforeMs) mem.splice(i, 1);
+	},
+	async runs(sinceMs) {
+		return computeRuns(await memoryStore.history("thinkpad", sinceMs));
+	},
+	async latency(sinceMs, bucketS) {
+		const b = bucketS * 1000;
+		const acc = new Map<string, LatencyRow & { sum: number; n: number }>();
+		for (const r of mem) {
+			if (r.source !== "thinkpad" || r.received_at < sinceMs) continue;
+			const bucket = Math.floor(r.received_at / b) * b;
+			for (const c of (r.payload as ThinkpadPayload).checks) {
+				const k = `${bucket}|${c.label}`;
+				const e = acc.get(k) ?? { bucket, label: c.label, avg_ms: null, fails: 0, samples: 0, sum: 0, n: 0 };
+				e.samples++;
+				if (!c.ok) e.fails++;
+				if (c.latency_ms != null) {
+					e.sum += c.latency_ms;
+					e.n++;
+				}
+				e.avg_ms = e.n ? Math.round(e.sum / e.n) : null;
+				acc.set(k, e);
+			}
+		}
+		return [...acc.values()].map(({ sum: _s, n: _n, ...row }) => row);
 	},
 };
 
@@ -102,6 +131,21 @@ function supabaseStore(env: StoreEnv): DeviceStatusStore {
 		async purge(beforeMs) {
 			const { error } = await db.from("device_status").delete().lt("received_at", new Date(beforeMs).toISOString());
 			if (error) throw new Error(`device_status purge: ${error.message}`);
+		},
+		async runs(sinceMs) {
+			const { data, error } = await db.rpc("thinkpad_runs", { p_since: new Date(sinceMs).toISOString() });
+			if (error) throw new Error(`thinkpad_runs: ${error.message}`);
+			return ((data ?? []) as Array<{ vpn_up: boolean; started_at: string; ended_at: string; beats: number; ended_by: Run["ended_by"] }>).map(
+				(r) => ({ vpn_up: r.vpn_up, start: Date.parse(r.started_at), end: Date.parse(r.ended_at), beats: r.beats, ended_by: r.ended_by }),
+			);
+		},
+		async latency(sinceMs, bucketS) {
+			const { data, error } = await db.rpc("thinkpad_latency", { p_since: new Date(sinceMs).toISOString(), p_bucket_s: bucketS });
+			if (error) throw new Error(`thinkpad_latency: ${error.message}`);
+			return ((data ?? []) as Array<{ bucket: string; label: string; avg_ms: number | null; fails: number; samples: number }>).map((r) => ({
+				...r,
+				bucket: Date.parse(r.bucket),
+			}));
 		},
 	};
 }

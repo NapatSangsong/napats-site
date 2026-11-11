@@ -268,7 +268,7 @@ describe("alerts", () => {
 		const r = evaluateAlerts(NOW, NOW, ten, S0);
 		expect(r.messages).toHaveLength(1);
 		expect(r.messages[0]).toContain("VPN");
-		expect(r.state).toEqual({ offline_since: null, degraded_since: NOW - 10 * MIN, degraded_kind: "vpn" });
+		expect(r.state).toMatchObject({ offline_since: null, degraded_since: NOW - 10 * MIN, degraded_kind: "vpn" });
 
 		// still down next tick → no repeat
 		expect(evaluateAlerts(NOW + 5 * MIN, NOW + 5 * MIN, [...ten, ...run(-1, -5, false)], r.state).messages).toHaveLength(0);
@@ -301,5 +301,189 @@ describe("alerts", () => {
 	it("a short VPN blip after coming back online doesn't alert", () => {
 		const h = [...run(60, 30), ...run(2, 0, false)]; // offline 28 min, then 3 bad beats
 		expect(evaluateAlerts(NOW, NOW, h, S0).messages).toHaveLength(0);
+	});
+});
+
+// ---------------- history / new alerts ----------------
+import { buildDigest, evaluateReboot, evaluateVpnExpiry, isDigestTime, willRaiseOffline } from "../thinkpad-alerts";
+import { computeRuns, latencySeries, latencySeriesStart, predictVpnEnd, stats, type Run } from "../thinkpad-history";
+
+const H = 60 * MIN;
+const run2 = (vpn: boolean, startMinAgo: number, endMinAgo: number, ended_by: Run["ended_by"]): Run => ({
+	vpn_up: vpn,
+	start: NOW - startMinAgo * MIN,
+	end: NOW - endMinAgo * MIN,
+	beats: startMinAgo - endMinAgo + 1,
+	ended_by,
+});
+
+describe("computeRuns (mirror of SQL thinkpad_runs)", () => {
+	it("splits on VPN change and on gaps > 3 min, labels how each run ended", () => {
+		const h = [...run(100, 61), ...run(60, 41, false), ...run(30, 0)]; // flip at 60, gap 41→30
+		const r = computeRuns(h);
+		expect(r.map((x) => [x.vpn_up, x.ended_by, x.beats])).toEqual([
+			[true, "change", 40],
+			[false, "offline", 20],
+			[true, "last", 31],
+		]);
+		expect(r[0].start).toBe(NOW - 100 * MIN);
+		expect(r[2].end).toBe(NOW);
+	});
+});
+
+describe("7-day stats", () => {
+	it("percentages, drops, offline events and longest gap", () => {
+		// 10 h observed: 6 h VPN, drop, 2 h no VPN, 1 h offline gap, 1 h VPN (ongoing)
+		const runs = [run2(true, 600, 241, "change"), run2(false, 240, 121, "offline"), run2(true, 60, 0, "last")];
+		const s = stats(runs, NOW)!;
+		expect(s.since).toBe(NOW - 600 * MIN);
+		expect(s.vpn_drops).toBe(1);
+		expect(s.offline_events).toBe(1);
+		expect(s.longest_offline_ms).toBe(61 * MIN);
+		expect(s.online_pct).toBeCloseTo(((360 + 120 + 61) / 600) * 100, 0);
+		expect(s.vpn_pct).toBeCloseTo(((360 + 61) / 600) * 100, 0);
+		expect(s.days).toHaveLength(7);
+		expect(s.days.slice(0, 5).every((d) => d.vpn_pct == null)).toBe(true);
+	});
+
+	it("counts the current outage when offline now", () => {
+		const s = stats([run2(true, 120, 30, "last")], NOW)!;
+		expect(s.offline_events).toBe(1);
+		expect(s.longest_offline_ms).toBe(30 * MIN);
+	});
+
+	it("null without data", () => {
+		expect(stats([], NOW)).toBeNull();
+	});
+});
+
+describe("VPN session prediction", () => {
+	const sessions = (lens: number[]) => {
+		const out: Run[] = [];
+		let t = 30 * 24 * 60; // minutes ago
+		for (const len of lens) {
+			out.push(run2(true, t, t - len + 1, "change"));
+			out.push(run2(false, t - len, t - len - 10, "change"));
+			t -= len + 11;
+		}
+		return out;
+	};
+
+	it("needs at least 2 completed sessions", () => {
+		expect(predictVpnEnd(sessions([720]), NOW)).toMatchObject({ n: 1, consistent: false, predicted_end: null });
+	});
+
+	it("consistent sessions predict the end of the current one", () => {
+		const runs = [...sessions([720, 715, 722]), run2(true, 700, 0, "last")];
+		const p = predictVpnEnd(runs, NOW);
+		expect(p).toMatchObject({ n: 3, consistent: true, typical_ms: 720 * MIN, current_start: NOW - 700 * MIN });
+		expect(p.predicted_end).toBe(NOW + 20 * MIN);
+	});
+
+	it("scattered sessions are not a fixed limit", () => {
+		const p = predictVpnEnd([...sessions([120, 600, 900]), run2(true, 30, 0, "last")], NOW);
+		expect(p.consistent).toBe(false);
+		expect(p.predicted_end).toBeNull();
+	});
+
+	it("short sessions (< 30 min) and offline-ended runs don't count", () => {
+		const runs = [run2(true, 900, 880, "change"), run2(true, 800, 100, "offline"), run2(true, 60, 0, "last")];
+		expect(predictVpnEnd(runs, NOW).n).toBe(0);
+	});
+
+	it("warns once, 30 min ahead, per VPN run", () => {
+		const runs = [...sessions([720, 715, 722]), run2(true, 700, 0, "last")];
+		const p = predictVpnEnd(runs, NOW);
+		const a = evaluateVpnExpiry(EMPTY_ALERT_STATE, p, NOW);
+		expect(a.messages).toHaveLength(1);
+		expect(a.messages[0]).toContain("น่าจะหลุด");
+		expect(evaluateVpnExpiry(a.state, p, NOW + MIN).messages).toHaveLength(0);
+		expect(evaluateVpnExpiry(EMPTY_ALERT_STATE, p, NOW - 20 * MIN).messages).toHaveLength(0); // 40 min left
+	});
+});
+
+describe("latency series", () => {
+	it("places 15-min buckets on a 96-slot axis", () => {
+		const start = latencySeriesStart(NOW);
+		const l = latencySeries(
+			[
+				{ bucket: start, label: "A", avg_ms: 100, fails: 0, samples: 15 },
+				{ bucket: start + 95 * 15 * MIN, label: "A", avg_ms: 300, fails: 2, samples: 15 },
+				{ bucket: start - 15 * MIN, label: "A", avg_ms: 999, fails: 0, samples: 1 },
+			],
+			NOW,
+		);
+		expect(l.series.A.avg).toHaveLength(96);
+		expect(l.series.A.avg[0]).toBe(100);
+		expect(l.series.A.avg[95]).toBe(300);
+		expect(l.series.A.fails[95]).toBe(2);
+		expect(l.series.A.avg.filter((v) => v != null)).toHaveLength(2);
+	});
+});
+
+describe("new alerts", () => {
+	const row = (over: Partial<ThinkpadPayload> = {}, ageMin = 0, uptimeS = 3600) => ({
+		source: "thinkpad" as const,
+		received_at: NOW - ageMin * MIN,
+		reported_at: null,
+		vpn_up: true,
+		kbs_ok: true,
+		payload: tpPayload({ uptime_s: uptimeS, ...over }),
+	});
+
+	it("offline alert says power cut / home internet when the house meter is offline too", () => {
+		const last = NOW - 15 * MIN;
+		expect(willRaiseOffline(NOW, last, EMPTY_ALERT_STATE)).toBe(true);
+		expect(evaluateAlerts(NOW, last, [], EMPTY_ALERT_STATE, { homeMeterOnline: false }).messages[0]).toContain("ไฟดับ");
+		expect(evaluateAlerts(NOW, last, [], EMPTY_ALERT_STATE, { homeMeterOnline: true }).messages[0]).toContain("บ้านมีไฟ");
+		expect(willRaiseOffline(NOW, last, { ...EMPTY_ALERT_STATE, offline_since: last })).toBe(false);
+	});
+
+	it("VPN-down alert points at home internet when the Internet check fails", () => {
+		const h = [...run(40, 11), ...run(10, 0, false)];
+		expect(evaluateAlerts(NOW, NOW, h, EMPTY_ALERT_STATE, { internetOk: false }).messages[0]).toContain("เน็ตบ้าน");
+	});
+
+	it("Windows Update restart pending: one warning with the restart window, cleared silently", () => {
+		const pending = row({ windows_update: { reboot_required: true, active_hours: { start: 5, end: 18 } } });
+		const a = evaluateReboot(EMPTY_ALERT_STATE, pending, NOW);
+		expect(a.messages).toHaveLength(1);
+		expect(a.messages[0]).toContain("18:00–05:00");
+		expect(evaluateReboot(a.state, pending, NOW + 5 * MIN).messages).toHaveLength(0);
+		const clear = evaluateReboot(a.state, { ...row({ windows_update: { reboot_required: false, active_hours: null } }), received_at: NOW + 10 * MIN }, NOW + 10 * MIN);
+		expect(clear.state.reboot_pending_since).toBeNull();
+	});
+
+	it("a boot-time jump is reported as a restart, with VPN state", () => {
+		const before = evaluateReboot(EMPTY_ALERT_STATE, row({}, 0, 36000), NOW);
+		expect(before.messages).toHaveLength(0);
+		const after = evaluateReboot(before.state, { ...row({ vpn: { adapter_found: true, up: false, has_ipv4: false } }, 0, 300), received_at: NOW + 10 * MIN }, NOW + 10 * MIN);
+		expect(after.messages[0]).toContain("restart");
+		expect(after.messages[0]).toContain("VPN ยังไม่ได้ต่อ");
+	});
+
+	it("stale heartbeat: no reboot judgement", () => {
+		const r = evaluateReboot(EMPTY_ALERT_STATE, row({ windows_update: { reboot_required: true, active_hours: null } }, 10), NOW);
+		expect(r.messages).toHaveLength(0);
+	});
+
+	it("digest only Mon–Fri 08:xx Bangkok", () => {
+		expect(isDigestTime(Date.UTC(2026, 10, 11, 1, 30))).toBe(true); // Wed 08:30 BKK
+		expect(isDigestTime(Date.UTC(2026, 10, 11, 2, 0))).toBe(false); // 09:00
+		expect(isDigestTime(Date.UTC(2026, 10, 14, 1, 30))).toBe(false); // Sat
+	});
+
+	it("digest text: ready / not ready", () => {
+		const base = buildView({ now: NOW, thinkpad: row(), mac: null, history: run(30, 0), alerts: null, runs: computeRuns(run(30, 0)) });
+		expect(buildDigest(base)).toContain("พร้อมทำงาน");
+		const p = tpPayload();
+		const bad = buildView({ now: NOW, thinkpad: row({ checks: [{ ...p.checks[0], ok: false }] }), mac: null, history: [], alerts: null });
+		expect(buildDigest(bad)).toContain("เข้าไม่ได้: KBS QAS API");
+	});
+
+	it("schema accepts the new optional fields and still accepts old payloads", () => {
+		expect(parsePayload("thinkpad", tpPayload({ windows_update: { reboot_required: true, active_hours: { start: 5, end: 18 } }, wifi: { connected: true, signal_pct: 92, rx_mbps: 2402 } })).ok).toBe(true);
+		expect(parsePayload("thinkpad", tpPayload()).ok).toBe(true);
+		expect(parsePayload("thinkpad", { ...tpPayload(), wifi: { connected: true, signal_pct: 92, rx_mbps: 1, ssid: "home" } }).ok).toBe(false);
 	});
 });

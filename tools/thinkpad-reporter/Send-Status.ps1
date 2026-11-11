@@ -163,6 +163,32 @@ try {
             Where-Object { $_.AddressState -eq 'Preferred' }).Count -gt 0
     }
 
+    # Windows Update restart state (registry, read-only)
+    $wu = $null
+    try {
+        $rebootReq = (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired') -or
+                     (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending')
+        $ah = $null
+        $ux = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings' -ErrorAction SilentlyContinue
+        if ($ux -and ($ux.PSObject.Properties.Name -contains 'ActiveHoursStart') -and ($ux.PSObject.Properties.Name -contains 'ActiveHoursEnd')) {
+            $ah = [ordered]@{ start = [int]$ux.ActiveHoursStart; end = [int]$ux.ActiveHoursEnd }
+        }
+        $wu = [ordered]@{ reboot_required = [bool]$rebootReq; active_hours = $ah }
+    } catch { }
+
+    # Wi-Fi link quality (no SSID is sent)
+    $wifi = $null
+    try {
+        $wl = (& netsh.exe wlan show interfaces 2>$null) -join "`n"
+        if ($wl -match '(?m)^\s*State\s*:\s*(\S+)') {
+            $connected = ($Matches[1] -eq 'connected')
+            $sig = $null; $rx = $null
+            if ($wl -match '(?m)^\s*Signal\s*:\s*(\d+)%') { $sig = [int]$Matches[1] }
+            if ($wl -match '(?m)^\s*Receive rate \(Mbps\)\s*:\s*([\d.]+)') { $rx = [int][double]$Matches[1] }
+            $wifi = [ordered]@{ connected = $connected; signal_pct = $sig; rx_mbps = $rx }
+        }
+    } catch { }
+
     $payload = [ordered]@{
         v           = 1
         reported_at = (Get-Date).ToUniversalTime().ToString('o')
@@ -182,6 +208,8 @@ try {
         checks      = @($results)
         duration_ms = [int]$sw.ElapsedMilliseconds
     }
+    if ($null -ne $wu) { $payload['windows_update'] = $wu }
+    if ($null -ne $wifi) { $payload['wifi'] = $wifi }
     $json = $payload | ConvertTo-Json -Depth 5 -Compress
 
     $fails = (@($results | Where-Object { -not $_.ok } | ForEach-Object { $_.label }) -join ',')

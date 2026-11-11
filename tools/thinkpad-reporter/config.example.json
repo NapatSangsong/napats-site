@@ -8,7 +8,9 @@
 			"host": "api.example.internal",
 			"port": 443,
 			"url": "https://api.example.internal/some/endpoint",
-			"expect_status": [401]
+			"expect_status": [
+				401
+			]
 		},
 		{
 			"label": "IdeaMANI UAT",
@@ -16,7 +18,9 @@
 			"host": "app.example.internal",
 			"port": 443,
 			"url": "https://app.example.internal/",
-			"expect_status": [302]
+			"expect_status": [
+				302
+			]
 		},
 		{
 			"label": "OpEx Connector QAS",
@@ -24,9 +28,27 @@
 			"host": "connector.example.internal",
 			"port": 443,
 			"url": "https://connector.example.internal/health",
-			"expect_status": [200]
+			"expect_status": [
+				200
+			]
 		},
-		{ "label": "SQL QAS", "kind": "tcp", "host": "sql-qas.example.internal", "port": 1433 },
-		{ "label": "SQL PRD", "kind": "tcp", "host": "sql-prd.example.internal", "port": 1433 }
+		{
+			"label": "SQL QAS",
+			"kind": "tcp",
+			"host": "sql-qas.example.internal",
+			"port": 1433
+		},
+		{
+			"label": "SQL PRD",
+			"kind": "tcp",
+			"host": "sql-prd.example.internal",
+			"port": 1433
+		},
+		{
+			"label": "Internet",
+			"kind": "tcp",
+			"host": "one.one.one.one",
+			"port": 443
+		}
 	]
 }
