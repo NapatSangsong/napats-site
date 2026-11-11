@@ -73,6 +73,27 @@ Checked every 5 min. Each incident pushes once when it starts and once when it c
 
 Rows older than 14 days are deleted hourly by the same cron.
 
+## Also on the page
+
+- **Remote Desktop** button (red when the ThinkPad is offline or the VPN is down) →
+  `THINKPAD_CRD_URL` if set (the ThinkPad's own session link), else the CRD device list.
+  The same link is added to LINE messages that need hands on the ThinkPad.
+- Disk free / RAM / CPU. LINE warns once when the system drive drops under 10 % free
+  (clears at 12 %).
+- 7-day stats add how long reconnecting the VPN took (average / last) and a 24-hour
+  histogram of when the VPN drops.
+- Installable as an app: `public/thinkpad.webmanifest`, icons, `public/thinkpad-sw.js`
+  (network only, offline fallback page). Add it to the home screen from Safari or Chrome.
+
+## LINE commands
+
+`POST /api/line/webhook` (`app/routes/api/line.webhook.ts`): the signature is checked with
+`LINE_CHANNEL_SECRET`, and the bot only answers `LINE_USER_ID`.
+`status` / `สถานะ` → status now, `crd` → Remote Desktop link, anything else → help.
+Once a day the cron points the channel's webhook at this URL, but only when the webhook
+is unset or already on ai.napats.dev. The result is kept in KV `line:webhook:status`.
+"Use webhook" must be on in the LINE console.
+
 ## Secrets / vars
 
 | Name | What |
@@ -80,6 +101,7 @@ Rows older than 14 days are deleted hourly by the same cron.
 | `THINKPAD_PAGE_KEY` | page key, only used when `THINKPAD_PUBLIC = false` |
 | `THINKPAD_INGEST_TOKEN_SHA256` | SHA-256 hex of the ThinkPad token (printed by `Set-Token.ps1`) |
 | `MAC_INGEST_TOKEN_SHA256` | SHA-256 hex of the Mac token (printed by `--init-token`) |
+| `THINKPAD_CRD_URL` | optional: the ThinkPad's Chrome Remote Desktop session link |
 | `THINKPAD_STORE=memory` | `.dev.vars` only — in-process store for `pnpm dev` without Supabase |
 
 ```bash

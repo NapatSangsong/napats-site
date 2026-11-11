@@ -497,3 +497,80 @@ describe("mac tunnel auto-heal payload", () => {
 		expect(parsePayload("mac", macPayload).ok).toBe(true);
 	});
 });
+
+// ---------------- round 3: reconnect stats, health, LINE ----------------
+import { evaluateHealth } from "../thinkpad-alerts";
+import { verifyLineSignature } from "../line.server";
+
+describe("reconnect time and drops by hour", () => {
+	it("measures VPN down → up while online, and buckets drops by BKK hour", () => {
+		const runs = [
+			run2(true, 300, 201, "change"), // drop at NOW-201min
+			run2(false, 200, 181, "change"), // back up after ~20 min
+			run2(true, 180, 61, "change"), // drop again
+			run2(false, 60, 51, "change"),
+			run2(true, 50, 0, "last"),
+		];
+		const s = stats(runs, NOW)!;
+		expect(s.vpn_drops).toBe(2);
+		expect(s.reconnect_last_ms).toBe(11 * MIN); // 61 → 50
+		expect(s.reconnect_avg_ms).toBe(((21 + 11) / 2) * MIN);
+		const hourOf = (minAgo: number) => new Date(NOW - minAgo * MIN + 7 * 3600_000).getUTCHours();
+		expect(s.drops_by_hour[hourOf(201)] + (hourOf(201) === hourOf(61) ? 0 : s.drops_by_hour[hourOf(61)])).toBe(2);
+		expect(s.drops_by_hour.reduce((a, b) => a + b, 0)).toBe(2);
+	});
+});
+
+describe("disk alert", () => {
+	const row = (pct: number, at = NOW) => ({
+		source: "thinkpad" as const,
+		received_at: at,
+		reported_at: null,
+		vpn_up: true,
+		kbs_ok: true,
+		payload: tpPayload({ health: { disk_free_gb: pct, disk_free_pct: pct, mem_used_pct: 30, cpu_pct: 3 } }),
+	});
+	it("warns once under 10 %, clears only at 12 % or more", () => {
+		const a = evaluateHealth(EMPTY_ALERT_STATE, row(9), NOW);
+		expect(a.messages).toHaveLength(1);
+		expect(a.messages[0]).toContain("ดิสก์");
+		expect(evaluateHealth(a.state, row(11, NOW + MIN), NOW + MIN).state.disk_low_since).not.toBeNull();
+		expect(evaluateHealth(a.state, row(9, NOW + MIN), NOW + MIN).messages).toHaveLength(0);
+		expect(evaluateHealth(a.state, row(12, NOW + MIN), NOW + MIN).state.disk_low_since).toBeNull();
+		expect(evaluateHealth(EMPTY_ALERT_STATE, row(12), NOW).messages).toHaveLength(0);
+	});
+});
+
+describe("CRD link and status reply", () => {
+	it("VPN-down alert carries the Remote Desktop link", () => {
+		const h = [...run(40, 11), ...run(10, 0, false)];
+		expect(evaluateAlerts(NOW, NOW, h, EMPTY_ALERT_STATE, { crdUrl: "https://crd.example/x" }).messages[0]).toContain("https://crd.example/x");
+	});
+	it("status reply uses the 'now' header and adds the CRD link when VPN is down", () => {
+		const v = buildView({
+			now: NOW,
+			thinkpad: { source: "thinkpad", received_at: NOW, reported_at: null, vpn_up: false, kbs_ok: true, payload: tpPayload({ vpn: { adapter_found: true, up: false, has_ipv4: false } }) },
+			mac: null,
+			history: [],
+			alerts: null,
+			crdUrl: "https://crd.example/x",
+		});
+		const t = buildDigest(v, "status");
+		expect(t).toContain("📟 ตอนนี้");
+		expect(t).toContain("https://crd.example/x");
+	});
+});
+
+describe("LINE webhook signature", () => {
+	it("accepts the right HMAC and rejects anything else", async () => {
+		const secret = "channel-secret";
+		const body = '{"events":[]}';
+		const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+		const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body)));
+		const sig = btoa(String.fromCharCode(...mac));
+		expect(await verifyLineSignature(secret, body, sig)).toBe(true);
+		expect(await verifyLineSignature(secret, body + " ", sig)).toBe(false);
+		expect(await verifyLineSignature(secret, body, null)).toBe(false);
+		expect(await verifyLineSignature("", body, sig)).toBe(false);
+	});
+});

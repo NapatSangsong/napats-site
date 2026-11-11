@@ -7,7 +7,9 @@ import { latencySeries, predictVpnEnd, stats, type LatencyRow, type LatencySerie
 import type { MacPayload, ThinkpadPayload } from "./thinkpad-schema";
 import type { HistoryPoint, StoredRow } from "./thinkpad-store.server";
 
-export const ONLINE_MS = 3 * 60_000; // no heartbeat for longer than this = offline
+export const ONLINE_MS = 3 * 60_000;
+/** Chrome Remote Desktop device list; THINKPAD_CRD_URL can point at the ThinkPad's own session link */
+export const CRD_DEFAULT_URL = "https://remotedesktop.google.com/access"; // no heartbeat for longer than this = offline
 export const BUCKET_MS = 5 * 60_000; // history bar resolution
 export const WINDOW_MS = 24 * 3600_000; // history bar span
 export const BUCKETS = WINDOW_MS / BUCKET_MS; // 288
@@ -71,6 +73,8 @@ export interface AlertState {
 	boot_at: number | null;
 	/** start of the VPN run we already sent the "session ending soon" warning for */
 	vpn_warned_run: number | null;
+	/** first time the system drive dropped below DISK_LOW_PCT free */
+	disk_low_since: number | null;
 }
 
 export const EMPTY_ALERT_STATE: AlertState = {
@@ -80,6 +84,7 @@ export const EMPTY_ALERT_STATE: AlertState = {
 	reboot_pending_since: null,
 	boot_at: null,
 	vpn_warned_run: null,
+	disk_low_since: null,
 };
 
 export interface StatusView {
@@ -106,6 +111,8 @@ export interface StatusView {
 	};
 	/** house meter on Tuya cloud — only looked up while the ThinkPad is offline */
 	home_meter_online?: boolean | null;
+	/** Chrome Remote Desktop link for the ThinkPad */
+	crd_url: string;
 }
 
 export function buildView(args: {
@@ -117,6 +124,7 @@ export function buildView(args: {
 	runs?: Run[];
 	latency?: LatencyRow[];
 	homeMeterOnline?: boolean | null;
+	crdUrl?: string;
 }): StatusView {
 	const { now, thinkpad, mac, history } = args;
 	const start = timelineStart(now);
@@ -145,5 +153,6 @@ export function buildView(args: {
 			latency: latencySeries(args.latency ?? [], now),
 		},
 		...(args.homeMeterOnline !== undefined ? { home_meter_online: args.homeMeterOnline } : {}),
+		crd_url: args.crdUrl || CRD_DEFAULT_URL,
 	};
 }

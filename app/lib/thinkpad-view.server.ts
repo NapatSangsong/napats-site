@@ -39,5 +39,5 @@ export async function loadStatusView(env: Env): Promise<StatusView> {
 	]);
 	// only ask Tuya when it explains something: the ThinkPad is gone
 	const homeMeter = thinkpad && !isOnline(thinkpad.received_at, now) ? await homeMeterOnline(env) : undefined;
-	return buildView({ now, thinkpad, mac, history, alerts, runs, latency, homeMeterOnline: homeMeter });
+	return buildView({ now, thinkpad, mac, history, alerts, runs, latency, homeMeterOnline: homeMeter, crdUrl: env.THINKPAD_CRD_URL });
 }

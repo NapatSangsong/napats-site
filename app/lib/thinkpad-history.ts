@@ -66,6 +66,11 @@ export interface Stats {
 	offline_events: number;
 	longest_offline_ms: number;
 	days: DayStat[];
+	/** VPN down → back up while the ThinkPad stayed online (how long reconnecting took) */
+	reconnect_avg_ms: number | null;
+	reconnect_last_ms: number | null;
+	/** VPN drops per Bangkok hour of day (0–23) */
+	drops_by_hour: number[];
 }
 
 /** overlap of [a0,a1) and [b0,b1) */
@@ -91,6 +96,17 @@ export function stats(runs: Run[], now: number, days = 7): Stats | null {
 		if (r.ended_by === "offline" && nextStart != null) {
 			offlineEvents++;
 			longest = Math.max(longest, nextStart - r.end);
+		}
+	});
+	const reconnects: number[] = [];
+	const byHour = new Array<number>(24).fill(0);
+	runs.forEach((r, i) => {
+		if (r.end < since) return;
+		if (r.vpn_up && r.ended_by === "change") byHour[new Date(r.end + BKK_MS).getUTCHours()]++;
+		const prev = runs[i - 1];
+		const next = runs[i + 1];
+		if (!r.vpn_up && r.ended_by === "change" && prev?.vpn_up && prev.ended_by === "change" && next?.vpn_up) {
+			reconnects.push(next.start - prev.end);
 		}
 	});
 	const last = runs[runs.length - 1];
@@ -127,6 +143,9 @@ export function stats(runs: Run[], now: number, days = 7): Stats | null {
 		offline_events: offlineEvents,
 		longest_offline_ms: longest,
 		days: dayStats,
+		reconnect_avg_ms: reconnects.length ? reconnects.reduce((a, b) => a + b, 0) / reconnects.length : null,
+		reconnect_last_ms: reconnects.length ? reconnects[reconnects.length - 1] : null,
+		drops_by_hour: byHour,
 	};
 }
 

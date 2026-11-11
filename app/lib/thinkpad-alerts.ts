@@ -30,7 +30,11 @@ export interface AlertContext {
 	homeMeterOnline?: boolean | null;
 	/** latest "Internet" check from the ThinkPad (null/undefined = not configured) */
 	internetOk?: boolean | null;
+	/** Chrome Remote Desktop link added to messages that need hands on the ThinkPad */
+	crdUrl?: string;
 }
+
+const crdLine = (url?: string) => (url ? `\nเปิด Chrome Remote Desktop: ${url}` : "");
 
 /** true when this tick would raise the offline incident (caller then looks up the meter) */
 export function willRaiseOffline(now: number, lastSeen: number | null, prev: AlertState): boolean {
@@ -60,7 +64,7 @@ export function evaluateAlerts(
 		if (state.offline_since == null) {
 			state.offline_since = lastSeen;
 			messages.push(
-				`🔴 ThinkPad หายไป — ไม่มี heartbeat ตั้งแต่ ${hhmm(lastSeen)} (${mins(now - lastSeen)} นาที)\n${offlineHint(ctx.homeMeterOnline)}\n${PAGE_URL}`,
+				`🔴 ThinkPad หายไป — ไม่มี heartbeat ตั้งแต่ ${hhmm(lastSeen)} (${mins(now - lastSeen)} นาที)\n${offlineHint(ctx.homeMeterOnline)}\n${PAGE_URL}${crdLine(ctx.crdUrl)}`,
 			);
 		}
 		return { state, messages }; // VPN state is unknowable while offline
@@ -97,7 +101,7 @@ export function evaluateAlerts(
 	state.degraded_kind = kind;
 	messages.push(
 		kind === "vpn"
-			? `🔴 VPN บน ThinkPad หลุด — adapter ของ Cisco ไม่ขึ้นตั้งแต่ ${hhmm(streakStart)} (${mins(now - streakStart)} นาที)\n${ctx.internetOk === false ? "เน็ตบ้านจาก ThinkPad ก็ออกไม่ได้ด้วย → ดูเน็ตบ้านก่อน\n" : ""}ต่อใหม่ผ่าน Chrome Remote Desktop\n${PAGE_URL}`
+			? `🔴 VPN บน ThinkPad หลุด — adapter ของ Cisco ไม่ขึ้นตั้งแต่ ${hhmm(streakStart)} (${mins(now - streakStart)} นาที)\n${ctx.internetOk === false ? "เน็ตบ้านจาก ThinkPad ก็ออกไม่ได้ด้วย → ดูเน็ตบ้านก่อน\n" : ""}ต่อใหม่ผ่าน Chrome Remote Desktop\n${PAGE_URL}${crdLine(ctx.crdUrl)}`
 			: `🟠 KBS QAS API เข้าไม่ได้จาก ThinkPad ตั้งแต่ ${hhmm(streakStart)} (${mins(now - streakStart)} นาที) — VPN adapter ยังขึ้นอยู่\n${PAGE_URL}`,
 	);
 	return { state, messages };
@@ -114,7 +118,12 @@ const two = (h: number) => String(h).padStart(2, "0");
  * Boot time moved → the machine restarted: say so, with the VPN state.
  * Only judged on a fresh heartbeat.
  */
-export function evaluateReboot(prev: AlertState, latest: StoredRow | null, now: number): { state: AlertState; messages: string[] } {
+export function evaluateReboot(
+	prev: AlertState,
+	latest: StoredRow | null,
+	now: number,
+	crdUrl?: string,
+): { state: AlertState; messages: string[] } {
 	const state: AlertState = { ...prev };
 	const messages: string[] = [];
 	if (!latest || latest.source !== "thinkpad" || !isOnline(latest.received_at, now)) return { state, messages };
@@ -123,7 +132,8 @@ export function evaluateReboot(prev: AlertState, latest: StoredRow | null, now: 
 	const bootAt = latest.received_at - p.uptime_s * 1000;
 	if (state.boot_at != null && Math.abs(bootAt - state.boot_at) > RESTART_JUMP_MS) {
 		const vpn = p.vpn.up && p.vpn.has_ipv4 ? "VPN ต่ออยู่แล้ว ✅" : "VPN ยังไม่ได้ต่อ → ต่อใหม่ผ่าน Chrome Remote Desktop";
-		messages.push(`🔄 ThinkPad เพิ่ง restart เมื่อ ${hhmm(bootAt)}\n${vpn}\n${PAGE_URL}`);
+		const vpnUp = p.vpn.up && p.vpn.has_ipv4;
+		messages.push(`🔄 ThinkPad เพิ่ง restart เมื่อ ${hhmm(bootAt)}\n${vpn}\n${PAGE_URL}${vpnUp ? "" : crdLine(crdUrl)}`);
 	}
 	state.boot_at = bootAt;
 
@@ -134,7 +144,7 @@ export function evaluateReboot(prev: AlertState, latest: StoredRow | null, now: 
 			const ah = wu.active_hours;
 			const when = ah ? `นอก active hours (${two(ah.end)}:00–${two(ah.start)}:00)` : "เมื่อไรก็ได้";
 			messages.push(
-				`⚠️ Windows Update บน ThinkPad รอ restart\nWindows อาจ restart เอง${when} แล้ว VPN จะหลุดจนกว่าจะต่อใหม่\nเลื่อนหรือ restart เองตอนสะดวกผ่าน Chrome Remote Desktop\n${PAGE_URL}`,
+				`⚠️ Windows Update บน ThinkPad รอ restart\nWindows อาจ restart เอง${when} แล้ว VPN จะหลุดจนกว่าจะต่อใหม่\nเลื่อนหรือ restart เองตอนสะดวกผ่าน Chrome Remote Desktop\n${PAGE_URL}${crdLine(crdUrl)}`,
 			);
 		}
 	} else if (wu && state.reboot_pending_since != null) {
@@ -178,23 +188,29 @@ export function digestKey(now: number): string {
 	return `thinkpad:digest:${new Date(now + 7 * 3600_000).toISOString().slice(0, 10)}`;
 }
 
-export function buildDigest(v: StatusView): string {
+/** weekday digest ("digest") or the reply to a LINE "status" command ("status") */
+export function buildDigest(v: StatusView, kind: "digest" | "status" = "digest"): string {
 	const lines: string[] = [];
 	const tp = v.thinkpad;
-	if (!tp) return `☀️ ThinkPad ยังไม่เคยรายงาน\n${PAGE_URL}`;
+	const head = kind === "digest" ? "☀️ เช้านี้" : `📟 ตอนนี้ (${hhmm(v.now)})`;
+	if (!tp) return `${head} ThinkPad ยังไม่เคยรายงาน\n${PAGE_URL}`;
 	if (!tp.online) {
-		lines.push(`☀️ เช้านี้ ThinkPad ออฟไลน์ ❌ (เห็นล่าสุด ${hhmm(tp.last_seen)})`);
+		lines.push(`${head} ThinkPad ออฟไลน์ ❌ (เห็นล่าสุด ${hhmm(tp.last_seen)})`);
+		if (v.home_meter_online === false) lines.push("· มิเตอร์ไฟบ้านก็ offline → น่าจะไฟดับหรือเน็ตบ้านล่ม");
+		else if (v.home_meter_online === true) lines.push("· มิเตอร์ไฟบ้านยัง online → ปัญหาอยู่ที่ ThinkPad");
 	} else {
 		const vpnOk = tp.data.vpn.up && tp.data.vpn.has_ipv4;
 		const fails = tp.data.checks.filter((c) => !c.ok).map((c) => c.label);
 		lines.push(
-			vpnOk && fails.length === 0 ? "☀️ เช้านี้พร้อมทำงาน ✅" : "☀️ เช้านี้ยังไม่พร้อม ⚠️",
+			vpnOk && fails.length === 0 ? `${head}พร้อมทำงาน ✅` : `${head}ยังไม่พร้อม ⚠️`,
 			vpnOk
 				? `· VPN ต่ออยู่${tp.vpn_since ? ` ตั้งแต่ ${hhmm(tp.vpn_since.since)}${tp.vpn_since.truncated ? "+" : ""}` : ""}`
 				: "· VPN ไม่ได้ต่อ → ต่อผ่าน Chrome Remote Desktop",
 			fails.length ? `· เข้าไม่ได้: ${fails.join(", ")}` : `· ระบบภายในเข้าได้ครบ ${tp.data.checks.length} ระบบ`,
 		);
 		if (tp.data.windows_update?.reboot_required) lines.push("· ⚠️ Windows Update รอ restart อยู่");
+		const h = tp.data.health;
+		if (h?.disk_free_pct != null && h.disk_free_pct < DISK_LOW_PCT) lines.push(`· 💾 ดิสก์เหลือ ${h.disk_free_pct.toFixed(0)}%`);
 		const pred = v.history.prediction;
 		if (pred.predicted_end && pred.predicted_end > v.now) lines.push(`· VPN น่าจะหลุดราว ${hhmm(pred.predicted_end)}`);
 	}
@@ -202,5 +218,28 @@ export function buildDigest(v: StatusView): string {
 	if (st) lines.push(`· 7 วัน: online ${st.online_pct.toFixed(0)}% · VPN ${st.vpn_pct.toFixed(0)}% · VPN หลุด ${st.vpn_drops} ครั้ง`);
 	if (v.mac) lines.push(`· Mac: ${v.mac.reporting ? "รายงานอยู่" : "ไม่ได้รายงาน"}`);
 	lines.push(PAGE_URL);
+	if (!tp.online || !(tp.data.vpn.up && tp.data.vpn.has_ipv4)) lines.push(`เปิด Chrome Remote Desktop: ${v.crd_url}`);
 	return lines.join("\n");
+}
+
+// ---------- machine health ----------
+
+export const DISK_LOW_PCT = 10;
+const DISK_OK_PCT = 12; // hysteresis so a disk hovering at 10 % doesn't flap
+
+export function evaluateHealth(prev: AlertState, latest: StoredRow | null, now: number): { state: AlertState; messages: string[] } {
+	const state: AlertState = { ...prev };
+	const messages: string[] = [];
+	if (!latest || latest.source !== "thinkpad" || !isOnline(latest.received_at, now)) return { state, messages };
+	const h = (latest.payload as ThinkpadPayload).health;
+	if (!h || h.disk_free_pct == null) return { state, messages };
+	if (h.disk_free_pct < DISK_LOW_PCT && state.disk_low_since == null) {
+		state.disk_low_since = now;
+		messages.push(
+			`💾 ดิสก์ ThinkPad เหลือ ${h.disk_free_pct.toFixed(0)}%${h.disk_free_gb != null ? ` (${h.disk_free_gb.toFixed(0)} GB)` : ""}\nถ้าเต็ม Windows Update และ VPN อาจมีปัญหา — ลบไฟล์ที่ไม่ใช้ออกบ้าง\n${PAGE_URL}`,
+		);
+	} else if (h.disk_free_pct >= DISK_OK_PCT && state.disk_low_since != null) {
+		state.disk_low_since = null;
+	}
+	return { state, messages };
 }

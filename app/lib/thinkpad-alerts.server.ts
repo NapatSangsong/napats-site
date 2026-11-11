@@ -10,10 +10,12 @@
  * digest.
  */
 import { pushLine } from "./energy-alerts.server";
+import { ensureLineWebhook } from "./line.server";
 import {
 	buildDigest,
 	digestKey,
 	evaluateAlerts,
+	evaluateHealth,
 	evaluateReboot,
 	evaluateVpnExpiry,
 	isDigestTime,
@@ -21,6 +23,7 @@ import {
 } from "./thinkpad-alerts";
 import { predictVpnEnd } from "./thinkpad-history";
 import { INTERNET_CHECK_LABEL, type ThinkpadPayload } from "./thinkpad-schema";
+import { CRD_DEFAULT_URL } from "./thinkpad-status";
 import { getStore } from "./thinkpad-store.server";
 import { ALERT_STATE_KEY, homeMeterOnline, loadStatusView, readAlertState, RUNS_WINDOW_MS } from "./thinkpad-view.server";
 
@@ -41,15 +44,17 @@ export async function runThinkpadAlerts(env: Env): Promise<{ messages: number }>
 	const ctx = {
 		homeMeterOnline: willRaiseOffline(now, lastSeen, prev) ? await homeMeterOnline(env) : undefined,
 		internetOk: internet ? internet.ok : null,
+		crdUrl: env.THINKPAD_CRD_URL || CRD_DEFAULT_URL,
 	};
 
 	const a = evaluateAlerts(now, lastSeen, recent, prev, ctx);
-	const b = evaluateReboot(a.state, latest, now);
+	const b = evaluateReboot(a.state, latest, now, ctx.crdUrl);
 	const c = evaluateVpnExpiry(b.state, predictVpnEnd(runs, now), now);
-	const messages = [...a.messages, ...b.messages, ...c.messages];
+	const d = evaluateHealth(c.state, latest, now);
+	const messages = [...a.messages, ...b.messages, ...c.messages, ...d.messages];
 	for (const m of messages) await pushLine(env, m);
-	if (JSON.stringify(c.state) !== JSON.stringify(prev)) {
-		await env.RATE_LIMIT_KV.put(ALERT_STATE_KEY, JSON.stringify(c.state));
+	if (JSON.stringify(d.state) !== JSON.stringify(prev)) {
+		await env.RATE_LIMIT_KV.put(ALERT_STATE_KEY, JSON.stringify(d.state));
 	}
 
 	// weekday 08:00 BKK digest, once a day
@@ -62,6 +67,9 @@ export async function runThinkpadAlerts(env: Env): Promise<{ messages: number }>
 			sent++;
 		}
 	}
+
+	// LINE webhook endpoint for the "status" command (checked once a day)
+	await ensureLineWebhook(env).catch((e) => console.error("[line-webhook-setup]", e instanceof Error ? e.message : String(e)));
 
 	// retention: once an hour
 	const purgeKey = `thinkpad:purge:${Math.floor(now / 3600_000)}`;
