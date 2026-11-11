@@ -193,6 +193,7 @@ export function buildDigest(v: StatusView, kind: "digest" | "status" = "digest")
 	const lines: string[] = [];
 	const tp = v.thinkpad;
 	const head = kind === "digest" ? "☀️ เช้านี้" : `📟 ตอนนี้ (${hhmm(v.now)})`;
+	const sep = kind === "digest" ? "" : " ";
 	if (!tp) return `${head} ThinkPad ยังไม่เคยรายงาน\n${PAGE_URL}`;
 	if (!tp.online) {
 		lines.push(`${head} ThinkPad ออฟไลน์ ❌ (เห็นล่าสุด ${hhmm(tp.last_seen)})`);
@@ -202,7 +203,7 @@ export function buildDigest(v: StatusView, kind: "digest" | "status" = "digest")
 		const vpnOk = tp.data.vpn.up && tp.data.vpn.has_ipv4;
 		const fails = tp.data.checks.filter((c) => !c.ok).map((c) => c.label);
 		lines.push(
-			vpnOk && fails.length === 0 ? `${head}พร้อมทำงาน ✅` : `${head}ยังไม่พร้อม ⚠️`,
+			vpnOk && fails.length === 0 ? `${head}${sep}พร้อมทำงาน ✅` : `${head}${sep}ยังไม่พร้อม ⚠️`,
 			vpnOk
 				? `· VPN ต่ออยู่${tp.vpn_since ? ` ตั้งแต่ ${hhmm(tp.vpn_since.since)}${tp.vpn_since.truncated ? "+" : ""}` : ""}`
 				: "· VPN ไม่ได้ต่อ → ต่อผ่าน Chrome Remote Desktop",
