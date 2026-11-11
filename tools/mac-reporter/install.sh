@@ -31,6 +31,8 @@ cat >"$PLIST" <<EOF
 	<key>StartInterval</key><integer>60</integer>
 	<key>RunAtLoad</key><true/>
 	<key>ProcessType</key><string>Background</string>
+	<!-- tunnels opened by auto-heal (ssh -f) must outlive each run -->
+	<key>AbandonProcessGroup</key><true/>
 	<key>StandardOutPath</key><string>$HOME/Library/Logs/napats-status-reporter.log</string>
 	<key>StandardErrorPath</key><string>$HOME/Library/Logs/napats-status-reporter.log</string>
 </dict>
