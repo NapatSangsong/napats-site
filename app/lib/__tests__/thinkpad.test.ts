@@ -557,6 +557,7 @@ describe("CRD link and status reply", () => {
 		});
 		const t = buildDigest(v, "status");
 		expect(t).toContain("📟 ตอนนี้");
+		expect(t).toMatch(/\(\d\d:\d\d\) ยังไม่พร้อม/);
 		expect(t).toContain("https://crd.example/x");
 	});
 });
