@@ -30,7 +30,8 @@ export async function replyLine(env: Env, replyToken: string, text: string): Pro
 
 /**
  * Point the channel's webhook at this site — but only when it is unset or
- * already on ai.napats.dev, never over some other service's endpoint.
+ * already on ai.napats.dev / this worker's workers.dev URL, never over some
+ * other service's endpoint.
  * Checked at most once a day (KV marker); the outcome is kept in KV
  * "line:webhook:status" (host only, no secrets).
  */
@@ -44,7 +45,9 @@ export async function ensureLineWebhook(env: Env): Promise<void> {
 	const info = (await cur.json()) as { endpoint?: string; active?: boolean };
 	const host = info.endpoint ? new URL(info.endpoint).host : "";
 	let action = "kept";
-	if (info.endpoint !== LINE_WEBHOOK_URL && (host === "" || host === "ai.napats.dev")) {
+	// ours = this site, or this same worker's own workers.dev URL
+	const ours = host === "" || host === "ai.napats.dev" || /^napats-site\.[^.]+\.workers\.dev$/.test(host);
+	if (info.endpoint !== LINE_WEBHOOK_URL && ours) {
 		const put = await fetch("https://api.line.me/v2/bot/channel/webhook/endpoint", {
 			method: "PUT",
 			headers: { ...auth, "Content-Type": "application/json" },
@@ -54,6 +57,7 @@ export async function ensureLineWebhook(env: Env): Promise<void> {
 	} else if (info.endpoint !== LINE_WEBHOOK_URL) {
 		action = "other endpoint in use — left alone";
 	}
-	await kv.put("line:webhook:status", JSON.stringify({ host: host || null, active: info.active ?? null, action, at: new Date().toISOString() }));
+	// host is recorded only when it is ours (never another service's address)
+	await kv.put("line:webhook:status", JSON.stringify({ host: ours ? host || null : "(other)", active: info.active ?? null, action, at: new Date().toISOString() }));
 	await kv.put("line:webhook:checked", "1", { expirationTtl: 86400 });
 }
