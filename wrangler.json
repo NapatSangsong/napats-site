@@ -9,7 +9,7 @@
 	},
 	"upload_source_maps": true,
 	"triggers": {
-		"crons": ["*/15 * * * *"]
+		"crons": ["*/15 * * * *", "*/5 * * * *"]
 	},
 	"vars": {
 		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare",

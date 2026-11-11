@@ -1,0 +1,32 @@
+{
+	"endpoint": "https://ai.napats.dev/api/thinkpad/report",
+	"vpn_adapter_match": "Cisco|AnyConnect",
+	"targets": [
+		{
+			"label": "KBS QAS API",
+			"kind": "https",
+			"host": "api.example.internal",
+			"port": 443,
+			"url": "https://api.example.internal/some/endpoint",
+			"expect_status": [401]
+		},
+		{
+			"label": "IdeaMANI UAT",
+			"kind": "https",
+			"host": "app.example.internal",
+			"port": 443,
+			"url": "https://app.example.internal/",
+			"expect_status": [302]
+		},
+		{
+			"label": "OpEx Connector QAS",
+			"kind": "https",
+			"host": "connector.example.internal",
+			"port": 443,
+			"url": "https://connector.example.internal/health",
+			"expect_status": [200]
+		},
+		{ "label": "SQL QAS", "kind": "tcp", "host": "sql-qas.example.internal", "port": 1433 },
+		{ "label": "SQL PRD", "kind": "tcp", "host": "sql-prd.example.internal", "port": 1433 }
+	]
+}

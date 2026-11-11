@@ -31,3 +31,13 @@ ENERGY_PAGE_KEY=your-energy-page-key
 LINE_CHANNEL_ACCESS_TOKEN=your-line-channel-access-token
 LINE_CHANNEL_SECRET=your-line-channel-secret
 LINE_USER_ID=Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# ThinkPad / VPN status page (/thinkpad)
+# Page gate key (any string). Open /thinkpad?key=<this> once per browser.
+THINKPAD_PAGE_KEY=your-thinkpad-page-key
+# hex SHA-256 of each reporter's bearer token — printed by the reporter's
+# token setup (tools/thinkpad-reporter/Set-Token.ps1, tools/mac-reporter --init-token)
+THINKPAD_INGEST_TOKEN_SHA256=0000000000000000000000000000000000000000000000000000000000000000
+MAC_INGEST_TOKEN_SHA256=0000000000000000000000000000000000000000000000000000000000000000
+# Local dev only: keep heartbeats in memory instead of Supabase
+# THINKPAD_STORE=memory

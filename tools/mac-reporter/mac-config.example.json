@@ -1,0 +1,17 @@
+{
+	"endpoint": "https://ai.napats.dev/api/thinkpad/report",
+	"tailscale_bin": "/usr/local/bin/tailscale",
+	"thinkpad_tailscale_ip": "<ThinkPad Tailscale IP>",
+	"thinkpad_targets": ["<ThinkPad Tailscale IP>", "<ThinkPad LAN IP>", "thinkpad-ts", "thinkpad"],
+	"ssh": [
+		{ "label": "Tailscale", "host": "thinkpad-ts" },
+		{ "label": "LAN", "host": "thinkpad" }
+	],
+	"ports": [1080, 1433, 1434],
+	"socks_port": 1080,
+	"socks": [
+		{ "label": "IdeaMANI UAT", "url": "https://app.example.internal/", "expect_status": [302] },
+		{ "label": "KBS QAS API", "url": "https://api.example.internal/some/endpoint", "expect_status": [401] },
+		{ "label": "OpEx Connector QAS", "url": "https://connector.example.internal/health", "expect_status": [200] }
+	]
+}

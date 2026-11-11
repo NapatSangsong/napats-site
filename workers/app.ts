@@ -2,6 +2,9 @@ import { createRequestHandler } from "react-router";
 import { runEnergyAlerts } from "../app/lib/energy-alerts.server";
 import { rollupDaily, sampleGrid } from "../app/lib/energy-rollup.server";
 import { syncEnergyReadings } from "../app/lib/energy-sync.server";
+import { runThinkpadAlerts } from "../app/lib/thinkpad-alerts.server";
+
+const THINKPAD_CRON = "*/5 * * * *"; // must match wrangler.json triggers.crons
 
 declare module "react-router" {
 	export interface AppLoadContext {
@@ -23,8 +26,17 @@ export default {
 			cloudflare: { env, ctx },
 		});
 	},
-	scheduled(_controller, env, ctx) {
-		// sequential: rollup must see the rows sync just wrote; each step is
+	scheduled(controller, env, ctx) {
+		// */5: ThinkPad heartbeat/VPN alerts only (needs faster detection than 15 min)
+		if (controller.cron === THINKPAD_CRON) {
+			ctx.waitUntil(
+				runThinkpadAlerts(env)
+					.then((r) => r.messages && console.log(`[thinkpad-alerts] pushed ${r.messages}`))
+					.catch((e) => console.error("[thinkpad-alerts]", e instanceof Error ? e.message : String(e))),
+			);
+			return;
+		}
+		// */15: energy. sequential: rollup must see the rows sync just wrote; each step is
 		// isolated so one failure doesn't stop the others
 		ctx.waitUntil(
 			(async () => {
