@@ -28,7 +28,7 @@ const VOLT_HI = 242; // 220V +10%
 const VOLT_THROTTLE_S = 6 * 3600;
 const DIGEST_HOUR = 22; // BKK
 
-async function pushLine(env: Env, text: string): Promise<void> {
+export async function pushLine(env: Env, text: string): Promise<void> {
 	const to = env.LINE_USER_ID;
 	if (!to || !env.LINE_CHANNEL_ACCESS_TOKEN) {
 		console.log("[alerts] LINE_USER_ID not set — skipping push:", text.slice(0, 80));

@@ -21,5 +21,12 @@ declare namespace Cloudflare {
 		TUYA_ACCESS_SECRET: string;
 		TUYA_DEVICE_ID: string;
 		ENERGY_PAGE_KEY: string;
+		// ThinkPad / VPN status page (/thinkpad)
+		THINKPAD_PAGE_KEY: string;
+		/** hex SHA-256 of each reporter's bearer token (the token itself is never stored) */
+		THINKPAD_INGEST_TOKEN_SHA256: string;
+		MAC_INGEST_TOKEN_SHA256: string;
+		/** dev only: "memory" = in-process store instead of Supabase (.dev.vars) */
+		THINKPAD_STORE?: string;
 	}
 }

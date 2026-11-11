@@ -19,6 +19,11 @@ export default [
 	route("api/energy/chat", "routes/api/energy.chat.ts"),
 	route("api/energy/sync", "routes/api/energy.sync.ts"),
 
+	// ThinkPad / VPN status (private, key-gated, not in nav)
+	route("thinkpad", "routes/thinkpad.tsx"),
+	route("api/thinkpad/status", "routes/api/thinkpad.status.ts"),
+	route("api/thinkpad/report", "routes/api/thinkpad.report.ts"),
+
 	// Learning platform — API routes
 	route("learning/gate", "routes/learning.gate.tsx"),
 	route("learning/api/session", "routes/api/session.ts"),
