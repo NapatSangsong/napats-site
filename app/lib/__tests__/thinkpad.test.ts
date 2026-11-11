@@ -574,3 +574,39 @@ describe("LINE webhook signature", () => {
 		expect(await verifyLineSignature("", body, sig)).toBe(false);
 	});
 });
+
+// ---------------- remote VPN command ----------------
+import { commandStatusSchema, commandStatusText, encryptForThinkpad, parseVpnCommand } from "../thinkpad-command.server";
+
+describe("LINE vpn command", () => {
+	it("parses user + password (password may contain spaces), password only, and bare vpn", () => {
+		expect(parseVpnCommand("vpn alice s3cr3t")).toEqual({ user: "alice", password: "s3cr3t" });
+		expect(parseVpnCommand("VPN alice pass with  spaces")).toEqual({ user: "alice", password: "pass with  spaces" });
+		expect(parseVpnCommand("vpn onlypass")).toEqual({ user: "", password: "onlypass" });
+		expect(parseVpnCommand("vpn")).toEqual({ usage: true });
+		expect(parseVpnCommand("status")).toBeNull();
+		expect(parseVpnCommand("vpnx a b")).toBeNull();
+	});
+
+	it("encrypts so only the private key can read it (RSA-OAEP-256)", async () => {
+		const kp = (await crypto.subtle.generateKey(
+			{ name: "RSA-OAEP", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
+			true,
+			["encrypt", "decrypt"],
+		)) as CryptoKeyPair;
+		const jwk = await crypto.subtle.exportKey("jwk", kp.publicKey);
+		const enc = await encryptForThinkpad(JSON.stringify(jwk), { u: "alice", p: "s3cr3t" });
+		expect(enc).not.toContain("s3cr3t");
+		const pt = await crypto.subtle.decrypt({ name: "RSA-OAEP" }, kp.privateKey, Uint8Array.from(atob(enc), (c) => c.charCodeAt(0)));
+		expect(JSON.parse(new TextDecoder().decode(pt))).toEqual({ u: "alice", p: "s3cr3t" });
+	});
+
+	it("progress reports: number shown big, no host-like detail accepted", () => {
+		expect(commandStatusText({ id: "ab12", stage: "need_number", number: "42" }, "x")).toContain("\n42\n");
+		expect(commandStatusText({ id: "ab12", stage: "failed", detail: "timeout" }, "https://crd")).toContain("https://crd");
+		expect(commandStatusSchema.safeParse({ id: "ab12", stage: "need_number", number: "42" }).success).toBe(true);
+		expect(commandStatusSchema.safeParse({ id: "ab12", stage: "failed", detail: "vpn.example.com down" }).success).toBe(false);
+		expect(commandStatusSchema.safeParse({ id: "ab12", stage: "need_number", number: "4x" }).success).toBe(false);
+		expect(commandStatusSchema.safeParse({ id: "ab12", stage: "hack" }).success).toBe(false);
+	});
+});

@@ -249,7 +249,21 @@ try {
         $code = [int]$resp.StatusCode
         $body = $resp.Content.ReadAsStringAsync().GetAwaiter().GetResult()
         $resp.Dispose()
-        if ($code -ge 200 -and $code -lt 300) { Write-Log "sent $code $summary" }
+        if ($code -ge 200 -and $code -lt 300) {
+            Write-Log "sent $code $summary"
+            # a remote command (encrypted) may ride back on the response -> hand it to the connect task
+            try {
+                $respObj = $body | ConvertFrom-Json
+                if ($respObj.PSObject.Properties.Name -contains 'command' -and $respObj.command) {
+                    $c = $respObj.command
+                    if ([string]$c.type -eq 'vpn_connect' -and [string]$c.id -match '^[A-Za-z0-9-]{1,40}$') {
+                        ($c | ConvertTo-Json -Compress) | Set-Content -LiteralPath (Join-Path $ConfigDir 'pending-command.json') -Encoding ASCII
+                        Start-ScheduledTask -TaskName 'napats-vpn-connect'
+                        Write-Log "command $($c.id) handed to napats-vpn-connect"
+                    }
+                }
+            } catch { Write-Log ("command hand-off failed: " + $_.Exception.Message) }
+        }
         else {
             $short = ($body -replace '\s+', ' ')
             if ($short.Length -gt 200) { $short = $short.Substring(0, 200) }

@@ -17,6 +17,10 @@ if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
 } else {
     Write-Host "Task '$TaskName' not found."
 }
+if (Get-ScheduledTask -TaskName 'napats-vpn-connect' -ErrorAction SilentlyContinue) {
+    Unregister-ScheduledTask -TaskName 'napats-vpn-connect' -Confirm:$false
+    Write-Host "Removed task 'napats-vpn-connect'."
+}
 if ($RemoveFiles -and (Test-Path -LiteralPath $InstallDir)) {
     Remove-Item -LiteralPath $InstallDir -Recurse -Force
     Write-Host "Deleted $InstallDir."

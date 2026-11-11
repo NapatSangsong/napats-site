@@ -21,6 +21,9 @@ foreach ($f in 'config.json', 'token.dpapi') {
     if (-not (Test-Path -LiteralPath (Join-Path $InstallDir $f))) { throw "$f missing in $InstallDir" }
 }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Send-Status.ps1') -Destination (Join-Path $InstallDir 'Send-Status.ps1') -Force
+if (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'Connect-Vpn.ps1')) {
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Connect-Vpn.ps1') -Destination (Join-Path $InstallDir 'Connect-Vpn.ps1') -Force
+}
 
 $script = Join-Path $InstallDir 'Send-Status.ps1'
 $action = New-ScheduledTaskAction `
@@ -43,3 +46,18 @@ Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Se
 $t = Get-ScheduledTask -TaskName $TaskName
 $rep = $t.Triggers[0].Repetition
 Write-Host ("Installed '{0}': state={1} interval={2} duration={3}" -f $TaskName, $t.State, $rep.Interval, $(if ($rep.Duration) { $rep.Duration } else { 'indefinite' }))
+
+# On-demand task for "vpn" from LINE: started by Send-Status.ps1, runs Connect-Vpn.ps1
+# in the user's session (UI Automation needs it); one at a time, max 6 minutes.
+$connect = Join-Path $InstallDir 'Connect-Vpn.ps1'
+if (Test-Path -LiteralPath $connect) {
+    $cAction = New-ScheduledTaskAction `
+        -Execute (Join-Path $env:WINDIR 'System32\conhost.exe') `
+        -Argument "--headless powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$connect`"" `
+        -WorkingDirectory $InstallDir
+    $cSettings = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 6) `
+        -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -Hidden
+    Register-ScheduledTask -TaskName 'napats-vpn-connect' -Action $cAction -Settings $cSettings -Principal $principal `
+        -Description 'Connect the VPN on request from LINE (napats-status)' -Force | Out-Null
+    Write-Host "Installed 'napats-vpn-connect' (on demand)."
+}

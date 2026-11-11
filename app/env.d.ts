@@ -31,5 +31,7 @@ declare namespace Cloudflare {
 		THINKPAD_STORE?: string;
 		/** optional: the ThinkPad's own Chrome Remote Desktop link (else the device list) */
 		THINKPAD_CRD_URL?: string;
+		/** public JWK (RSA-OAEP-256) of the ThinkPad's command key — New-CommandKey.ps1 */
+		THINKPAD_CMD_PUBLIC_JWK?: string;
 	}
 }
