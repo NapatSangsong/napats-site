@@ -94,6 +94,30 @@ Once a day the cron points the channel's webhook at this URL, but only when the 
 is unset or already on ai.napats.dev. The result is kept in KV `line:webhook:status`.
 "Use webhook" must be on in the LINE console.
 
+## Connect the VPN from LINE (owner decision 2026-11-11)
+
+`vpn <user> <password>` (or `vpn <password>` to reuse the last user) in the LINE chat:
+
+1. The webhook encrypts `{u,p}` right away with the ThinkPad's RSA-OAEP-256 public key
+   (`THINKPAD_CMD_PUBLIC_JWK`, made by `tools/thinkpad-reporter/New-CommandKey.ps1`). Only
+   ciphertext is queued, in KV `thinkpad:cmd` with a 5-minute TTL. Nothing is logged.
+2. The next heartbeat response hands the command to the ThinkPad and deletes it from KV.
+   `Send-Status.ps1` writes `pending-command.json` and starts the on-demand task
+   `napats-vpn-connect`.
+3. `Connect-Vpn.ps1` (in the user's session) decrypts with the non-exportable CNG key,
+   deletes the file, and remembers the user name (DPAPI). It then runs `vpncli -s connect`
+   to the profile's default host and answers its prompts. If the GUI blocks the CLI, it
+   closes the GUI and reopens it afterwards. With UI Automation it fills the SSO window and
+   sends the Microsoft Authenticator number to LINE. It reports `started` /
+   `need_number` / `connected` / `failed` to `POST /api/thinkpad/command-status`, which
+   pushes each to LINE (at most 8 per command). It gives up after 5 minutes and dumps the
+   UI element names (no values) to `vpn-ui-dump.txt` for tuning.
+
+Risks the owner accepted: the password sits in the LINE chat history unless unsent, and
+it passes through the worker in memory. The bot's reply suggests unsending it.
+Turn it off with `wrangler secret delete THINKPAD_CMD_PUBLIC_JWK`. Rotate the key with
+`New-CommandKey.ps1 -Force` and a new secret.
+
 ## Secrets / vars
 
 | Name | What |
@@ -101,6 +125,7 @@ is unset or already on ai.napats.dev. The result is kept in KV `line:webhook:sta
 | `THINKPAD_PAGE_KEY` | page key, only used when `THINKPAD_PUBLIC = false` |
 | `THINKPAD_INGEST_TOKEN_SHA256` | SHA-256 hex of the ThinkPad token (printed by `Set-Token.ps1`) |
 | `MAC_INGEST_TOKEN_SHA256` | SHA-256 hex of the Mac token (printed by `--init-token`) |
+| `THINKPAD_CMD_PUBLIC_JWK` | public key for `vpn` commands (`New-CommandKey.ps1`); unset = feature off |
 | `THINKPAD_CRD_URL` | optional: the ThinkPad's Chrome Remote Desktop session link |
 | `THINKPAD_STORE=memory` | `.dev.vars` only — in-process store for `pnpm dev` without Supabase |
 

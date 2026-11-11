@@ -7,6 +7,7 @@
 import type { Route } from "./+types/thinkpad.report";
 import { sourceForRequest } from "~/lib/thinkpad-auth.server";
 import { MAX_BODY_BYTES, parsePayload, summarize, type ThinkpadPayload } from "~/lib/thinkpad-schema";
+import { takeCommand } from "~/lib/thinkpad-command.server";
 import { getStore } from "~/lib/thinkpad-store.server";
 
 const json = (body: unknown, status = 200) =>
@@ -53,5 +54,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 		console.error(`[thinkpad-report] ${source} store failed:`, e instanceof Error ? e.message : String(e));
 		return json({ ok: false, error: "store failed" }, 502);
 	}
-	return json({ ok: true, source });
+	// a queued remote command (encrypted) rides back on the ThinkPad's heartbeat
+	const command = source === "thinkpad" ? await takeCommand(env.RATE_LIMIT_KV).catch(() => null) : null;
+	return json(command ? { ok: true, source, command } : { ok: true, source });
 }
