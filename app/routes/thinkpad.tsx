@@ -8,9 +8,17 @@ import { loadStatusView } from "~/lib/thinkpad-view.server";
 export const meta: Route.MetaFunction = () => [
 	{ title: "ThinkPad · VPN" },
 	{ name: "robots", content: "noindex, nofollow" },
+	{ name: "theme-color", content: "#0f1520" },
+	{ name: "apple-mobile-web-app-capable", content: "yes" },
+	{ name: "mobile-web-app-capable", content: "yes" },
+	{ name: "apple-mobile-web-app-title", content: "ThinkPad" },
+	{ name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
 ];
 
 export const links: Route.LinksFunction = () => [
+	{ rel: "manifest", href: "/thinkpad.webmanifest" },
+	{ rel: "apple-touch-icon", href: "/thinkpad-icon-180.png" },
+	{ rel: "icon", type: "image/svg+xml", href: "/thinkpad-icon.svg" },
 	{
 		rel: "stylesheet",
 		href: "https://fonts.googleapis.com/css2?family=Anuphan:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap",
@@ -99,6 +107,7 @@ export default function ThinkpadPage({ loaderData }: Route.ComponentProps) {
 		const tickId = setInterval(() => {
 			if (viewNow.current != null && fetchedAt.current != null) setNow(viewNow.current + (Date.now() - fetchedAt.current));
 		}, 5_000);
+		if ("serviceWorker" in navigator) navigator.serviceWorker.register("/thinkpad-sw.js", { scope: "/thinkpad" }).catch(() => {});
 		const onVisible = () => document.visibilityState === "visible" && poll();
 		document.addEventListener("visibilitychange", onVisible);
 		return () => {
@@ -175,13 +184,17 @@ function Hero({ view, now }: { view: StatusView; now: number }) {
 			sub = `heartbeat ล่าสุด ${ago(age)}`;
 		}
 	}
+	const needHands = !!tp && (!tp.online || !(tp.data.vpn.up && tp.data.vpn.has_ipv4));
 	return (
 		<div className="tp-hero">
 			<span className={`tp-hero-dot c-${tone}`} />
-			<div>
+			<div style={{ flex: 1, minWidth: 0 }}>
 				<div className="tp-hero-title">{title}</div>
 				<div className="tp-hero-sub">{sub}</div>
 			</div>
+			<a className={`tp-btn${needHands ? " primary" : ""}`} href={view.crd_url} target="_blank" rel="noreferrer">
+				Remote Desktop
+			</a>
 		</div>
 	);
 }
@@ -235,6 +248,19 @@ function ThinkpadCard({ tp, now }: { tp: Tp; now: number }) {
 						) : (
 							"ไม่มีค้าง"
 						)}
+					</Row>
+				)}
+				{tp.data.health && (
+					<Row k="ดิสก์ / RAM / CPU">
+						{tp.data.health.disk_free_pct != null && (
+							<Pill tone={tp.data.health.disk_free_pct < 10 ? "bad" : tp.data.health.disk_free_pct < 15 ? "warn" : "ok"}>
+								ว่าง {tp.data.health.disk_free_pct.toFixed(0)}%
+								{tp.data.health.disk_free_gb != null ? ` · ${tp.data.health.disk_free_gb.toFixed(0)} GB` : ""}
+							</Pill>
+						)}
+						<span className="tp-mono">
+							RAM {tp.data.health.mem_used_pct?.toFixed(0) ?? "—"}% · CPU {tp.data.health.cpu_pct?.toFixed(0) ?? "—"}%
+						</span>
 					</Row>
 				)}
 				{tp.data.wifi && (
@@ -532,6 +558,25 @@ function StatsCard({ view }: { view: StatusView }) {
 					<span>หายนานสุด</span>
 				</div>
 			</div>
+			<div className="tp-sub-row">
+				<span>
+					ต่อ VPN กลับ: เฉลี่ย {st.reconnect_avg_ms != null ? dur(st.reconnect_avg_ms / 1000) : "—"} · ล่าสุด{" "}
+					{st.reconnect_last_ms != null ? dur(st.reconnect_last_ms / 1000) : "—"}
+				</span>
+			</div>
+			{st.drops_by_hour.some((n) => n > 0) && (
+				<div className="tp-hours" title="VPN หลุดตามชั่วโมง (เวลาไทย)">
+					{st.drops_by_hour.map((n, h) => {
+						const max = Math.max(...st.drops_by_hour, 1);
+						return (
+							<div key={h}>
+								<span className={n ? "c-bad" : "c-off"} style={{ height: `${n ? 20 + (n / max) * 80 : 8}%` }} />
+								{h % 6 === 0 && <em>{two(h)}</em>}
+							</div>
+						);
+					})}
+				</div>
+			)}
 			<div className="tp-days">
 				{st.days.map((d) => (
 					<div key={d.day} title={d.vpn_pct == null ? "ไม่มีข้อมูล" : `VPN ${d.vpn_pct.toFixed(1)}% · online ${d.online_pct?.toFixed(1)}%`}>

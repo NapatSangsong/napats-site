@@ -29,5 +29,7 @@ declare namespace Cloudflare {
 		MAC_INGEST_TOKEN_SHA256: string;
 		/** dev only: "memory" = in-process store instead of Supabase (.dev.vars) */
 		THINKPAD_STORE?: string;
+		/** optional: the ThinkPad's own Chrome Remote Desktop link (else the device list) */
+		THINKPAD_CRD_URL?: string;
 	}
 }

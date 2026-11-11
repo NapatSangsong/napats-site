@@ -55,6 +55,15 @@ export const thinkpadPayloadSchema = z.strictObject({
 			active_hours: z.strictObject({ start: z.number().int().min(0).max(23), end: z.number().int().min(0).max(23) }).nullable(),
 		})
 		.optional(),
+	/** machine health; optional for older reporters */
+	health: z
+		.strictObject({
+			disk_free_gb: z.number().min(0).max(100_000).nullable(),
+			disk_free_pct: z.number().min(0).max(100).nullable(),
+			mem_used_pct: z.number().min(0).max(100).nullable(),
+			cpu_pct: z.number().min(0).max(100).nullable(),
+		})
+		.optional(),
 	/** Wi-Fi link (no SSID); optional for older reporters */
 	wifi: z
 		.strictObject({

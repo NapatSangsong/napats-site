@@ -189,6 +189,21 @@ try {
         }
     } catch { }
 
+    # machine health (read-only)
+    $health = $null
+    try {
+        $disk = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='$($env:SystemDrive)'" -OperationTimeoutSec 5
+        $cpu = @(Get-CimInstance Win32_Processor -OperationTimeoutSec 5 | ForEach-Object { $_.LoadPercentage } | Where-Object { $null -ne $_ })
+        $memUsed = $null
+        if ($os.TotalVisibleMemorySize -gt 0) { $memUsed = [Math]::Round((1 - $os.FreePhysicalMemory / $os.TotalVisibleMemorySize) * 100, 1) }
+        $health = [ordered]@{
+            disk_free_gb  = $(if ($disk -and $disk.Size) { [Math]::Round($disk.FreeSpace / 1GB, 1) } else { $null })
+            disk_free_pct = $(if ($disk -and $disk.Size) { [Math]::Round($disk.FreeSpace / $disk.Size * 100, 1) } else { $null })
+            mem_used_pct  = $memUsed
+            cpu_pct       = $(if ($cpu.Count -gt 0) { [Math]::Round(($cpu | Measure-Object -Average).Average, 1) } else { $null })
+        }
+    } catch { }
+
     $payload = [ordered]@{
         v           = 1
         reported_at = (Get-Date).ToUniversalTime().ToString('o')
@@ -210,6 +225,7 @@ try {
     }
     if ($null -ne $wu) { $payload['windows_update'] = $wu }
     if ($null -ne $wifi) { $payload['wifi'] = $wifi }
+    if ($null -ne $health) { $payload['health'] = $health }
     $json = $payload | ConvertTo-Json -Depth 5 -Compress
 
     $fails = (@($results | Where-Object { -not $_.ok } | ForEach-Object { $_.label }) -join ',')

@@ -23,6 +23,7 @@ export default [
 	route("thinkpad", "routes/thinkpad.tsx"),
 	route("api/thinkpad/status", "routes/api/thinkpad.status.ts"),
 	route("api/thinkpad/report", "routes/api/thinkpad.report.ts"),
+	route("api/line/webhook", "routes/api/line.webhook.ts"),
 
 	// Learning platform — API routes
 	route("learning/gate", "routes/learning.gate.tsx"),
