@@ -1,8 +1,9 @@
 /**
  * Auth for the /thinkpad page and its reporters.
  *
- * Page: THINKPAD_PAGE_KEY through the shared cookie key gate (always gated —
- * there is no public switch).
+ * Page: public while THINKPAD_PUBLIC is true (the page shows labels only — no
+ * host names or IPs). Set it to false to put the page and its status API
+ * behind THINKPAD_PAGE_KEY through the shared cookie key gate again.
  *
  * Ingest: each reporter sends `Authorization: Bearer <token>`. The worker only
  * holds hex(SHA-256(token)) per source (THINKPAD_INGEST_TOKEN_SHA256,
@@ -13,7 +14,16 @@ import { safeEqual } from "./energy-gate.server";
 import { createKeyGate, sha256hex } from "./key-gate.server";
 import type { DeviceSource } from "./thinkpad-schema";
 
-export const thinkpadGate = createKeyGate("__Host-napats-thinkpad");
+/** true = /thinkpad and /api/thinkpad/status need no key (owner decision 2026-11-11) */
+export const THINKPAD_PUBLIC = true;
+
+const keyGate = createKeyGate("__Host-napats-thinkpad");
+export const thinkpadGate = {
+	requireAuth: (request: Request, key: string | undefined) =>
+		THINKPAD_PUBLIC ? Promise.resolve() : keyGate.requireAuth(request, key),
+	pageGate: (request: Request, key: string | undefined, path: string) =>
+		THINKPAD_PUBLIC ? Promise.resolve() : keyGate.pageGate(request, key, path),
+};
 
 export interface IngestEnv {
 	THINKPAD_INGEST_TOKEN_SHA256?: string;

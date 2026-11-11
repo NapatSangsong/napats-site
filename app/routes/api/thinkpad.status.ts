@@ -1,4 +1,4 @@
-/** GET /api/thinkpad/status — the page's 30 s poll (cookie-gated, 404 otherwise). */
+/** GET /api/thinkpad/status — the page's 30 s poll (public unless THINKPAD_PUBLIC is false). */
 import type { Route } from "./+types/thinkpad.status";
 import { thinkpadGate } from "~/lib/thinkpad-auth.server";
 import { loadStatusView } from "~/lib/thinkpad-view.server";

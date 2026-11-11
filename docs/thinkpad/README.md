@@ -5,9 +5,12 @@ on, whether its Cisco VPN adapter is up, whether the internal systems answer
 from it, and (optionally) whether the Mac's tunnels through it work. LINE push
 when the ThinkPad disappears or the VPN / key check stays down.
 
-Not in the nav, `noindex`, key-gated like `/energy` (cookie = SHA-256 of
-`THINKPAD_PAGE_KEY`; wrong or missing key → 404). It does **not** follow
-`ENERGY_PUBLIC`.
+Not in the nav and `noindex`, but **public**: `THINKPAD_PUBLIC = true` in
+`app/lib/thinkpad-auth.server.ts` (owner decision, 2026-11-11). The page only
+shows labels, never host names or IPs. Set it to `false` to put the page and
+`/api/thinkpad/status` behind the `/energy`-style key gate again (cookie =
+SHA-256 of `THINKPAD_PAGE_KEY`, wrong or missing key → 404). Ingest always
+needs a reporter token.
 
 ## Pieces
 
@@ -57,13 +60,12 @@ Rows older than 14 days are deleted hourly by the same cron.
 
 | Name | What |
 |---|---|
-| `THINKPAD_PAGE_KEY` | page key (`/thinkpad?key=…` once per browser) |
+| `THINKPAD_PAGE_KEY` | page key, only used when `THINKPAD_PUBLIC = false` |
 | `THINKPAD_INGEST_TOKEN_SHA256` | SHA-256 hex of the ThinkPad token (printed by `Set-Token.ps1`) |
 | `MAC_INGEST_TOKEN_SHA256` | SHA-256 hex of the Mac token (printed by `--init-token`) |
 | `THINKPAD_STORE=memory` | `.dev.vars` only — in-process store for `pnpm dev` without Supabase |
 
 ```bash
-npx wrangler secret put THINKPAD_PAGE_KEY
 npx wrangler secret put THINKPAD_INGEST_TOKEN_SHA256
 npx wrangler secret put MAC_INGEST_TOKEN_SHA256
 ```
@@ -104,9 +106,9 @@ While the Mac sleeps launchd doesn't run it, and the page shows "Mac ไม่�
 2. `npx wrangler secret put THINKPAD_INGEST_TOKEN_SHA256` (or `MAC_…`) with the new hash.
    Between steps 1 and 2 reports get 401, so do them back to back. Nothing else changes.
 
-Rotate the page key with `wrangler secret put THINKPAD_PAGE_KEY`. Every old cookie stops working.
+If the page is gated again, rotating `THINKPAD_PAGE_KEY` invalidates every old cookie.
 
 ## Local dev
 
-`.dev.vars` (gitignored) with `THINKPAD_STORE=memory`, a page key and the two hashes, then
+`.dev.vars` (gitignored) with `THINKPAD_STORE=memory` and the two hashes, then
 `pnpm dev` and POST a dry-run payload with `curl -H "Authorization: Bearer <token>"`.

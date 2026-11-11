@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createKeyGate, sha256hex } from "../key-gate.server";
 import { evaluateAlerts, OFFLINE_ALERT_MS } from "../thinkpad-alerts";
-import { sourceForRequest } from "../thinkpad-auth.server";
+import { THINKPAD_PUBLIC, sourceForRequest, thinkpadGate } from "../thinkpad-auth.server";
 import { parsePayload, summarize, type ThinkpadPayload } from "../thinkpad-schema";
 import {
 	BUCKETS,
@@ -119,7 +119,15 @@ describe("ingest token", () => {
 	});
 });
 
-describe("page key gate", () => {
+describe("thinkpad page access", () => {
+	it("is public: page and status API pass with no key and no cookie", async () => {
+		expect(THINKPAD_PUBLIC).toBe(true);
+		await expect(thinkpadGate.pageGate(new Request("https://x/thinkpad"), undefined, "/thinkpad")).resolves.toBeUndefined();
+		await expect(thinkpadGate.requireAuth(new Request("https://x/api/thinkpad/status"), undefined)).resolves.toBeUndefined();
+	});
+});
+
+describe("page key gate (used when THINKPAD_PUBLIC is false)", () => {
 	const gate = createKeyGate("__Host-test");
 	const KEY = "page-key-123";
 
