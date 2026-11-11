@@ -102,6 +102,21 @@ export const macPayloadSchema = z.strictObject({
 			}),
 		)
 		.max(10),
+	/** Mac tunnel auto-heal: last action per port (optional) */
+	tunnel_heal: z
+		.strictObject({
+			enabled: z.boolean(),
+			events: z
+				.array(
+					z.strictObject({
+						port: z.number().int().min(1).max(65535),
+						action: z.enum(["opened", "restarted", "failed"]),
+						at: isoTime,
+					}),
+				)
+				.max(10),
+		})
+		.optional(),
 	duration_ms: ms,
 });
 

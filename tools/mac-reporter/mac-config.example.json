@@ -2,16 +2,73 @@
 	"endpoint": "https://ai.napats.dev/api/thinkpad/report",
 	"tailscale_bin": "/usr/local/bin/tailscale",
 	"thinkpad_tailscale_ip": "<ThinkPad Tailscale IP>",
-	"thinkpad_targets": ["<ThinkPad Tailscale IP>", "<ThinkPad LAN IP>", "thinkpad-ts", "thinkpad"],
-	"ssh": [
-		{ "label": "Tailscale", "host": "thinkpad-ts" },
-		{ "label": "LAN", "host": "thinkpad" }
+	"thinkpad_targets": [
+		"<ThinkPad Tailscale IP>",
+		"<ThinkPad LAN IP>",
+		"thinkpad-ts",
+		"thinkpad"
 	],
-	"ports": [1080, 1433, 1434],
+	"ssh": [
+		{
+			"label": "Tailscale",
+			"host": "thinkpad-ts"
+		},
+		{
+			"label": "LAN",
+			"host": "thinkpad"
+		}
+	],
+	"ports": [
+		1080,
+		1433,
+		1434
+	],
 	"socks_port": 1080,
 	"socks": [
-		{ "label": "IdeaMANI UAT", "url": "https://app.example.internal/", "expect_status": [302] },
-		{ "label": "KBS QAS API", "url": "https://api.example.internal/some/endpoint", "expect_status": [401] },
-		{ "label": "OpEx Connector QAS", "url": "https://connector.example.internal/health", "expect_status": [200] }
+		{
+			"label": "IdeaMANI UAT",
+			"url": "https://app.example.internal/",
+			"expect_status": [
+				302
+			]
+		},
+		{
+			"label": "KBS QAS API",
+			"url": "https://api.example.internal/some/endpoint",
+			"expect_status": [
+				401
+			]
+		},
+		{
+			"label": "OpEx Connector QAS",
+			"url": "https://connector.example.internal/health",
+			"expect_status": [
+				200
+			]
+		}
+	],
+	"auto_heal": true,
+	"tunnels": [
+		{
+			"port": 1080,
+			"forward": [
+				"-D",
+				"1080"
+			]
+		},
+		{
+			"port": 1433,
+			"forward": [
+				"-L",
+				"1433:sql-qas.example.internal:1433"
+			]
+		},
+		{
+			"port": 1434,
+			"forward": [
+				"-L",
+				"1434:sql-prd.example.internal:1433"
+			]
+		}
 	]
 }

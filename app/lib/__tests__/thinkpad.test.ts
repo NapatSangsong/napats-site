@@ -487,3 +487,13 @@ describe("new alerts", () => {
 		expect(parsePayload("thinkpad", { ...tpPayload(), wifi: { connected: true, signal_pct: 92, rx_mbps: 1, ssid: "home" } }).ok).toBe(false);
 	});
 });
+
+describe("mac tunnel auto-heal payload", () => {
+	it("accepts heal events, rejects unknown actions", () => {
+		const ok = { ...macPayload, tunnel_heal: { enabled: true, events: [{ port: 1080, action: "opened", at: "2026-11-11T13:00:00.000Z" }] } };
+		expect(parsePayload("mac", ok).ok).toBe(true);
+		const bad = { ...macPayload, tunnel_heal: { enabled: true, events: [{ port: 1080, action: "killed", at: "2026-11-11T13:00:00.000Z" }] } };
+		expect(parsePayload("mac", bad).ok).toBe(false);
+		expect(parsePayload("mac", macPayload).ok).toBe(true);
+	});
+});

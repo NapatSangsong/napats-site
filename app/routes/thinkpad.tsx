@@ -356,8 +356,17 @@ function MacCard({ mac, now }: { mac: StatusView["mac"]; now: number }) {
 						<Ms v={s.latency_ms} />
 					</Row>
 				))}
+				{d.tunnel_heal && <Row k="Auto-heal tunnel">{d.tunnel_heal.enabled ? "เปิดอยู่" : "ปิด"}</Row>}
 				{d.ports.map((p) => {
 					const tone: Tone = p.listening && p.via_thinkpad ? "ok" : p.listening ? "warn" : "off";
+					const ev = d.tunnel_heal?.events.find((e) => e.port === p.port);
+					const evAt = ev ? Date.parse(ev.at) : null;
+					const healNote =
+						ev && evAt != null && now - evAt < 24 * 3600_000 ? (
+							<span className="tp-mono">
+								{ev.action === "opened" ? "เปิดใหม่อัตโนมัติ" : ev.action === "restarted" ? "รีสตาร์ทอัตโนมัติ" : "เปิดใหม่ไม่สำเร็จ"} {when(evAt, now)}
+							</span>
+						) : null;
 					return (
 						<Row
 							key={`port-${p.port}`}
@@ -367,6 +376,7 @@ function MacCard({ mac, now }: { mac: StatusView["mac"]; now: number }) {
 								</>
 							}
 						>
+							{healNote}
 							{p.listening ? (p.via_thinkpad ? "เปิดอยู่" : <Pill tone="warn">ไม่ใช่ ssh ไป ThinkPad</Pill>) : <Pill tone="off">ปิด</Pill>}
 						</Row>
 					);

@@ -117,6 +117,16 @@ offline until someone logs in. The ThinkPad has no battery, so a power cut shows
 
 While the Mac sleeps launchd doesn't run it, and the page shows "Mac ไม่ได้รายงาน".
 
+**Tunnel auto-heal** (owner approved 2026-11-11). With `"auto_heal": true` and a `"tunnels"`
+list in `mac-config.json` (see the example), each run:
+- opens `ssh -f -N <forward> <alias>` for a configured port that has no listener (Tailscale alias first, LAN second);
+- restarts the SOCKS tunnel when it is an ssh to the ThinkPad but every SOCKS check fails at
+  the connection level two runs in a row while plain ssh works (SIGTERM, then SIGKILL);
+- never touches a port held by another process; one attempt per port per 4 min.
+The last action per port is shown on the page. Set `"auto_heal": false` to turn it off.
+The VPN on the ThinkPad is never touched (reconnecting needs the user's sign-in).
+The plist has `AbandonProcessGroup` so tunnels outlive each run.
+
 ## Rotating a token
 
 1. ThinkPad: `Set-Token.ps1 -Generate` (Mac: `--init-token`): the new token replaces the old one.
