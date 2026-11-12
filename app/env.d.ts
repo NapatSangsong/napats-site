@@ -21,6 +21,9 @@ declare namespace Cloudflare {
 		TUYA_ACCESS_SECRET: string;
 		TUYA_DEVICE_ID: string;
 		ENERGY_PAGE_KEY: string;
+		/** BlueRing PV cloud bearer token — from `node tools/bluering/bluering.mjs login`.
+		 *  Optional: /api/energy/bluering answers 503 token_expired until it is set. */
+		BLUERING_TOKEN?: string;
 		// ThinkPad / VPN status page (/thinkpad)
 		/** only used when THINKPAD_PUBLIC (thinkpad-auth.server.ts) is false */
 		THINKPAD_PAGE_KEY?: string;

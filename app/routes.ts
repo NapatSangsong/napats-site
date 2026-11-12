@@ -15,6 +15,7 @@ export default [
 	route("api/energy/history", "routes/api/energy.history.ts"),
 	route("api/energy/weather", "routes/api/energy.weather.ts"),
 	route("api/energy/solar", "routes/api/energy.solar.ts"),
+	route("api/energy/bluering", "routes/api/energy.bluering.ts"),
 	route("api/energy/grid", "routes/api/energy.grid.ts"),
 	route("api/energy/chat", "routes/api/energy.chat.ts"),
 	route("api/energy/sync", "routes/api/energy.sync.ts"),
