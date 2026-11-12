@@ -9,6 +9,7 @@ import { ago, baht, hhmm, kwh, n0, n1, n2, thDate, thShort } from "~/components/
 import type { LiveReading } from "~/lib/bluering.server";
 import { BlueringAuthError } from "~/lib/bluering.server";
 import { ENERGY_PUBLIC, gateCookie, keyHash, requireEnergyAuth, safeEqual } from "~/lib/energy-gate.server";
+import { billingCycle } from "~/lib/energy-forecast";
 import { type EnergyView, getView } from "~/lib/energy-model.server";
 
 export const meta: Route.MetaFunction = () => [
@@ -504,10 +505,19 @@ function HistoryCard({ view, colors }: { view: EnergyView; colors: ReturnType<ty
  */
 function CyclesCard({ view }: { view: EnergyView }) {
 	// a cycle with no measured day yet (still backfilling) would read as a ~41 ฿ bill
-	const rows = view.cycles.filter((c) => c.projected || c.measuredDays > 0).reverse();
+	const cycles = view.cycles.filter((c) => c.projected || c.measuredDays > 0);
+	const known = new Set(cycles.map((c) => c.end));
+	// receipts from before BlueRing was installed: MEA's numbers only
+	const older = (view.bills ?? []).filter((b) => !known.has(b.read) && b.read <= (cycles[0]?.end ?? b.read));
 	const hasLease = view.cycle.packageThb !== null;
+	const fromReceipts = view.model.calibration.source === "receipts";
+	const rows: ({ kind: "cycle"; c: (typeof cycles)[number] } | { kind: "bill"; b: (typeof older)[number] })[] = [
+		...cycles.map((c) => ({ kind: "cycle" as const, c })),
+		...older.map((b) => ({ kind: "bill" as const, b })),
+	].sort((x, y) => (y.kind === "cycle" ? y.c.end : y.b.read).localeCompare(x.kind === "cycle" ? x.c.end : x.b.read));
+	const cols = hasLease ? 5 : 4;
 	return (
-		<Card title="รอบบิลย้อนหลัง" className="ev-o6" aside={<span className="ev-chip">เทียบบิล MEA ได้</span>}>
+		<Card title="รอบบิลย้อนหลัง" className="ev-o6" aside={<span className="ev-chip">{fromReceipts ? "เทียบใบเสร็จ MEA" : "เทียบบิล MEA ได้"}</span>}>
 			<div className="ev-table-wrap">
 				<table className="ev-table">
 					<thead>
@@ -520,9 +530,26 @@ function CyclesCard({ view }: { view: EnergyView }) {
 						</tr>
 					</thead>
 					<tbody>
-						{rows.map((c) => {
-							const lastDay = new Date(Date.parse(`${c.end}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+						{rows.map((row) => {
+							if (row.kind === "bill") {
+								const b = row.b;
+								const start = billingCycle(addDaysIso(b.read, -1), view.plant.meterReadingDay).start;
+								return (
+									<tr key={b.read} className="pre">
+										<td>
+											{thShort(start)}–{thShort(addDaysIso(b.read, -1))}
+											<small>ก่อนมี BlueRing</small>
+										</td>
+										<td colSpan={cols - 1} className="mea-only">
+											ใบเสร็จ {n0(b.thb)} ฿ · ซื้อ {n0(b.kwh)} หน่วย
+										</td>
+									</tr>
+								);
+							}
+							const c = row.c;
+							const lastDay = addDaysIso(c.end, -1);
 							const partial = !c.projected && c.measuredDays < c.days - 1;
+							const acc = c.mea && !partial && !c.projected ? Math.round((c.billThb / c.mea.thb) * 100) : null;
 							return (
 								<tr key={c.start} className={c.projected ? "proj" : ""}>
 									<td>
@@ -533,6 +560,12 @@ function CyclesCard({ view }: { view: EnergyView }) {
 									<td>
 										{c.projected ? "≈" : ""}
 										{n0(c.billThb)}
+										{c.mea && (
+											<small>
+												ใบเสร็จ {n0(c.mea.thb)}
+												{acc !== null ? ` · ${acc}%` : ""}
+											</small>
+										)}
 									</td>
 									<td>{n0(c.savingsThb)}</td>
 									{hasLease && (
@@ -547,11 +580,32 @@ function CyclesCard({ view }: { view: EnergyView }) {
 				</table>
 			</div>
 			<p className="ev-meta">
-				ใช้ไฟเป็น kWh อื่นๆ เป็นบาท · ค่าไฟคำนวณจากข้อมูล BlueRing ตามอัตรา TOU + ค่าบริการ ถ้าต่างจากบิล MEA จริงมาก แปลว่าเซนเซอร์ของ
-				BlueRing วัดคลาด{hasLease ? " · หักค่าเช่า = โซลาร์ช่วย − ค่าเช่าแผงต่อรอบ" : ""}
+				ใช้ไฟเป็น kWh อื่นๆ เป็นบาท · ค่าไฟคำนวณจากข้อมูล BlueRing ตามอัตรา TOU + ค่าบริการ
+				{fromReceipts
+					? ` แล้วปรับเทียบกับใบเสร็จ MEA (หน่วย ×${n2(view.model.calibration.kwhFactor)}, ราคา ×${n2(view.model.calibration.priceFactor)}) · % = คำนวณ ÷ ใบเสร็จ`
+					: " ถ้าต่างจากบิล MEA จริงมาก แปลว่าเซนเซอร์ของ BlueRing วัดคลาด"}
+				{hasLease ? " · หักค่าเช่า = โซลาร์ช่วย − ค่าเช่าแผงต่อรอบ" : ""}
 			</p>
 		</Card>
 	);
+}
+
+/** YYYY-MM-DD ± n days (UTC calendar arithmetic, no timezone involved) */
+function addDaysIso(date: string, n: number): string {
+	return new Date(Date.parse(`${date}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+}
+
+function CalibrationStat({ c }: { c: EnergyView["model"]["calibration"] }) {
+	if (c.source === "receipts") {
+		return (
+			<Stat
+				label={`ปรับเทียบใบเสร็จ MEA ${c.cycles} รอบ`}
+				value={`×${n2(c.kwhFactor)}`}
+				note={`หน่วย ×${n2(c.kwhFactor)} · ราคา ×${n2(c.priceFactor)}`}
+			/>
+		);
+	}
+	return <Stat label="ปรับเทียบมิเตอร์" value={`×${n2(c.kwhFactor)}`} note="ยอดรายวันของ BlueRing (ยังไม่มีใบเสร็จ)" />;
 }
 
 function ModelCard({ view, colors }: { view: EnergyView; colors: ReturnType<typeof useChartColors> }) {
@@ -569,7 +623,7 @@ function ModelCard({ view, colors }: { view: EnergyView; colors: ReturnType<type
 				<Stat label="คลาดเคลื่อนเฉลี่ย" value={m.mapePct === null ? "—" : `±${m.mapePct}`} unit={m.mapePct === null ? undefined : "%/วัน"} />
 				<Stat label="เรียนจาก" value={n0(m.days)} unit="วัน" />
 				<Stat label="PR ของแผงจริง" value={n2(m.learnedPr)} note="kWh ต่อ kWp ที่แดด 1000 W/m²" />
-				<Stat label="ปรับเทียบมิเตอร์" value={`×${n2(m.importFactor)}`} note="ไฟที่ซื้อ เทียบยอดรายวัน" />
+				<CalibrationStat c={m.calibration} />
 			</div>
 		</Card>
 	);

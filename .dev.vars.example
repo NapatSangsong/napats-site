@@ -26,6 +26,8 @@ TUYA_DEVICE_ID=your-tuya-device-id
 # Get it with: node tools/bluering/bluering.mjs login   (token is kept in Keychain)
 # then: security find-generic-password -s napats-bluering -a token -w
 # BLUERING_TOKEN=eyJ...   # valid 30 days; the plant/gateway are discovered from it
+# MEA receipts to calibrate bills (secret: the repo is public). read = meter-reading day.
+# MEA_BILLS=[{"read":"2026-11-02","kwh":800,"thb":3200.00}]
 
 # Energy page gate key (any string; SHA-256 of this is stored in the cookie)
 ENERGY_PAGE_KEY=your-energy-page-key

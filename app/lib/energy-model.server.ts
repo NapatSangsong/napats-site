@@ -48,7 +48,11 @@ import {
 	SLOT_MS,
 	type SolarWindow,
 	type Summary,
-	scaleImport,
+	calibrate,
+	type Calibration,
+	type Cycle,
+	parseMeaBills,
+	receiptCalibration,
 	summarize,
 	pricingSignature,
 	type Tariff,
@@ -67,7 +71,7 @@ const SERVICE_THB = 40.9;
 const GATEWAY_SILENT_MIN = 45;
 
 /** bump the suffix whenever EnergyView's shape changes, so an old cached view is never served */
-const VIEW_KV_KEY = "energy:v2:view:4";
+const VIEW_KV_KEY = "energy:v2:view:5";
 const VIEW_FRESH_MS = 5 * 60_000;
 const VIEW_TTL_SEC = 3 * 86400;
 const WEATHER_KV_KEY = "energy:v2:weather";
@@ -127,6 +131,8 @@ export interface CycleRow {
 	netThb: number | null;
 	/** the running cycle: measured so far + forecast */
 	projected: boolean;
+	/** the MEA receipt for this cycle, when MEA_BILLS has it */
+	mea: { kwh: number; thb: number } | null;
 }
 
 export interface EnergyView {
@@ -163,6 +169,8 @@ export interface EnergyView {
 		coveragePct: number;
 	};
 	cycles: CycleRow[];
+	/** every MEA receipt from MEA_BILLS, including cycles before BlueRing was installed */
+	bills: { read: string; kwh: number; thb: number }[];
 	history: {
 		daily: { date: string; solar: number; consumption: number; gridPurchased: number; gridSold: number }[];
 	};
@@ -170,8 +178,8 @@ export interface EnergyView {
 		kGlobal: number;
 		/** kWh per kWp at 1000 W/m², i.e. the learned performance ratio */
 		learnedPr: number;
-		/** meter ÷ 15-min-sum for imported kWh, applied to every import/cost figure */
-		importFactor: number;
+		/** applied to every import/cost figure: MEA receipts when available, else BlueRing's meter */
+		calibration: Calibration;
 		days: number;
 		mapePct: number | null;
 		backtest: { date: string; actualKwh: number; predictedKwh: number }[];
@@ -358,7 +366,10 @@ async function getLiveReading(env: BlueringEnv, gid: number, today: string): Pro
 
 // ---------------- assembly ----------------
 
-export async function buildView(env: BlueringEnv, kv: KVNamespace | undefined, now = Date.now()): Promise<EnergyView> {
+/** BlueRing token + optional MEA receipts (JSON secret, see parseMeaBills) */
+export type EnergyEnv = BlueringEnv & { MEA_BILLS?: string };
+
+export async function buildView(env: EnergyEnv, kv: KVNamespace | undefined, now = Date.now()): Promise<EnergyView> {
 	const plant = await getPlant(env, kv);
 	const gid = plant.gatewayId;
 	const tariff: Tariff = {
@@ -397,8 +408,37 @@ export async function buildView(env: BlueringEnv, kv: KVNamespace | undefined, n
 	const model = fitSolarModel(hourlySolarKwh(learnBuckets), weather, plant.capKw);
 	const profiles = buildProfiles(learnBuckets);
 	const weatherByHour = new Map(weather.map((w) => [w.t, w]));
-	const factor = importCalibration(learnBuckets, new Map(daily.map((d) => [d.date, d.gridPurchased] as const)));
-	const sum = (bs: Bucket[]) => scaleImport(summarize(bs, tariff), factor);
+	// ---- calibration: MEA receipts when there are any, else BlueRing's own daily meter ----
+	const daySums = await getDaySums(env, kv, gid, installDate, today, buckets, tariff);
+	const allCycles = cyclesSince(installDate, today, plant.meterReadingDay);
+	const rawCycle = (c: Cycle) => {
+		let s = emptySummary();
+		let measuredDays = 0;
+		for (let d = c.start; d < c.end; d = addDays(d, 1)) {
+			const ds = daySums.get(d);
+			if (!ds || ds.buckets === 0) continue;
+			s = addSummaries(s, ds);
+			measuredDays++;
+		}
+		return { s, measuredDays };
+	};
+	const bills = parseMeaBills(env.MEA_BILLS);
+	const billByEnd = new Map(bills.map((b) => [b.read, b]));
+	const pairs = allCycles.flatMap((c) => {
+		const b = billByEnd.get(c.end);
+		if (!b || c.start === cycle.start) return [];
+		const r = rawCycle(c);
+		// only fully measured cycles: a partial one would read as BlueRing missing kWh
+		return r.measuredDays >= c.days - 1 ? [{ meaKwh: b.kwh, meaThb: b.thb, rawImportKwh: r.s.importKwh, rawCostThb: r.s.costThb }] : [];
+	});
+	const dailyFactor = importCalibration(learnBuckets, new Map(daily.map((d) => [d.date, d.gridPurchased] as const)));
+	const cal: Calibration = receiptCalibration(pairs, SERVICE_THB) ?? {
+		kwhFactor: dailyFactor,
+		priceFactor: 1,
+		source: dailyFactor === 1 ? "none" : "bluering",
+		cycles: 0,
+	};
+	const sum = (bs: Bucket[]) => calibrate(summarize(bs, tariff), cal);
 
 	// "now" for the model = end of the last measured bucket today
 	const lastT = buckets.filter((b) => b.t >= todayStart).at(-1)?.t;
@@ -447,8 +487,11 @@ export async function buildView(env: BlueringEnv, kv: KVNamespace | undefined, n
 	const packageThb = plant.packageMonthlyThb;
 
 	// ---- every past cycle since install, from per-day summaries ----
-	const daySums = await getDaySums(env, kv, gid, installDate, today, buckets, tariff);
-	const cycles: CycleRow[] = cyclesSince(installDate, today, plant.meterReadingDay).map((c) => {
+	const meaFor = (c: Cycle) => {
+		const b = billByEnd.get(c.end);
+		return b ? { kwh: b.kwh, thb: b.thb } : null;
+	};
+	const cycles: CycleRow[] = allCycles.map((c) => {
 		if (c.start === cycle.start) {
 			return {
 				start: c.start,
@@ -464,17 +507,12 @@ export async function buildView(env: BlueringEnv, kv: KVNamespace | undefined, n
 				savingsThb: r2(cycleProjected.savingsThb),
 				netThb: packageThb === null ? null : r2(cycleProjected.savingsThb - packageThb),
 				projected: true,
+				mea: meaFor(c),
 			};
 		}
-		let s = emptySummary();
-		let measuredDays = 0;
-		for (let d = c.start; d < c.end; d = addDays(d, 1)) {
-			const ds = daySums.get(d);
-			if (!ds || ds.buckets === 0) continue;
-			s = addSummaries(s, ds);
-			measuredDays++;
-		}
-		s = scaleImport(s, factor);
+		const r = rawCycle(c);
+		const s = calibrate(r.s, cal);
+		const measuredDays = r.measuredDays;
 		return {
 			start: c.start,
 			end: c.end,
@@ -489,6 +527,7 @@ export async function buildView(env: BlueringEnv, kv: KVNamespace | undefined, n
 			savingsThb: r2(s.savingsThb),
 			netThb: packageThb === null ? null : r2(s.savingsThb - packageThb),
 			projected: false,
+			mea: meaFor(c),
 		};
 	});
 	const previous = cycles.length >= 2 ? cycles[cycles.length - 2] : null;
@@ -497,7 +536,7 @@ export async function buildView(env: BlueringEnv, kv: KVNamespace | undefined, n
 	const dailyCosts: number[] = [];
 	for (let d = learnFrom; d < today; d = addDays(d, 1)) {
 		const ds = daySums.get(d);
-		if (ds && ds.buckets >= 90) dailyCosts.push(ds.costThb * factor);
+		if (ds && ds.buckets >= 90) dailyCosts.push(ds.costThb * cal.kwhFactor * cal.priceFactor);
 	}
 	const spreadThb = billSpread(dailyCosts, (cycleEnd - measuredEnd) / DAY_MS);
 
@@ -541,11 +580,16 @@ export async function buildView(env: BlueringEnv, kv: KVNamespace | undefined, n
 			coveragePct: elapsed.length ? Math.round(((elapsed.length - cycleActual.estimatedBuckets) / elapsed.length) * 100) : 0,
 		},
 		cycles,
+		bills,
 		history: { daily: daily.slice(-61) },
 		model: {
 			kGlobal: model.kGlobal,
 			learnedPr: r2((model.kGlobal * 1000) / plant.capKw),
-			importFactor: Math.round(factor * 1000) / 1000,
+			calibration: {
+				...cal,
+				kwhFactor: Math.round(cal.kwhFactor * 1000) / 1000,
+				priceFactor: Math.round(cal.priceFactor * 1000) / 1000,
+			},
 			days: model.days,
 			mapePct: model.mapePct === null ? null : Math.round(model.mapePct),
 			backtest: model.backtest.slice(-14).map((b) => ({ date: b.date, actualKwh: r2(b.actualKwh), predictedKwh: r2(b.predictedKwh) })),
@@ -561,7 +605,7 @@ export async function buildView(env: BlueringEnv, kv: KVNamespace | undefined, n
  * an error page. Throws only when there is nothing cached at all. `force` (the cron)
  * always rebuilds.
  */
-export async function getView(env: BlueringEnv, kv: KVNamespace | undefined, force = false, now = Date.now()): Promise<EnergyView> {
+export async function getView(env: EnergyEnv, kv: KVNamespace | undefined, force = false, now = Date.now()): Promise<EnergyView> {
 	const hit = await kv?.get<EnergyView>(VIEW_KV_KEY, "json");
 	if (!force && hit && now - hit.generatedAt < VIEW_FRESH_MS) return hit;
 	try {

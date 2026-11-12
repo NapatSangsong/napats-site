@@ -838,3 +838,10 @@ body:has(.ev) {
 .ev-table td.pos {
 	color: var(--good-ink);
 }
+.ev-table tr.pre td {
+	color: var(--muted);
+}
+.ev-table td.mea-only {
+	text-align: left;
+	font-size: 12.5px;
+}

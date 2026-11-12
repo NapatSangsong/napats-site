@@ -24,6 +24,9 @@ declare namespace Cloudflare {
 		/** BlueRing PV cloud bearer token — from `node tools/bluering/bluering.mjs login`.
 		 *  Optional: /api/energy/bluering answers 503 token_expired until it is set. */
 		BLUERING_TOKEN?: string;
+		/** MEA receipts for bill calibration, JSON [{ read: "YYYY-MM-DD", kwh, thb }]. A secret
+		 *  because the repo is public. Optional: falls back to BlueRing's own meter. */
+		MEA_BILLS?: string;
 		// ThinkPad / VPN status page (/thinkpad)
 		/** only used when THINKPAD_PUBLIC (thinkpad-auth.server.ts) is false */
 		THINKPAD_PAGE_KEY?: string;

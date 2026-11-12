@@ -10,6 +10,9 @@ import {
 	bestSolarWindow,
 	billingCycle,
 	billSpread,
+	calibrate,
+	parseMeaBills,
+	receiptCalibration,
 	type Bucket,
 	bkk,
 	buildProfiles,
@@ -226,6 +229,47 @@ describe("cycles + day summaries + bill spread", () => {
 		expect(billSpread(costs, 16)).toBeCloseTo(sd * 4);
 		expect(billSpread(costs, 0)).toBe(0);
 		expect(billSpread([100, 100], 10)).toBe(0);
+	});
+});
+
+describe("receipt calibration", () => {
+	it("parseMeaBills keeps valid entries, sorted, and never throws", () => {
+		expect(parseMeaBills(undefined)).toEqual([]);
+		expect(parseMeaBills("not json")).toEqual([]);
+		expect(
+			parseMeaBills('[{"read":"2026-11-02","kwh":800,"thb":3200.5},{"read":"bad","kwh":1,"thb":1},{"read":"2026-10-02","kwh":700,"thb":2900.25}]'),
+		).toEqual([
+			{ read: "2026-10-02", kwh: 700, thb: 2900.25 },
+			{ read: "2026-11-02", kwh: 800, thb: 3200.5 },
+		]);
+	});
+
+	it("fits kWh and price factors that reproduce the receipts in total", () => {
+		const pairs = [
+			{ meaKwh: 800, meaThb: 3200, rawImportKwh: 790, rawCostThb: 3100 },
+			{ meaKwh: 700, meaThb: 2900, rawImportKwh: 715, rawCostThb: 2850 },
+		];
+		const c = receiptCalibration(pairs, 40.9)!;
+		expect(c.source).toBe("receipts");
+		expect(c.cycles).toBe(2);
+		expect(c.kwhFactor).toBeCloseTo((800 + 700) / (790 + 715), 6);
+		const predicted = pairs.reduce((t, p) => t + p.rawCostThb * c.kwhFactor * c.priceFactor + 40.9, 0);
+		expect(predicted).toBeCloseTo(3200 + 2900, 6);
+	});
+
+	it("clamps a wild receipt to ±15% and returns null with nothing to fit", () => {
+		const c = receiptCalibration([{ meaKwh: 5000, meaThb: 20000, rawImportKwh: 800, rawCostThb: 3000 }], 40.9)!;
+		expect(c.kwhFactor).toBe(1.15);
+		expect(receiptCalibration([], 40.9)).toBeNull();
+	});
+
+	it("calibrate scales import by kWh, cost by both, savings by price only", () => {
+		const s = summarize([{ t: at("2026-11-12", "12:00"), solar: 1, load: 3 }], TARIFF);
+		const out = calibrate(s, { kwhFactor: 1.1, priceFactor: 1.02, source: "receipts", cycles: 2 });
+		expect(out.importKwh).toBeCloseTo(s.importKwh * 1.1);
+		expect(out.costThb).toBeCloseTo(s.costThb * 1.1 * 1.02);
+		expect(out.savingsThb).toBeCloseTo(s.savingsThb * 1.02);
+		expect(out.loadKwh).toBe(s.loadKwh);
 	});
 });
 

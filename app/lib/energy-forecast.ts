@@ -436,6 +436,83 @@ export function billSpread(dailyCosts: number[], remainingDays: number): number 
 	return sd * Math.sqrt(remainingDays);
 }
 
+// ---------------- receipt calibration ----------------
+
+/** One MEA bill: the meter-reading day (= the cycle's exclusive end), units and amount */
+export interface MeaBill {
+	read: string;
+	kwh: number;
+	thb: number;
+}
+
+/**
+ * Parse the MEA_BILLS secret: a JSON array of { read: "YYYY-MM-DD", kwh, thb }. Kept out of
+ * git (the repo is public). Malformed entries are dropped, never thrown on.
+ */
+export function parseMeaBills(json: string | undefined): MeaBill[] {
+	if (!json) return [];
+	try {
+		const arr = JSON.parse(json) as unknown;
+		if (!Array.isArray(arr)) return [];
+		return arr
+			.filter(
+				(b): b is MeaBill =>
+					!!b &&
+					typeof b === "object" &&
+					/^\d{4}-\d{2}-\d{2}$/.test(String((b as MeaBill).read)) &&
+					Number.isFinite((b as MeaBill).kwh) &&
+					Number.isFinite((b as MeaBill).thb) &&
+					(b as MeaBill).kwh > 0,
+			)
+			.sort((a, b) => a.read.localeCompare(b.read));
+	} catch {
+		return [];
+	}
+}
+
+export interface Calibration {
+	/** multiplies imported kWh (MEA meter ÷ BlueRing) */
+	kwhFactor: number;
+	/** multiplies energy cost after kwhFactor (Ft/rounding the tariff misses) */
+	priceFactor: number;
+	source: "receipts" | "bluering" | "none";
+	/** fully measured cycles with a receipt that the fit used */
+	cycles: number;
+}
+
+/**
+ * Fit both factors on cycles that have a receipt and complete BlueRing data:
+ *   kwhFactor   = Σ MEA kWh ÷ Σ BlueRing import
+ *   priceFactor = Σ (MEA ฿ − service) ÷ Σ (BlueRing energy cost × kwhFactor)
+ * Each is clamped to ±15%, so a typo in a receipt can't wreck the page. null with no pair.
+ */
+export function receiptCalibration(
+	pairs: { meaKwh: number; meaThb: number; rawImportKwh: number; rawCostThb: number }[],
+	serviceThb: number,
+): Calibration | null {
+	const ok = pairs.filter((p) => p.rawImportKwh > 0 && p.rawCostThb > 0);
+	if (!ok.length) return null;
+	const clamp = (x: number) => Math.min(1.15, Math.max(0.85, x));
+	const kwhFactor = clamp(ok.reduce((t, p) => t + p.meaKwh, 0) / ok.reduce((t, p) => t + p.rawImportKwh, 0));
+	const priceFactor = clamp(
+		ok.reduce((t, p) => t + (p.meaThb - serviceThb), 0) / ok.reduce((t, p) => t + p.rawCostThb * kwhFactor, 0),
+	);
+	return { kwhFactor, priceFactor, source: "receipts", cycles: ok.length };
+}
+
+/** Apply a calibration: imported kWh × kwhFactor; cost and savings × both (same tariff) */
+export function calibrate(s: Summary, c: Calibration): Summary {
+	const money = c.kwhFactor * c.priceFactor;
+	return {
+		...s,
+		importKwh: s.importKwh * c.kwhFactor,
+		peakImportKwh: s.peakImportKwh * c.kwhFactor,
+		offPeakImportKwh: s.offPeakImportKwh * c.kwhFactor,
+		costThb: s.costThb * money,
+		savingsThb: s.savingsThb * c.priceFactor,
+	};
+}
+
 // ---------------- insights ----------------
 
 export interface SolarWindow {
