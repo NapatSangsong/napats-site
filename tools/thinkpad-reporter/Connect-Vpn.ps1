@@ -9,12 +9,13 @@
        command file is deleted right away; the user name (not the password) is
        remembered DPAPI-protected for "vpn <password>"
     2. already connected? -> report and stop
-    3. start `vpncli -s` connect to the profile's default host and answer its
-       prompts (Username / Password / accept banner); if the GUI blocks the CLI,
-       close the GUI, retry, and reopen it afterwards
-    4. meanwhile watch the SSO login window (WebView2) with UI Automation:
-       fill email/password, press Next / Sign in / Yes, and send the number
-       shown for Microsoft Authenticator number matching to LINE
+    3. drive the Cisco Secure Client GUI (vpncli cannot do the gateway's SAML
+       login): dismiss a leftover gateway prompt, put the profile's default
+       host in the address box, press Connect
+    4. watch the SSO login window (WebView2, only inside the Cisco process
+       tree) with UI Automation: fill email/password ONCE, press Next /
+       Sign in / Yes, and send the number shown for Microsoft Authenticator
+       number matching to LINE; accept the Cisco banner
     5. report connected / failed. Gives up after 5 minutes.
   The password is never written to disk or to the log. Local log:
   %LOCALAPPDATA%\napats-status\vpn-connect.log (stages + UI element names only).
@@ -22,7 +23,11 @@
 [CmdletBinding()]
 param(
     [string]$ConfigDir = (Join-Path $env:LOCALAPPDATA 'napats-status'),
-    [int]$TimeoutSec = 300
+    [int]$TimeoutSec = 300,
+    # diagnostics: press Connect in the GUI, dump the login window it opens
+    # (element names only), then close the GUI again. No command, no
+    # credentials, nothing is sent to LINE.
+    [switch]$ProbeOnly
 )
 $ErrorActionPreference = 'Stop'
 
@@ -46,6 +51,7 @@ function Read-Token {
 $script:cmdId = 'unknown'
 function Report([string]$stage, [string]$number = $null, [string]$detail = $null) {
     Log "report $stage $number $detail"
+    if ($ProbeOnly) { return }
     try {
         $o = [ordered]@{ id = $script:cmdId; stage = $stage }
         if ($number) { $o.number = $number }
@@ -70,6 +76,7 @@ function Test-VpnUp {
 }
 
 # ---------- 1) command ----------
+if ($ProbeOnly) { $script:cmdId = 'probe'; $user = ''; $pass = '' } else {
 $cmdFile = Join-Path $ConfigDir 'pending-command.json'
 if (-not (Test-Path -LiteralPath $cmdFile)) { Log 'no pending command'; exit 0 }
 $cmd = Get-Content -LiteralPath $cmdFile -Raw | ConvertFrom-Json
@@ -100,48 +107,75 @@ if ($user) {
 # ---------- 2) already up? ----------
 if (Test-VpnUp) { Report 'already_connected'; $pass = $null; exit 0 }
 Report 'started'
+}
 
-# ---------- 3) vpncli ----------
+# ---------- 3) Cisco GUI ----------
 $cscDir = "${env:ProgramFiles(x86)}\Cisco\Cisco Secure Client"
-$vpncli = Join-Path $cscDir 'vpncli.exe'
 $gui = Join-Path $cscDir 'UI\csc_ui.exe'
-$prefs = "$env:LOCALAPPDATA\Cisco\Cisco Secure Client\VPN\preferences.xml"
-if (-not (Test-Path $prefs)) { $prefs = "$env:LOCALAPPDATA\Cisco\Cisco AnyConnect Secure Mobility Client\preferences.xml" }
 $vpnHost = ''
-try { $vpnHost = ([xml](Get-Content $prefs -Raw)).SelectSingleNode("//*[local-name()='DefaultHostName']").InnerText.Trim() } catch { }
+foreach ($prefs in @("$env:LOCALAPPDATA\Cisco\Cisco Secure Client\VPN\preferences.xml", "$env:LOCALAPPDATA\Cisco\Cisco AnyConnect Secure Mobility Client\preferences.xml")) {
+    if ($vpnHost -or -not (Test-Path -LiteralPath $prefs)) { continue }
+    try {
+        $x = [xml](Get-Content -LiteralPath $prefs -Raw)
+        foreach ($n in 'DefaultHostName', 'DefaultHostAddress') {
+            $v = $x.SelectSingleNode("//*[local-name()='$n']")
+            if (-not $vpnHost -and $v -and $v.InnerText.Trim()) { $vpnHost = $v.InnerText.Trim() }
+        }
+    } catch { }
+}
 if (-not $vpnHost) { Report 'failed' $null 'no default VPN host in Secure Client preferences'; exit 1 }
 
-$script:cli = $null
-$script:cliOut = $null
-$script:pending = $null
-$script:buf = New-Object char[] 4096
-function Start-Cli {
-    $psi = New-Object System.Diagnostics.ProcessStartInfo($vpncli, '-s')
-    $psi.UseShellExecute = $false
-    $psi.RedirectStandardInput = $true
-    $psi.RedirectStandardOutput = $true
-    $psi.RedirectStandardError = $true
-    $psi.CreateNoWindow = $true
-    $script:cli = [System.Diagnostics.Process]::Start($psi)
-    $script:cliOut = New-Object System.Text.StringBuilder
-    $script:pending = $script:cli.StandardOutput.ReadAsync($script:buf, 0, 4096)
-    $script:cli.StandardInput.WriteLine("connect $vpnHost")
-    $script:cli.StandardInput.Flush()
-    Log 'vpncli connect started'
-}
-function Read-Cli {
-    # non-blocking drain of whatever vpncli printed so far
-    if (-not $script:cli) { return '' }
-    $text = ''
-    while ($script:pending -and $script:pending.IsCompleted) {
-        $n = $script:pending.Result
-        if ($n -le 0) { $script:pending = $null; break }
-        $text += (New-Object string($script:buf, 0, $n))
-        $script:pending = $script:cli.StandardOutput.ReadAsync($script:buf, 0, 4096)
+# vpncli cannot do it: the gateway uses SAML ("The requested authentication
+# type is not supported in AnyConnect CLI", 2026-11-12), so the GUI is driven
+# instead. Its window is a classic Win32 dialog whose controls expose no UIA
+# patterns, so they are driven with window messages (WM_SETTEXT / BM_CLICK).
+Add-Type -Namespace NapatsVpn -Name W32 -MemberDefinition @'
+[DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr SendMessage(IntPtr h, int msg, IntPtr w, string l);
+[DllImport("user32.dll")] public static extern bool PostMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
+'@
+$WM_SETTEXT = 0x000C; $BM_CLICK = 0x00F5
+
+function Get-CiscoControls {
+    # every control of every Cisco-owned top window: @{ h; cls; name; id; en; top }
+    $out = @()
+    foreach ($w in (Get-LoginElements)) {
+        $top = [string]$w.Current.Name
+        foreach ($e in @($w) + @($w.FindAll($TS::Descendants, $AnyCond))) {
+            try {
+                $c = $e.Current
+                if ($c.NativeWindowHandle -eq 0) { continue }
+                $out += ,@{ h = [IntPtr]$c.NativeWindowHandle; cls = [string]$c.ClassName; name = [string]$c.Name; id = [string]$c.AutomationId; en = $c.IsEnabled; top = $top }
+            } catch { }
+        }
     }
-    return $text
+    return $out
 }
-function Send-Cli([string]$line) { try { $script:cli.StandardInput.WriteLine($line); $script:cli.StandardInput.Flush() } catch { } }
+function Click-Win32($ctl) { [void][NapatsVpn.W32]::PostMessage($ctl.h, $BM_CLICK, [IntPtr]::Zero, [IntPtr]::Zero) }
+
+function Start-GuiConnect {
+    if (-not (Get-Process csc_ui -ErrorAction SilentlyContinue)) { Start-Process $gui; Log 'started Cisco GUI'; Start-Sleep -Seconds 3 }
+    $deadline = (Get-Date).AddSeconds(30)
+    while ((Get-Date) -lt $deadline) {
+        $ctls = Get-CiscoControls
+        # leftover "Please enter a secure gateway to connect to." box -> OK
+        if ($ctls | Where-Object { $_.name -match 'enter a secure gateway' }) {
+            $ok = $ctls | Where-Object { $_.cls -eq 'Button' -and $_.name -eq 'OK' -and $_.en } | Select-Object -First 1
+            if ($ok) { Click-Win32 $ok; Log 'dismissed gateway prompt'; Start-Sleep -Seconds 1; continue }
+        }
+        $combo = $ctls | Where-Object { $_.cls -eq 'ComboBox' -and $_.id -eq '1203' -and $_.en } | Select-Object -First 1
+        $btn = $ctls | Where-Object { $_.cls -eq 'Button' -and $_.id -eq '1314' -and $_.en } | Select-Object -First 1
+        if ($btn -and $btn.name -match 'Disconnect') { return 'busy' }
+        if ($combo -and $btn -and $btn.name -eq 'Connect') {
+            [void][NapatsVpn.W32]::SendMessage($combo.h, $WM_SETTEXT, [IntPtr]::Zero, $vpnHost)
+            Start-Sleep -Milliseconds 400
+            Click-Win32 $btn
+            Log 'GUI connect pressed'
+            return 'pressed'
+        }
+        Start-Sleep -Milliseconds 700
+    }
+    return 'no window'
+}
 
 # ---------- 4) SSO window via UI Automation ----------
 $A = [System.Windows.Automation.AutomationElement]
@@ -149,14 +183,32 @@ $TS = [System.Windows.Automation.TreeScope]
 $AnyCond = [System.Windows.Automation.Condition]::TrueCondition
 $script:done = @{}
 $script:lastNumber = ''
+$script:pwFills = 0
+$script:pwFilledAt = $null
 
+# Only windows that belong to the Cisco client may be touched. Other apps
+# (LinkedIn, Teams, Outlook, ...) also host msedgewebview2 and show "Sign in"
+# pages: a WebView2 window counts only when its parent chain leads to a Cisco
+# process. (2026-11-12: the first version matched any WebView2 window and
+# typed the VPN login into the LinkedIn app.)
+$script:owned = @{}
+function Test-CiscoOwned([int]$procId) {
+    for ($i = 0; $i -lt 6 -and $procId -gt 0; $i++) {
+        $p = Get-CimInstance Win32_Process -Filter "ProcessId=$procId" -ErrorAction SilentlyContinue
+        if (-not $p) { return $false }
+        if ($p.Name -match '^(csc_ui|vpnui|acwebhelper|vpndownloader)\.exe$') { return $true }
+        if ($p.Name -ne 'msedgewebview2.exe') { return $false }
+        $procId = [int]$p.ParentProcessId
+    }
+    return $false
+}
 function Get-LoginElements {
     $out = @()
     foreach ($w in $A::RootElement.FindAll($TS::Children, $AnyCond)) {
         try {
-            $p = Get-Process -Id $w.Current.ProcessId -ErrorAction Stop
-            if ($p.ProcessName -notmatch 'csc_ui|vpnui|msedgewebview2|vpndownloader' -and $w.Current.Name -notmatch 'Cisco|Sign in|Microsoft') { continue }
-            $out += ,$w
+            $procId = [int]$w.Current.ProcessId
+            if (-not $script:owned.ContainsKey($procId)) { $script:owned[$procId] = Test-CiscoOwned $procId }
+            if ($script:owned[$procId]) { $out += ,$w }
         } catch { }
     }
     return $out
@@ -180,7 +232,9 @@ function Step-Login {
             $id = [string]$c.AutomationId; $name = [string]$c.Name
             if ($type -eq 'ControlType.Edit' -and $c.IsEnabled -and $c.IsOffscreen -eq $false) { $edits += ,$e }
             elseif ($type -eq 'ControlType.Button' -and $c.IsEnabled) { $buttons += ,$e }
-            if ($id -eq 'idRichContext_DisplaySign' -or ($type -eq 'ControlType.Text' -and $name -match '^\d{2,3}$' -and $id -match 'DisplaySign|displaySign')) { $number = $name.Trim() }
+            # the element's name can carry the instructions too ("Open your Authenticator
+            # app and approve the request. ... 48") -> keep only the 2-3 digit number
+            if (($id -eq 'idRichContext_DisplaySign' -or $id -match 'DisplaySign|displaySign') -and $name -match '(?<!\d)(\d{2,3})\D*$') { $number = $matches[1] }
             if ($id -match '^(passwordError|usernameError|idTD_Error|errorText)$' -and $name) { $err = $name }
         }
         if ($err) { return @{ failed = 'sign-in error shown on the login page' } }
@@ -194,16 +248,25 @@ function Step-Login {
             $val = ''
             try { $val = ($e.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)).Current.Value } catch { }
             if ($c.IsPassword) {
-                if (-not $val -and $pass) { if (Set-El $e $pass) { $filled = $true; Log 'filled password field' } }
+                # the password goes in ONCE per command: a password field that is still
+                # (or again) there 15 s after submitting means a wrong password or an
+                # unexpected page -> stop rather than risk locking the account
+                if (-not $val -and $pass) {
+                    if ($script:pwFills -ge 1) {
+                        if (((Get-Date) - $script:pwFilledAt).TotalSeconds -lt 15) { continue }
+                        return @{ failed = 'password asked again (wrong password) - stopped to avoid account lockout' }
+                    }
+                    if (Set-El $e $pass) { $script:pwFills++; $script:pwFilledAt = Get-Date; $filled = $true; Log 'filled password field' }
+                }
             } elseif ($c.AutomationId -match 'i0116|loginfmt|email|user' -or $c.Name -match 'email|phone|user|ผู้ใช้|อีเมล') {
                 if (-not $val -and $user) { if (Set-El $e $user) { $filled = $true; Log 'filled user field' } }
             }
         }
-        # press the primary button (Next / Sign in / Yes / Accept / Connect) at most every 5 s per label
+        # press the primary button (Next / Sign in / Yes) at most every 5 s per label
         foreach ($b in $buttons) {
             $c = $b.Current
             $label = "$($c.AutomationId)|$($c.Name)"
-            if ($c.AutomationId -eq 'idSIButton9' -or $c.Name -match '^(Next|Sign in|Yes|Accept|Continue|Connect|OK|Verify|ถัดไป|ลงชื่อเข้าใช้|ใช่|ยอมรับ|เชื่อมต่อ)$') {
+            if ($c.AutomationId -eq 'idSIButton9' -or $c.Name -match '^(Next|Sign in|Yes|Continue|Verify|ถัดไป|ลงชื่อเข้าใช้|ใช่)$') {
                 if ($c.Name -match '^(No|Cancel|Back|ไม่|ยกเลิก)$') { continue }
                 $last = $script:done[$label]
                 if ($filled -or -not $last -or ((Get-Date) - $last).TotalSeconds -gt 5) {
@@ -232,39 +295,51 @@ function Dump-Ui {
 
 # ---------- main loop ----------
 $sw = [Diagnostics.Stopwatch]::StartNew()
-$guiClosed = $false
 $result = 'timeout'
-try {
-    Start-Cli
-    while ($sw.Elapsed.TotalSeconds -lt $TimeoutSec) {
-        $out = Read-Cli
-        if ($out) {
-            [void]$script:cliOut.Append($out)
-            foreach ($l in ($out -split "`r?`n")) { if ($l.Trim()) { Log ("cli: " + ($l.Trim() -replace '[a-z0-9-]+(\.[a-z0-9-]+)+', '<host>')) } }
-            if ($out -match 'Username:\s*(\[.*\])?\s*$') { Send-Cli $user }
-            if ($out -match 'Password:\s*$') { Send-Cli $pass }
-            if ($out -match 'accept\?\s*\[y/n\]|\[y/n\]:\s*$') { Send-Cli 'y' }
-            if ($out -match 'another .*application is running|Connect not available' -and -not $guiClosed) {
-                Log 'GUI blocks vpncli: closing GUI and retrying'
-                Get-Process csc_ui -ErrorAction SilentlyContinue | Stop-Process -Force
-                $guiClosed = $true
-                try { $script:cli.Kill() } catch { }
-                Start-Sleep -Seconds 2
-                Start-Cli
-            }
-            if ($out -match 'Login failed|authentication failed|Login denied') { $result = 'login failed'; break }
+if ($ProbeOnly) {
+    $g = Start-GuiConnect
+    Log "probe: GUI $g"
+    for ($i = 0; $i -lt 8; $i++) {
+        Start-Sleep -Seconds 3
+        foreach ($w in $A::RootElement.FindAll($TS::Children, $AnyCond)) {
+            try {
+                $c = $w.Current; $pn = (Get-Process -Id $c.ProcessId -ErrorAction Stop).ProcessName
+                if ($pn -match 'csc|vpn|cisco|acweb|webview') { Log ("probe t+{0}s: '{1}' proc={2} owned={3}" -f (3 * ($i + 1)), ($c.Name -replace '[a-z0-9-]+(\.[a-z0-9-]+){2,}', '<host>'), $pn, (Test-CiscoOwned $c.ProcessId)) }
+            } catch { }
         }
-        $r = Step-Login
-        if ($r.failed) { $result = $r.failed; break }
-        if (Test-VpnUp) { $result = 'connected'; break }
-        Start-Sleep -Milliseconds 700
+        $st = Get-CiscoControls | Where-Object { $_.id -eq '1212' } | Select-Object -First 1
+        if ($st) { Log ("probe status: " + ($st.name -replace '[a-z0-9-]+(\.[a-z0-9-]+){2,}', '<host>')) }
+    }
+    Dump-Ui
+    Get-Process csc_ui -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Sleep -Seconds 2
+    Start-Process $gui
+    Log 'probe: done, GUI restarted'
+    exit 0
+}
+try {
+    $g = Start-GuiConnect
+    if ($g -eq 'no window') { $result = 'Cisco window not found or not ready' }
+    else {
+        if ($g -eq 'busy') { Log 'GUI already connecting' }
+        while ($sw.Elapsed.TotalSeconds -lt $TimeoutSec) {
+            $r = Step-Login
+            if ($r.failed) { $result = $r.failed; break }
+            $ctls = Get-CiscoControls
+            # banner after login -> Accept
+            $acc = $ctls | Where-Object { $_.cls -eq 'Button' -and $_.name -match '^(Accept|ยอมรับ)$' -and $_.en } | Select-Object -First 1
+            if ($acc -and -not $script:done['banner']) { Click-Win32 $acc; $script:done['banner'] = Get-Date; Log 'accepted banner' }
+            # Cisco reports a failure in its own window
+            $bad = $ctls | Where-Object { $_.cls -eq 'Static' -and $_.name -match 'Login failed|Login denied|authentication failed|Connection attempt has failed' } | Select-Object -First 1
+            if ($bad) { $result = 'Cisco says: ' + $bad.name; break }
+            if (Test-VpnUp) { $result = 'connected'; break }
+            Start-Sleep -Milliseconds 700
+        }
     }
 } catch {
     $result = 'error: ' + $_.Exception.Message
 } finally {
     $pass = $null
-    if ($script:cli -and -not $script:cli.HasExited) { Send-Cli 'exit'; Start-Sleep -Milliseconds 500; try { if (-not $script:cli.HasExited) { $script:cli.Kill() } } catch { } }
-    if ($guiClosed -and (Test-Path $gui)) { Start-Process $gui }
 }
 
 if ($result -eq 'connected') { Report 'connected' }
