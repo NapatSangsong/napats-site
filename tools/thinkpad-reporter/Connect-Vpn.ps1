@@ -105,10 +105,17 @@ Report 'started'
 $cscDir = "${env:ProgramFiles(x86)}\Cisco\Cisco Secure Client"
 $vpncli = Join-Path $cscDir 'vpncli.exe'
 $gui = Join-Path $cscDir 'UI\csc_ui.exe'
-$prefs = "$env:LOCALAPPDATA\Cisco\Cisco Secure Client\VPN\preferences.xml"
-if (-not (Test-Path $prefs)) { $prefs = "$env:LOCALAPPDATA\Cisco\Cisco AnyConnect Secure Mobility Client\preferences.xml" }
 $vpnHost = ''
-try { $vpnHost = ([xml](Get-Content $prefs -Raw)).SelectSingleNode("//*[local-name()='DefaultHostName']").InnerText.Trim() } catch { }
+foreach ($prefs in @("$env:LOCALAPPDATA\Cisco\Cisco Secure Client\VPN\preferences.xml", "$env:LOCALAPPDATA\Cisco\Cisco AnyConnect Secure Mobility Client\preferences.xml")) {
+    if ($vpnHost -or -not (Test-Path -LiteralPath $prefs)) { continue }
+    try {
+        $x = [xml](Get-Content -LiteralPath $prefs -Raw)
+        foreach ($n in 'DefaultHostName', 'DefaultHostAddress') {
+            $v = $x.SelectSingleNode("//*[local-name()='$n']")
+            if (-not $vpnHost -and $v -and $v.InnerText.Trim()) { $vpnHost = $v.InnerText.Trim() }
+        }
+    } catch { }
+}
 if (-not $vpnHost) { Report 'failed' $null 'no default VPN host in Secure Client preferences'; exit 1 }
 
 $script:cli = $null
@@ -149,14 +156,33 @@ $TS = [System.Windows.Automation.TreeScope]
 $AnyCond = [System.Windows.Automation.Condition]::TrueCondition
 $script:done = @{}
 $script:lastNumber = ''
+$script:pwFills = 0
+$script:pwFilledAt = $null
+$script:cliPwSent = $false
 
+# Only windows that belong to the Cisco client may be touched. Other apps
+# (LinkedIn, Teams, Outlook, ...) also host msedgewebview2 and show "Sign in"
+# pages: a WebView2 window counts only when its parent chain leads to a Cisco
+# process. (2026-11-12: the first version matched any WebView2 window and
+# typed the VPN login into the LinkedIn app.)
+$script:owned = @{}
+function Test-CiscoOwned([int]$procId) {
+    for ($i = 0; $i -lt 6 -and $procId -gt 0; $i++) {
+        $p = Get-CimInstance Win32_Process -Filter "ProcessId=$procId" -ErrorAction SilentlyContinue
+        if (-not $p) { return $false }
+        if ($p.Name -match '^(csc_ui|vpnui|acwebhelper|vpndownloader)\.exe$') { return $true }
+        if ($p.Name -ne 'msedgewebview2.exe') { return $false }
+        $procId = [int]$p.ParentProcessId
+    }
+    return $false
+}
 function Get-LoginElements {
     $out = @()
     foreach ($w in $A::RootElement.FindAll($TS::Children, $AnyCond)) {
         try {
-            $p = Get-Process -Id $w.Current.ProcessId -ErrorAction Stop
-            if ($p.ProcessName -notmatch 'csc_ui|vpnui|msedgewebview2|vpndownloader' -and $w.Current.Name -notmatch 'Cisco|Sign in|Microsoft') { continue }
-            $out += ,$w
+            $procId = [int]$w.Current.ProcessId
+            if (-not $script:owned.ContainsKey($procId)) { $script:owned[$procId] = Test-CiscoOwned $procId }
+            if ($script:owned[$procId]) { $out += ,$w }
         } catch { }
     }
     return $out
@@ -194,7 +220,16 @@ function Step-Login {
             $val = ''
             try { $val = ($e.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)).Current.Value } catch { }
             if ($c.IsPassword) {
-                if (-not $val -and $pass) { if (Set-El $e $pass) { $filled = $true; Log 'filled password field' } }
+                # the password goes in ONCE per command: a password field that is still
+                # (or again) there 15 s after submitting means a wrong password or an
+                # unexpected page -> stop rather than risk locking the account
+                if (-not $val -and $pass) {
+                    if ($script:pwFills -ge 1) {
+                        if (((Get-Date) - $script:pwFilledAt).TotalSeconds -lt 15) { continue }
+                        return @{ failed = 'password asked again (wrong password) - stopped to avoid account lockout' }
+                    }
+                    if (Set-El $e $pass) { $script:pwFills++; $script:pwFilledAt = Get-Date; $filled = $true; Log 'filled password field' }
+                }
             } elseif ($c.AutomationId -match 'i0116|loginfmt|email|user' -or $c.Name -match 'email|phone|user|ผู้ใช้|อีเมล') {
                 if (-not $val -and $user) { if (Set-El $e $user) { $filled = $true; Log 'filled user field' } }
             }
@@ -242,9 +277,12 @@ try {
             [void]$script:cliOut.Append($out)
             foreach ($l in ($out -split "`r?`n")) { if ($l.Trim()) { Log ("cli: " + ($l.Trim() -replace '[a-z0-9-]+(\.[a-z0-9-]+)+', '<host>')) } }
             if ($out -match 'Username:\s*(\[.*\])?\s*$') { Send-Cli $user }
-            if ($out -match 'Password:\s*$') { Send-Cli $pass }
+            if ($out -match 'Password:\s*$') {
+                if ($script:cliPwSent) { $result = 'password asked again (wrong password) - stopped to avoid account lockout'; break }
+                Send-Cli $pass; $script:cliPwSent = $true
+            }
             if ($out -match 'accept\?\s*\[y/n\]|\[y/n\]:\s*$') { Send-Cli 'y' }
-            if ($out -match 'another .*application is running|Connect not available' -and -not $guiClosed) {
+            if ($out -match 'another .*application is running|Connect not available|Connect capability is unavailable|application acquired it' -and -not $guiClosed) {
                 Log 'GUI blocks vpncli: closing GUI and retrying'
                 Get-Process csc_ui -ErrorAction SilentlyContinue | Stop-Process -Force
                 $guiClosed = $true
