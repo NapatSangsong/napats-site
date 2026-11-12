@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { data, redirect } from "react-router";
-import type { Route } from "./+types/energy";
+import type { Route } from "./+types/energy-legacy";
 import "~/styles/energy.css";
 import { BillToDate } from "~/components/energy/BillToDate";
 import { EnergyChat } from "~/components/energy/EnergyChat";
@@ -116,7 +116,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	if (key !== null) {
 		// correct key → set cookie and drop ?key= from the URL; wrong key → 404
 		if (env.ENERGY_PAGE_KEY && safeEqual(key, env.ENERGY_PAGE_KEY)) {
-			throw redirect("/energy", { headers: { "Set-Cookie": gateCookie(await keyHash(env)) } });
+			throw redirect("/energy/legacy", { headers: { "Set-Cookie": gateCookie(await keyHash(env)) } });
 		}
 		throw data(null, { status: 404 });
 	}

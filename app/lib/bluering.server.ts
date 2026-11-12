@@ -33,6 +33,8 @@ const PLANT_KV_KEY = "energy:bluering:plant";
 const SNAPSHOT_TTL_SEC = 60;
 const PLANT_TTL_SEC = 6 * 3600;
 const TIMEOUT_MS = 10_000;
+/** waits (ms) before retrying a throttled (429) request */
+const RETRY_429 = [1500, 4000];
 const PAGE = 200;
 const MAX_PAGES = 20;
 
@@ -71,6 +73,7 @@ export interface RawPlant {
 	meterReadingDate: number;
 	grid: { purchasePrice: number; purchaseOffPeakPrice: number; salePrice: number };
 	gatewayId: number;
+	package?: { code: string; name: string } | null;
 	gateway: {
 		id: number;
 		serialNumber: string;
@@ -140,10 +143,26 @@ export interface PlantInfo {
 	meterReadingDay: number;
 	tariff: { peakThbPerKwh: number; offPeakThbPerKwh: number; saleThbPerKwh: number };
 	inverters: { model: string; pvCount: number }[];
+	/** sum of inverter AC ratings (MI-1000 → 1 kW each) */
+	capKw: number;
+	/** solar-lease fee parsed from the package name ("… 1,399 บาท/เดือน …"), null if absent */
+	packageMonthlyThb: number | null;
 }
 
-/** Public subset of a plant: no serial numbers, lead number or package details */
+/** "MI-1000-2M0" → 1 kW; unknown models count as 1 kW */
+export function inverterKw(model: string): number {
+	const m = /(\d{3,5})/.exec(model);
+	return m ? Number(m[1]) / 1000 : 1;
+}
+
+export function parsePackageFee(name: string | undefined | null): number | null {
+	const m = /([\d,]+(?:\.\d+)?)\s*บาท\s*\/\s*เดือน/.exec(name ?? "");
+	return m ? Number(m[1].replace(/,/g, "")) : null;
+}
+
+/** Public subset of a plant: no serial numbers, lead number or package code */
 export function toPlantInfo(p: RawPlant): PlantInfo {
+	const inverters = p.gateway?.inverters ?? [];
 	return {
 		plantId: p.id,
 		gatewayId: p.gatewayId ?? p.gateway.id,
@@ -156,7 +175,9 @@ export function toPlantInfo(p: RawPlant): PlantInfo {
 			offPeakThbPerKwh: p.grid.purchaseOffPeakPrice,
 			saleThbPerKwh: p.grid.salePrice,
 		},
-		inverters: (p.gateway?.inverters ?? []).map((i) => ({ model: i.model, pvCount: i.pvCount })),
+		inverters: inverters.map((i) => ({ model: i.model, pvCount: i.pvCount })),
+		capKw: inverters.length ? inverters.reduce((t, i) => t + inverterKw(i.model), 0) : 4,
+		packageMonthlyThb: parsePackageFee(p.package?.name),
 	};
 }
 
@@ -237,10 +258,16 @@ export async function blueringGet<T = unknown>(env: BlueringEnv, path: string): 
 	const exp = tokenExpiry(token);
 	if (exp !== null && exp < Date.now()) throw new BlueringAuthError();
 
-	const res = await fetch(BLUERING_BASE + path, {
-		headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-		signal: AbortSignal.timeout(TIMEOUT_MS),
-	});
+	let res: Response;
+	for (let attempt = 0; ; attempt++) {
+		res = await fetch(BLUERING_BASE + path, {
+			headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+			signal: AbortSignal.timeout(TIMEOUT_MS),
+		});
+		// NestJS throttler: back off briefly rather than failing a whole page build
+		if (res.status !== 429 || attempt >= RETRY_429.length) break;
+		await new Promise((r) => setTimeout(r, RETRY_429[attempt]));
+	}
 	const text = await res.text();
 	let body: unknown = text;
 	try {
@@ -256,17 +283,21 @@ export async function blueringGet<T = unknown>(env: BlueringEnv, path: string): 
 	return body as T;
 }
 
-/** Follow limit/offset paging until a short page (BlueRing defaults to 10 rows) */
+/**
+ * Follow limit/offset paging until a short page (BlueRing defaults to 10 rows). Throws
+ * rather than return a silently truncated list when MAX_PAGES is hit: a partial range
+ * would otherwise be summarised and cached as if the missing days had no data.
+ */
 export async function getAllPages<T>(env: BlueringEnv, pathWithQuery: string): Promise<T[]> {
 	const out: T[] = [];
 	const sep = pathWithQuery.includes("?") ? "&" : "?";
 	for (let page = 0; page < MAX_PAGES; page++) {
 		const rows = await blueringGet<T[]>(env, `${pathWithQuery}${sep}limit=${PAGE}&offset=${page * PAGE}`);
-		if (!Array.isArray(rows)) break;
+		if (!Array.isArray(rows)) return out;
 		out.push(...rows);
-		if (rows.length < PAGE) break;
+		if (rows.length < PAGE) return out;
 	}
-	return out;
+	throw new Error(`BlueRing: more than ${MAX_PAGES * PAGE} rows for ${pathWithQuery}; request a shorter range`);
 }
 
 // ---------------- resources ----------------
@@ -283,16 +314,41 @@ export async function getPlant(env: BlueringEnv, kv?: KVNamespace): Promise<Plan
 	return info;
 }
 
+/**
+ * Energies rows for Bangkok days [fromDate, toDate). BlueRing treats endDate as inclusive
+ * (it returns that midnight's bucket too), so rows at or past the end are dropped here.
+ * Without fromDate it returns everything since install.
+ */
+export async function getEnergiesRange(
+	env: BlueringEnv,
+	gatewayId: number,
+	type: SeriesType,
+	fromDate?: string,
+	toDate?: string,
+): Promise<RawEnergy[]> {
+	let q = `type=${type}`;
+	if (fromDate) q += `&startDate=${encodeURIComponent(bangkokMidnightIso(fromDate))}`;
+	if (toDate) q += `&endDate=${encodeURIComponent(bangkokMidnightIso(toDate))}`;
+	const rows = await getAllPages<RawEnergy>(env, `/gateways/${gatewayId}/energies?${q}`);
+	if (!toDate) return rows;
+	const end = Date.parse(bangkokMidnightIso(toDate));
+	return rows.filter((r) => Date.parse(r.deviceTime ?? r.date ?? "") < end);
+}
+
 export async function getSeries(
 	env: BlueringEnv,
 	gatewayId: number,
 	type: SeriesType,
 	date: string,
 ): Promise<SeriesPoint[]> {
-	// monthly ignores the day; ask for everything since install
-	const q = type === "monthly" ? `type=monthly` : `type=${type}&startDate=${encodeURIComponent(bangkokMidnightIso(date))}`;
-	const rows = await getAllPages<RawEnergy>(env, `/gateways/${gatewayId}/energies?${q}`);
-	return toSeries(rows);
+	if (type === "monthly") return toSeries(await getEnergiesRange(env, gatewayId, "monthly"));
+	if (type === "minute") return toSeries(await getEnergiesRange(env, gatewayId, "minute", date, nextDay(date)));
+	// daily: from that day to today
+	return toSeries(await getEnergiesRange(env, gatewayId, "daily", date));
+}
+
+function nextDay(date: string): string {
+	return new Date(Date.parse(`${date}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
 }
 
 export interface BlueringSnapshot {
