@@ -154,9 +154,22 @@ function Click-Win32($ctl) { [void][NapatsVpn.W32]::PostMessage($ctl.h, $BM_CLIC
 
 function Start-GuiConnect {
     if (-not (Get-Process csc_ui -ErrorAction SilentlyContinue)) { Start-Process $gui; Log 'started Cisco GUI'; Start-Sleep -Seconds 3 }
-    $deadline = (Get-Date).AddSeconds(30)
+    $deadline = (Get-Date).AddSeconds(40)
+    $restartAt = (Get-Date).AddSeconds(5)
+    $restarted = $false
     while ((Get-Date) -lt $deadline) {
         $ctls = Get-CiscoControls
+        # after a connect the GUI sits hidden in the tray (no window to drive):
+        # restart it once so its main window opens again
+        if (-not $restarted -and (Get-Date) -gt $restartAt -and -not ($ctls | Where-Object { $_.id -eq '1314' })) {
+            Get-Process csc_ui -ErrorAction SilentlyContinue | Stop-Process -Force
+            Start-Sleep -Seconds 2
+            Start-Process $gui
+            $restarted = $true
+            Log 'GUI window hidden: restarted the GUI'
+            Start-Sleep -Seconds 3
+            continue
+        }
         # leftover "Please enter a secure gateway to connect to." box -> OK
         if ($ctls | Where-Object { $_.name -match 'enter a secure gateway' }) {
             $ok = $ctls | Where-Object { $_.cls -eq 'Button' -and $_.name -eq 'OK' -and $_.en } | Select-Object -First 1
