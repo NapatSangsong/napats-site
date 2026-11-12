@@ -154,6 +154,12 @@ describe("HTTP", () => {
 		expect(f.mock.calls[1][0]).toContain("offset=200");
 	});
 
+	it("getAllPages throws instead of silently truncating at its page cap", async () => {
+		const full = Array.from({ length: 200 }, (_, i) => i);
+		vi.stubGlobal("fetch", vi.fn(async () => Response.json(full)));
+		await expect(getAllPages({ BLUERING_TOKEN: "t" }, "/gateways/835/energies?type=minute")).rejects.toThrow(/more than/);
+	});
+
 	it("getSnapshot discovers the plant, takes the newest bucket, and caches both", async () => {
 		const store = new Map<string, string>();
 		const kv = {

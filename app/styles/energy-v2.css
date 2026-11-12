@@ -799,3 +799,42 @@ body:has(.ev) {
 :root[data-theme="dark"] body:has(.ev) {
 	background: #0d0d0d;
 }
+
+/* ---------- bill range, delta, cycles table ---------- */
+.ev-hero-range {
+	color: var(--ink-2);
+	font-size: 13px;
+	margin-bottom: 2px;
+}
+.ev-delta {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	margin-top: 8px;
+	font-size: 12.5px;
+	color: var(--ink-2);
+	background: var(--card-2);
+	border-radius: 999px;
+	padding: 3px 10px;
+}
+.ev-delta.up svg {
+	color: var(--serious);
+}
+.ev-delta.down svg {
+	color: var(--good);
+}
+.ev-table td small {
+	display: block;
+	color: var(--muted);
+	font-size: 11px;
+	line-height: 1.3;
+}
+.ev-table tr.proj td {
+	color: var(--ink-2);
+}
+.ev-table td.neg {
+	color: var(--serious-ink);
+}
+.ev-table td.pos {
+	color: var(--good-ink);
+}

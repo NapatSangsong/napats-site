@@ -351,6 +351,40 @@ export function billingCycle(today: string, readingDay: number): Cycle {
 	return { start, end, days: daysBetween(start, end) };
 }
 
+/** Every billing cycle from the one containing `firstDate` up to the one containing `today` */
+export function cyclesSince(firstDate: string, today: string, readingDay: number): Cycle[] {
+	const out: Cycle[] = [];
+	let c = billingCycle(firstDate, readingDay);
+	for (let guard = 0; guard < 240 && c.start <= today; guard++) {
+		out.push(c);
+		c = billingCycle(c.end, readingDay);
+	}
+	return out;
+}
+
+/** Measured buckets summarised per Bangkok day (modelled buckets are skipped) */
+export function daySummaries(buckets: Bucket[], tariff: Tariff): Map<string, Summary> {
+	const byDay = new Map<string, Bucket[]>();
+	for (const b of buckets) {
+		if (b.est) continue;
+		const d = bkk(b.t).date;
+		(byDay.get(d) ?? byDay.set(d, []).get(d)!).push(b);
+	}
+	return new Map([...byDay].map(([d, bs]) => [d, summarize(bs, tariff)]));
+}
+
+/**
+ * ± half-width for a projected bill: day-to-day spread of the daily energy cost,
+ * grown with √(days still to come). Days are treated as independent, which is honest
+ * for weather and habits but ignores trends (e.g. a heatwave week).
+ */
+export function billSpread(dailyCosts: number[], remainingDays: number): number {
+	if (dailyCosts.length < 5 || remainingDays <= 0) return 0;
+	const mean = dailyCosts.reduce((t, c) => t + c, 0) / dailyCosts.length;
+	const sd = Math.sqrt(dailyCosts.reduce((t, c) => t + (c - mean) ** 2, 0) / (dailyCosts.length - 1));
+	return sd * Math.sqrt(remainingDays);
+}
+
 // ---------------- insights ----------------
 
 export interface SolarWindow {

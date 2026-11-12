@@ -5,7 +5,7 @@ import type { Route } from "./+types/energy";
 import "~/styles/energy-v2.css";
 import { BacktestChart, HistoryChart, TodayChart, useChartColors } from "~/components/energy-v2/Charts";
 import { Flow } from "~/components/energy-v2/Flow";
-import { ago, baht, hhmm, kwh, n0, n1, n2, thDate, thMonth, thShort } from "~/components/energy-v2/format";
+import { ago, baht, hhmm, kwh, n0, n1, n2, thDate, thShort } from "~/components/energy-v2/format";
 import type { LiveReading } from "~/lib/bluering.server";
 import { BlueringAuthError } from "~/lib/bluering.server";
 import { ENERGY_PUBLIC, gateCookie, keyHash, requireEnergyAuth, safeEqual } from "~/lib/energy-gate.server";
@@ -51,48 +51,29 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	}
 }
 
-const LIVE_POLL_MS = 60_000;
-const VIEW_REFRESH_MS = 10 * 60_000;
-const SLOT_MS = 15 * 60_000;
+/** BlueRing data lands every 15 min; the server view is fresh within 5 min */
+const VIEW_REFRESH_MS = 5 * 60_000;
 
 export default function EnergyPage({ loaderData }: Route.ComponentProps) {
 	const { view, error } = loaderData;
 	const root = useRef<HTMLDivElement>(null);
 	const colors = useChartColors(root);
 	const revalidator = useRevalidator();
-	const [live, setLive] = useState<LiveReading | null>(view?.live ?? null);
 	const [now, setNow] = useState(() => view?.generatedAt ?? 0);
 
-	useEffect(() => setLive(view?.live ?? null), [view]);
-
-	// live reading every minute while visible; the full model every 10 min
+	// one source of truth: re-run the loader every 5 min while visible, and on return
 	useEffect(() => {
-		let stopped = false;
-		const pollLive = async () => {
-			if (document.hidden) return;
-			try {
-				const res = await fetch("/api/energy/bluering", { cache: "no-store" });
-				const j = (await res.json()) as { ok: boolean; live?: LiveReading | null };
-				if (!stopped && j.ok && j.live) setLive(j.live);
-			} catch {
-				/* keep the last reading */
-			}
-		};
 		setNow(Date.now());
 		const tick = setInterval(() => setNow(Date.now()), 30_000);
-		const liveId = setInterval(pollLive, LIVE_POLL_MS);
 		const viewId = setInterval(() => !document.hidden && revalidator.revalidate(), VIEW_REFRESH_MS);
 		const onVisible = () => {
 			if (document.hidden) return;
 			setNow(Date.now());
-			pollLive();
 			revalidator.revalidate();
 		};
 		document.addEventListener("visibilitychange", onVisible);
 		return () => {
-			stopped = true;
 			clearInterval(tick);
-			clearInterval(liveId);
 			clearInterval(viewId);
 			document.removeEventListener("visibilitychange", onVisible);
 		};
@@ -108,16 +89,7 @@ export default function EnergyPage({ loaderData }: Route.ComponentProps) {
 					</header>
 					<div className="ev-banner bad">
 						<TriangleAlert size={18} />
-						<div>
-							{error === "token_expired" ? (
-								<>
-									token ของ BlueRing หมดอายุ รัน <code>node tools/bluering/bluering.mjs login</code> แล้ว
-									<code>wrangler secret put BLUERING_TOKEN</code>
-								</>
-							) : (
-								"ดึงข้อมูลจาก BlueRing ไม่ได้ตอนนี้ ลองใหม่อีกครั้ง"
-							)}
-						</div>
+						<div>{error === "token_expired" ? <TokenFix /> : "ดึงข้อมูลจาก BlueRing ไม่ได้ตอนนี้ ลองใหม่อีกครั้ง"}</div>
 					</div>
 				</div>
 			</div>
@@ -127,16 +99,16 @@ export default function EnergyPage({ loaderData }: Route.ComponentProps) {
 	return (
 		<div className="ev" ref={root}>
 			<div className="ev-wrap">
-				<Header view={view} live={live} now={now} refreshing={revalidator.state === "loading"} />
-				<TokenWarning expiresAt={view.tokenExpiresAt} now={now} />
+				<Header view={view} now={now} refreshing={revalidator.state === "loading"} />
+				<Alerts view={view} now={now} />
 				<div className="ev-grid">
-					<NowCard view={view} live={live} />
+					<NowCard view={view} live={view.live} />
 					<TodayCard view={view} colors={colors} />
 					<CycleCard view={view} />
 					<WeekCard view={view} />
 					<InsightsCard view={view} />
 					<HistoryCard view={view} colors={colors} />
-					<MonthlyCard view={view} />
+					<CyclesCard view={view} />
 					<ModelCard view={view} colors={colors} />
 				</div>
 				<footer className="ev-foot">
@@ -148,12 +120,12 @@ export default function EnergyPage({ loaderData }: Route.ComponentProps) {
 	);
 }
 
-// ---------------- header ----------------
+// ---------------- header + alerts ----------------
 
-function Header({ view, live, now, refreshing }: { view: EnergyView; live: LiveReading | null; now: number; refreshing: boolean }) {
-	const end = live ? Date.parse(live.at) + SLOT_MS : null;
+function Header({ view, now, refreshing }: { view: EnergyView; now: number; refreshing: boolean }) {
+	const end = view.status.lastDataT;
 	const ageSec = end ? Math.max(0, (now - end) / 1000) : null;
-	const stale = ageSec === null || ageSec > 40 * 60;
+	const late = view.status.gatewaySilent || ageSec === null || ageSec > 45 * 60;
 	return (
 		<header className="ev-top">
 			<div>
@@ -163,26 +135,70 @@ function Header({ view, live, now, refreshing }: { view: EnergyView; live: LiveR
 					{view.plant.meterType === "tou" ? "TOU" : "ปกติ"}
 				</p>
 			</div>
-			<span className={`ev-pill ${stale ? "stale" : ""} ${refreshing ? "busy" : ""}`} title="ข้อมูลมาเป็นช่วง 15 นาที ขึ้นระบบหลังจบช่วงราว 5 นาที">
+			<span className={`ev-pill ${late ? "stale" : ""} ${refreshing ? "busy" : ""}`} title="ข้อมูลมาเป็นช่วง 15 นาที ขึ้นระบบหลังจบช่วงราว 5 นาที">
 				<span className="dot" />
-				{live && end ? `${hhmm(Date.parse(live.at))}–${hhmm(end)} · ${ago(ageSec ?? 0)}` : "ยังไม่มีข้อมูลวันนี้"}
+				{end ? `ข้อมูลถึง ${hhmm(end)} · ${ago(ageSec ?? 0)}` : "ยังไม่มีข้อมูล"}
 			</span>
 		</header>
 	);
 }
 
-function TokenWarning({ expiresAt, now }: { expiresAt: number | null; now: number }) {
-	if (!expiresAt || !now) return null;
-	const days = (expiresAt - now) / 86_400_000;
-	if (days > 7) return null;
+function TokenFix() {
 	return (
-		<div className="ev-banner warn">
-			<TriangleAlert size={18} />
-			<div>
-				token ของ BlueRing จะหมดอายุใน {Math.max(0, Math.ceil(days))} วัน ({thShort(new Date(expiresAt + 7 * 3600_000).toISOString().slice(0, 10))}) ·
-				รัน <code>node tools/bluering/bluering.mjs login</code>
-			</div>
-		</div>
+		<>
+			token ของ BlueRing หมดอายุ รัน <code>node tools/bluering/bluering.mjs login</code> แล้ว <code>wrangler secret put BLUERING_TOKEN</code>
+		</>
+	);
+}
+
+/** Things that need the owner: the gateway went quiet, the data is frozen, the token is ending */
+function Alerts({ view, now }: { view: EnergyView; now: number }) {
+	const items: { key: string; tone: "warn" | "bad"; body: React.ReactNode }[] = [];
+	if (view.stale) {
+		items.push({
+			key: "stale",
+			tone: "bad",
+			body:
+				view.stale.reason === "token_expired" ? (
+					<>
+						กำลังแสดงข้อมูลเก่าเมื่อ {hhmm(view.generatedAt)} · <TokenFix />
+					</>
+				) : (
+					`กำลังแสดงข้อมูลเก่าเมื่อ ${hhmm(view.generatedAt)} เพราะดึงข้อมูลใหม่จาก BlueRing ไม่ได้`
+				),
+		});
+	}
+	const lastT = view.status.lastDataT;
+	if (lastT && now - lastT > 45 * 60_000) {
+		items.push({
+			key: "gw",
+			tone: "warn",
+			body: `gateway ไม่ส่งข้อมูลมา ${ago((now - lastT) / 1000).replace("ที่แล้ว", "")} · ลองเช็กไฟ/WiFi ของกล่อง BlueRing ช่วงนี้ตัวเลขด้านล่างเป็นค่าคาดการณ์`,
+		});
+	}
+	if (view.tokenExpiresAt && now && !view.stale) {
+		const days = (view.tokenExpiresAt - now) / 86_400_000;
+		if (days <= 7) {
+			items.push({
+				key: "token",
+				tone: "warn",
+				body: (
+					<>
+						token ของ BlueRing จะหมดอายุใน {Math.max(0, Math.ceil(days))} วัน · รัน <code>node tools/bluering/bluering.mjs login</code>
+					</>
+				),
+			});
+		}
+	}
+	return (
+		<>
+			{items.map((i) => (
+				<div key={i.key} className={`ev-banner ${i.tone}`} role="status">
+					<TriangleAlert size={18} />
+					<div>{i.body}</div>
+				</div>
+			))}
+		</>
 	);
 }
 
@@ -291,9 +307,15 @@ function CycleCard({ view }: { view: EnergyView }) {
 					{n0(c.projectedBillThb)}
 					<small>฿</small>
 				</div>
+				{c.spreadThb > 0 && (
+					<div className="ev-hero-range">
+						น่าจะอยู่ระหว่าง {n0(c.projectedBillThb - c.spreadThb)}–{n0(c.projectedBillThb + c.spreadThb)} ฿
+					</div>
+				)}
 				<div className="ev-hero-note">
 					ถึงตอนนี้ {baht(c.billSoFarThb)} · ใช้ไฟ {kwh(p.loadKwh)} · ซื้อ {kwh(p.importKwh)}
 				</div>
+				{c.previousBillThb !== null && <PrevDelta now={c.projectedBillThb} prev={c.previousBillThb} />}
 			</div>
 			<div className="ev-meter" aria-label={`ผ่านไป ${n1(c.elapsedDays)} จาก ${c.days} วัน`}>
 				<span style={{ width: `${elapsedPct}%` }} />
@@ -332,6 +354,20 @@ function CycleCard({ view }: { view: EnergyView }) {
 				</div>
 			)}
 		</Card>
+	);
+}
+
+/** vs the previous cycle: up is bad for a bill, so it gets the serious tone + an arrow */
+function PrevDelta({ now, prev }: { now: number; prev: number }) {
+	const d = now - prev;
+	const pct = prev > 0 ? Math.round((d / prev) * 100) : 0;
+	if (Math.abs(d) < 1) return <div className="ev-delta">เท่ากับรอบที่แล้ว ({baht(prev)})</div>;
+	return (
+		<div className={`ev-delta ${d > 0 ? "up" : "down"}`}>
+			{d > 0 ? <TrendingUp size={14} aria-hidden="true" /> : <TrendingDown size={14} aria-hidden="true" />}
+			{d > 0 ? "แพงกว่า" : "ถูกกว่า"}รอบที่แล้ว {baht(Math.abs(d))} ({d > 0 ? "+" : "−"}
+			{Math.abs(pct)}%) · รอบก่อน {baht(prev)}
+		</div>
 	);
 }
 
@@ -419,7 +455,7 @@ function InsightsCard({ view }: { view: EnergyView }) {
 							<strong>
 								แบตเตอรี่ ~{n0(Math.ceil(b.kwhPerWeekday))} kWh จะประหยัดได้ ≈{baht(b.thbPerMonth)}/เดือน
 							</strong>
-							<span>คิดจากไฟ On-peak ที่ซื้อหลังหักโซลาร์ในวันธรรมดา (ค่ากลาง 30 วัน) ชาร์จช่วง Off-peak ประสิทธิภาพ 90%</span>
+							<span>คิดจากไฟ On-peak ที่ซื้อหลังหักโซลาร์ในวันธรรมดา (ค่ากลาง 30 วัน) ชาร์จช่วง Off-peak ประสิทธิภาพ 90% · ยังไม่หักราคาแบต</span>
 						</div>
 					</li>
 				)}
@@ -450,34 +486,58 @@ function HistoryCard({ view, colors }: { view: EnergyView; colors: ReturnType<ty
 	);
 }
 
-function MonthlyCard({ view }: { view: EnergyView }) {
+/**
+ * Every billing cycle since install, priced from BlueRing data at the TOU rates. The point
+ * is to hold it up against the paper MEA bill: if they disagree, BlueRing's meter (CT) is off.
+ */
+function CyclesCard({ view }: { view: EnergyView }) {
+	// a cycle with no measured day yet (still backfilling) would read as a ~41 ฿ bill
+	const rows = view.cycles.filter((c) => c.projected || c.measuredDays > 0).reverse();
+	const hasLease = view.cycle.packageThb !== null;
 	return (
-		<Card title="รายเดือน" className="ev-o6">
+		<Card title="รอบบิลย้อนหลัง" className="ev-o6" aside={<span className="ev-chip">เทียบบิล MEA ได้</span>}>
 			<div className="ev-table-wrap">
 				<table className="ev-table">
 					<thead>
 						<tr>
-							<th>เดือน</th>
+							<th>รอบ</th>
 							<th>ใช้ไฟ</th>
-							<th>โซลาร์</th>
-							<th>ซื้อ</th>
-							<th>พึ่งโซลาร์</th>
+							<th>ค่าไฟ</th>
+							<th>โซลาร์ช่วย</th>
+							{hasLease && <th>หักค่าเช่า</th>}
 						</tr>
 					</thead>
 					<tbody>
-						{[...view.history.monthly].reverse().map((m) => (
-							<tr key={m.month}>
-								<td>{thMonth(m.month)}</td>
-								<td>{n0(m.consumption)}</td>
-								<td>{n0(m.solar)}</td>
-								<td>{n0(m.gridPurchased)}</td>
-								<td>{m.consumption > 0 ? `${Math.round(((m.solar - m.gridSold) / m.consumption) * 100)}%` : "—"}</td>
-							</tr>
-						))}
+						{rows.map((c) => {
+							const lastDay = new Date(Date.parse(`${c.end}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+							const partial = !c.projected && c.measuredDays < c.days - 1;
+							return (
+								<tr key={c.start} className={c.projected ? "proj" : ""}>
+									<td>
+										{thShort(c.start)}–{thShort(lastDay)}
+										<small>{c.projected ? "รอบนี้ · คาด" : partial ? `มีข้อมูล ${c.measuredDays}/${c.days} วัน` : `${c.days} วัน`}</small>
+									</td>
+									<td>{n0(c.loadKwh)}</td>
+									<td>
+										{c.projected ? "≈" : ""}
+										{n0(c.billThb)}
+									</td>
+									<td>{n0(c.savingsThb)}</td>
+									{hasLease && (
+										<td className={c.netThb === null || partial ? "" : c.netThb < 0 ? "neg" : "pos"}>
+											{c.netThb === null || partial ? "—" : `${c.netThb >= 0 ? "+" : "−"}${n0(Math.abs(c.netThb))}`}
+										</td>
+									)}
+								</tr>
+							);
+						})}
 					</tbody>
 				</table>
 			</div>
-			<p className="ev-meta">หน่วย kWh · เดือนแรกนับจากวันติดตั้ง</p>
+			<p className="ev-meta">
+				ใช้ไฟเป็น kWh อื่นๆ เป็นบาท · ค่าไฟคำนวณจากข้อมูล BlueRing ตามอัตรา TOU + ค่าบริการ ถ้าต่างจากบิล MEA จริงมาก แปลว่าเซนเซอร์ของ
+				BlueRing วัดคลาด{hasLease ? " · หักค่าเช่า = โซลาร์ช่วย − ค่าเช่าแผงต่อรอบ" : ""}
+			</p>
 		</Card>
 	);
 }

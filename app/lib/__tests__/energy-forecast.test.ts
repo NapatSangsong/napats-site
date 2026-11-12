@@ -9,9 +9,12 @@ import {
 	batteryPotential,
 	bestSolarWindow,
 	billingCycle,
+	billSpread,
 	type Bucket,
 	bkk,
 	buildProfiles,
+	cyclesSince,
+	daySummaries,
 	dayStart,
 	fillGaps,
 	fitSolarModel,
@@ -170,6 +173,38 @@ describe("profiles + forecast", () => {
 		expect(filled).toHaveLength(8);
 		expect(filled.filter((b) => b.est)).toHaveLength(1);
 		expect(filled[1].est).toBe(true);
+	});
+});
+
+describe("cycles + day summaries + bill spread", () => {
+	it("cyclesSince lists every cycle from install to the running one", () => {
+		const cs = cyclesSince("2026-08-11", "2026-11-12", 2);
+		expect(cs.map((c) => c.start)).toEqual(["2026-08-02", "2026-09-02", "2026-10-02", "2026-11-02"]);
+		expect(cs.at(-1)!.end).toBe("2026-12-02");
+	});
+
+	it("daySummaries groups measured buckets by Bangkok day and skips modelled ones", () => {
+		const d1 = Date.parse("2026-11-10T16:45:00Z"); // 23:45 on the 10th in Bangkok
+		const d2 = Date.parse("2026-11-10T17:00:00Z"); // 00:00 on the 11th
+		const m = daySummaries(
+			[
+				{ t: d1, solar: 0, load: 2 },
+				{ t: d2, solar: 0, load: 4 },
+				{ t: d2 + SLOT_MS, solar: 0, load: 4, est: true },
+			],
+			TARIFF,
+		);
+		expect([...m.keys()]).toEqual(["2026-11-10", "2026-11-11"]);
+		expect(m.get("2026-11-11")!.loadKwh).toBeCloseTo(1);
+		expect(m.get("2026-11-11")!.buckets).toBe(1);
+	});
+
+	it("billSpread grows with √days left and needs enough history", () => {
+		const costs = [100, 120, 80, 110, 90, 100];
+		const sd = Math.sqrt(costs.reduce((t, c) => t + (c - 100) ** 2, 0) / (costs.length - 1));
+		expect(billSpread(costs, 16)).toBeCloseTo(sd * 4);
+		expect(billSpread(costs, 0)).toBe(0);
+		expect(billSpread([100, 100], 10)).toBe(0);
 	});
 });
 

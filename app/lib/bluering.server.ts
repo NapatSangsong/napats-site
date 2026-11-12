@@ -283,17 +283,21 @@ export async function blueringGet<T = unknown>(env: BlueringEnv, path: string): 
 	return body as T;
 }
 
-/** Follow limit/offset paging until a short page (BlueRing defaults to 10 rows) */
+/**
+ * Follow limit/offset paging until a short page (BlueRing defaults to 10 rows). Throws
+ * rather than return a silently truncated list when MAX_PAGES is hit: a partial range
+ * would otherwise be summarised and cached as if the missing days had no data.
+ */
 export async function getAllPages<T>(env: BlueringEnv, pathWithQuery: string): Promise<T[]> {
 	const out: T[] = [];
 	const sep = pathWithQuery.includes("?") ? "&" : "?";
 	for (let page = 0; page < MAX_PAGES; page++) {
 		const rows = await blueringGet<T[]>(env, `${pathWithQuery}${sep}limit=${PAGE}&offset=${page * PAGE}`);
-		if (!Array.isArray(rows)) break;
+		if (!Array.isArray(rows)) return out;
 		out.push(...rows);
-		if (rows.length < PAGE) break;
+		if (rows.length < PAGE) return out;
 	}
-	return out;
+	throw new Error(`BlueRing: more than ${MAX_PAGES * PAGE} rows for ${pathWithQuery}; request a shorter range`);
 }
 
 // ---------------- resources ----------------
