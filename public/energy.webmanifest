@@ -1,0 +1,17 @@
+{
+	"name": "พลังงานบ้าน",
+	"short_name": "พลังงาน",
+	"description": "โซลาร์ ไฟบ้าน และค่าไฟ: วัดจริง + พยากรณ์",
+	"start_url": "/energy",
+	"scope": "/energy",
+	"display": "standalone",
+	"orientation": "portrait",
+	"background_color": "#0d0d0d",
+	"theme_color": "#0d0d0d",
+	"lang": "th",
+	"icons": [
+		{ "src": "/energy-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+		{ "src": "/energy-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+		{ "src": "/energy-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+	]
+}

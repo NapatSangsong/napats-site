@@ -1,5 +1,6 @@
 import { createRequestHandler } from "react-router";
 import { runEnergyAlerts } from "../app/lib/energy-alerts.server";
+import { getView } from "../app/lib/energy-model.server";
 import { rollupDaily, sampleGrid } from "../app/lib/energy-rollup.server";
 import { syncEnergyReadings } from "../app/lib/energy-sync.server";
 import { runThinkpadAlerts } from "../app/lib/thinkpad-alerts.server";
@@ -50,6 +51,12 @@ export default {
 					.then((r) => console.log(`[rollup] ${r.days} day(s)`))
 					.catch((e) => console.error("[rollup]", e));
 				await runEnergyAlerts(env).catch((e) => console.error("[alerts]", e));
+				// keep the /energy view warm (BlueRing measured + forecast), so the page opens instantly
+				if (env.BLUERING_TOKEN) {
+					await getView(env, env.RATE_LIMIT_KV, true)
+						.then((v) => console.log(`[energy-view] built, bill ≈${Math.round(v.cycle.projectedBillThb)} ฿`))
+						.catch((e) => console.error("[energy-view]", e instanceof Error ? e.message : String(e)));
+				}
 			})(),
 		);
 	},
