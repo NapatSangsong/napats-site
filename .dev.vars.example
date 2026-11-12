@@ -22,6 +22,11 @@ TUYA_ACCESS_ID=your-tuya-access-id
 TUYA_ACCESS_SECRET=your-tuya-access-secret
 TUYA_DEVICE_ID=your-tuya-device-id
 
+# BlueRing rooftop-PV cloud (real solar data for /api/energy/bluering)
+# Get it with: node tools/bluering/bluering.mjs login   (token is kept in Keychain)
+# then: security find-generic-password -s napats-bluering -a token -w
+# BLUERING_TOKEN=eyJ...   # valid 30 days; the plant/gateway are discovered from it
+
 # Energy page gate key (any string; SHA-256 of this is stored in the cookie)
 ENERGY_PAGE_KEY=your-energy-page-key
 
