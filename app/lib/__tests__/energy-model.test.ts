@@ -21,7 +21,7 @@ function memKv(seed: Record<string, unknown> = {}) {
 
 const NOW = Date.parse("2026-11-12T05:00:00Z");
 const cached = { generatedAt: NOW - 20 * 60_000, cycles: [] } as unknown as EnergyView;
-const VIEW_KEY = "energy:v2:view:3";
+const VIEW_KEY = "energy:v2:view:4";
 
 describe("getView", () => {
 	afterEach(() => vi.unstubAllGlobals());

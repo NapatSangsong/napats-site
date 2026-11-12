@@ -76,17 +76,68 @@ export function daysBetween(a: string, b: string): number {
 // ---------------- TOU ----------------
 
 /**
- * Fixed-date Thai public holidays (MMDD), which bill as off-peak all day. Lunar holidays
- * (Makha/Visakha/Asalha Bucha) move every year and aren't listed, so those days bill as
- * normal weekdays here. That costs at most a few baht per cycle.
+ * Days MEA bills as off-peak all day, besides Sat/Sun. MEA's rule (กกพ. 7 Apr 2566, on
+ * MEA's residential TOU page): "วันเสาร์และวันอาทิตย์ วันแรงงานแห่งชาติ และวันหยุดราชการ
+ * ตามปกติ", excluding Royal Ploughing Day, substitution holidays (วันหยุดชดเชย) and
+ * cabinet-added special holidays. Lunar holidays and Khao Phansa DO count, so the list
+ * changes every year and has to come from MEA's own calendar.
+ *
+ * 2569 (2026): copied from the 2569 column on
+ * https://www.mea.or.th/electricity/electricity-tariffs/B0kv94Yol (checked 2026-11-12).
+ * Add each new year from MEA's "ปฏิทินวันหยุด Off Peak" when it's published.
+ */
+export const TOU_HOLIDAYS: Readonly<Record<number, readonly string[]>> = {
+	2026: [
+		"2026-01-01", // วันขึ้นปีใหม่
+		"2026-03-03", // วันมาฆบูชา
+		"2026-04-06", // วันจักรี
+		"2026-04-13", // วันสงกรานต์
+		"2026-04-14", // วันสงกรานต์
+		"2026-04-15", // วันสงกรานต์
+		"2026-05-01", // วันแรงงานแห่งชาติ
+		"2026-05-04", // วันฉัตรมงคล
+		"2026-05-31", // วันวิสาขบูชา (Sun)
+		"2026-06-03", // วันเฉลิมพระชนมพรรษา สมเด็จพระราชินี
+		"2026-07-28", // วันเฉลิมพระชนมพรรษา ร.10
+		"2026-07-29", // วันอาสาฬหบูชา
+		"2026-07-30", // วันเข้าพรรษา
+		"2026-08-12", // วันแม่แห่งชาติ
+		"2026-10-13", // วันนวมินทรมหาราช
+		"2026-10-23", // วันปิยมหาราช
+		"2026-12-05", // วันพ่อแห่งชาติ (Sat)
+		"2026-12-10", // วันรัฐธรรมนูญ
+		"2026-12-31", // วันสิ้นปี
+	],
+};
+const TOU_HOLIDAY_SET = new Set(Object.values(TOU_HOLIDAYS).flat());
+
+/**
+ * For a year MEA hasn't published yet: only the fixed-date holidays. Lunar ones (Makha,
+ * Visakha, Asalha, Khao Phansa) are then billed as weekdays, overstating cost by a few baht
+ * on each of those days. The page flags it (touHolidaysVerified).
  */
 const FIXED_HOLIDAYS = new Set([
 	"01-01", "04-06", "04-13", "04-14", "04-15", "05-01", "05-04", "06-03",
 	"07-28", "08-12", "10-13", "10-23", "12-05", "12-10", "12-31",
 ]);
 
+/**
+ * Changes whenever anything that prices a stored day changes (rates or the holiday
+ * calendar), so cached per-day costs are recomputed instead of silently going stale.
+ */
+export function pricingSignature(t: Tariff): string {
+	const years = Object.keys(TOU_HOLIDAYS).join(".");
+	return `${t.peak}-${t.offPeak}-${t.sale}-h${years}x${TOU_HOLIDAY_SET.size}`;
+}
+
+/** true when the year's off-peak holidays come from MEA's published calendar */
+export function touHolidaysVerified(year: number): boolean {
+	return year in TOU_HOLIDAYS;
+}
+
 export function isOffPeakDay(date: string, dow: number): boolean {
-	return dow === 0 || dow === 6 || FIXED_HOLIDAYS.has(date.slice(5));
+	if (dow === 0 || dow === 6) return true;
+	return touHolidaysVerified(Number(date.slice(0, 4))) ? TOU_HOLIDAY_SET.has(date) : FIXED_HOLIDAYS.has(date.slice(5));
 }
 
 /** MEA TOU on-peak: Mon–Fri 09:00–21:59, excluding holidays */

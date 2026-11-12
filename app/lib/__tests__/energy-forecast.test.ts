@@ -27,6 +27,8 @@ import {
 	scaleImport,
 	summarize,
 	type Tariff,
+	TOU_HOLIDAYS,
+	touHolidaysVerified,
 	type WeatherHour,
 } from "../energy-forecast";
 
@@ -64,6 +66,25 @@ describe("time + TOU", () => {
 		expect(isPeak(at("2026-11-12", "08:45"))).toBe(false);
 		expect(isPeak(at("2026-11-14", "12:00"))).toBe(false); // Sat
 		expect(isPeak(at("2026-12-10", "12:00"))).toBe(false); // Constitution Day (Thu)
+	});
+
+	it("follows MEA's 2569 calendar: lunar holidays + Khao Phansa off-peak; substitution/cabinet days not", () => {
+		expect(isPeak(at("2026-03-03", "12:00"))).toBe(false); // วันมาฆบูชา (Tue)
+		expect(isPeak(at("2026-07-29", "12:00"))).toBe(false); // วันอาสาฬหบูชา (Wed)
+		expect(isPeak(at("2026-07-30", "12:00"))).toBe(false); // วันเข้าพรรษา (Thu)
+		expect(isPeak(at("2026-06-01", "12:00"))).toBe(true); // substitution for 31 May → normal weekday
+		expect(isPeak(at("2026-12-07", "12:00"))).toBe(true); // substitution for 5 Dec
+		expect(isPeak(at("2026-01-02", "12:00"))).toBe(true); // cabinet-added special holiday
+		// 17 weekday off-peak holidays in 2569, per MEA
+		const weekdays = TOU_HOLIDAYS[2026].filter((d) => ![0, 6].includes(new Date(`${d}T00:00:00Z`).getUTCDay()));
+		expect(weekdays).toHaveLength(17);
+	});
+
+	it("falls back to fixed-date holidays for a year MEA hasn't published", () => {
+		expect(touHolidaysVerified(2026)).toBe(true);
+		expect(touHolidaysVerified(2027)).toBe(false);
+		expect(isPeak(at("2027-01-01", "12:00"))).toBe(false); // New Year (Fri) still off-peak
+		expect(isPeak(at("2027-01-04", "12:00"))).toBe(true);
 	});
 
 	it("billing cycle runs from the meter-reading day to the next one", () => {

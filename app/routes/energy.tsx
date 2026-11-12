@@ -176,6 +176,18 @@ function Alerts({ view, now }: { view: EnergyView; now: number }) {
 			body: `gateway ไม่ส่งข้อมูลมา ${ago((now - lastT) / 1000).replace("ที่แล้ว", "")} · ลองเช็กไฟ/WiFi ของกล่อง BlueRing ช่วงนี้ตัวเลขด้านล่างเป็นค่าคาดการณ์`,
 		});
 	}
+	for (const y of view.status.unverifiedHolidayYears ?? []) {
+		items.push({
+			key: `hol-${y}`,
+			tone: "warn",
+			body: (
+				<>
+					ยังไม่มีปฏิทินวันหยุด Off-Peak ปี {y + 543} ของ กฟน. วันหยุดทางจันทรคติ (มาฆะ วิสาขะ อาสาฬหะ เข้าพรรษา) จะถูกคิดเป็นวันธรรมดา ·
+					เพิ่มใน <code>TOU_HOLIDAYS</code>
+				</>
+			),
+		});
+	}
 	if (view.tokenExpiresAt && now && !view.stale) {
 		const days = (view.tokenExpiresAt - now) / 86_400_000;
 		if (days <= 7) {

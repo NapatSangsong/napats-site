@@ -50,7 +50,9 @@ import {
 	type Summary,
 	scaleImport,
 	summarize,
+	pricingSignature,
 	type Tariff,
+	touHolidaysVerified,
 	type WeatherHour,
 } from "./energy-forecast";
 
@@ -65,7 +67,7 @@ const SERVICE_THB = 40.9;
 const GATEWAY_SILENT_MIN = 45;
 
 /** bump the suffix whenever EnergyView's shape changes, so an old cached view is never served */
-const VIEW_KV_KEY = "energy:v2:view:3";
+const VIEW_KV_KEY = "energy:v2:view:4";
 const VIEW_FRESH_MS = 5 * 60_000;
 const VIEW_TTL_SEC = 3 * 86400;
 const WEATHER_KV_KEY = "energy:v2:weather";
@@ -73,7 +75,8 @@ const WEATHER_FRESH_MS = 30 * 60_000;
 const WEATHER_TTL_SEC = 12 * 3600;
 const dayKey = (gid: number, date: string) => `energy:bluering:min:${gid}:${date}`;
 const DAY_TTL_SEC = 120 * 86400;
-const daySumsKey = (gid: number) => `energy:v2:daysums:${gid}`;
+/** keyed by pricing too: new rates or a new holiday year re-price every stored day */
+const daySumsKey = (gid: number, t: Tariff) => `energy:v2:daysums:${gid}:${pricingSignature(t)}`;
 /** at most this many old days fetched per build (≈10 BlueRing pages) */
 const BACKFILL_DAYS_PER_BUILD = 20;
 
@@ -136,6 +139,8 @@ export interface EnergyView {
 		lastDataT: number | null;
 		/** true when the gateway hasn't delivered for GATEWAY_SILENT_MIN */
 		gatewaySilent: boolean;
+		/** years in the cycle/outlook whose MEA off-peak holiday calendar isn't in TOU_HOLIDAYS */
+		unverifiedHolidayYears: number[];
 	};
 	today: { date: string; points: ChartPoint[]; actual: Summary; projected: Summary; nowT: number };
 	week: DayForecast[];
@@ -261,7 +266,7 @@ async function getDaySums(
 	buckets: Bucket[],
 	tariff: Tariff,
 ): Promise<Map<string, Summary>> {
-	const stored = (await kv?.get<Record<string, Summary>>(daySumsKey(gid), "json")) ?? {};
+	const stored = (await kv?.get<Record<string, Summary>>(daySumsKey(gid, tariff), "json")) ?? {};
 	// an empty day is never trusted from storage (it may be a failed fetch); refetch it
 	const sums = new Map(Object.entries(stored).filter(([, v]) => v.buckets > 0));
 	const purged = sums.size !== Object.keys(stored).length;
@@ -298,7 +303,7 @@ async function getDaySums(
 		for (const [d, s] of sums) {
 			if (keepable(d, s)) keep[d] = roundSummary(s);
 		}
-		await kv?.put(daySumsKey(gid), JSON.stringify(keep));
+		await kv?.put(daySumsKey(gid, tariff), JSON.stringify(keep));
 	}
 	return sums;
 }
@@ -507,6 +512,9 @@ export async function buildView(env: BlueringEnv, kv: KVNamespace | undefined, n
 		status: {
 			lastDataT,
 			gatewaySilent: lastDataT === null || now - lastDataT > GATEWAY_SILENT_MIN * 60_000,
+			unverifiedHolidayYears: [
+				...new Set([cycle.start, addDays(cycle.end, -1), addDays(today, FORECAST_DAYS - 1)].map((d) => Number(d.slice(0, 4)))),
+			].filter((y) => !touHolidaysVerified(y)),
 		},
 		today: {
 			date: today,
