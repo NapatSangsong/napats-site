@@ -232,7 +232,9 @@ function Step-Login {
             $id = [string]$c.AutomationId; $name = [string]$c.Name
             if ($type -eq 'ControlType.Edit' -and $c.IsEnabled -and $c.IsOffscreen -eq $false) { $edits += ,$e }
             elseif ($type -eq 'ControlType.Button' -and $c.IsEnabled) { $buttons += ,$e }
-            if ($id -eq 'idRichContext_DisplaySign' -or ($type -eq 'ControlType.Text' -and $name -match '^\d{2,3}$' -and $id -match 'DisplaySign|displaySign')) { $number = $name.Trim() }
+            # the element's name can carry the instructions too ("Open your Authenticator
+            # app and approve the request. ... 48") -> keep only the 2-3 digit number
+            if (($id -eq 'idRichContext_DisplaySign' -or $id -match 'DisplaySign|displaySign') -and $name -match '(?<!\d)(\d{2,3})\D*$') { $number = $matches[1] }
             if ($id -match '^(passwordError|usernameError|idTD_Error|errorText)$' -and $name) { $err = $name }
         }
         if ($err) { return @{ failed = 'sign-in error shown on the login page' } }
