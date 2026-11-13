@@ -2,13 +2,16 @@
  * Builds everything the /energy page shows, from BlueRing (measured) + Open-Meteo (weather),
  * via the pure engine in energy-forecast.ts.
  *
- * Caching (RATE_LIMIT_KV), sized for the free plan's 1,000 writes/day:
+ * Caching (RATE_LIMIT_KV), sized for the free plan's 1,000 writes/day, which every
+ * feature on this account shares (≈125 energy writes/day in steady state):
  *   15-min buckets of a past day   one key per day, kept 120 d; written once per day
  *   per-day summaries since install one key; written only when a new day is finished
- *   weather                        fresh 30 min, served stale up to 12 h if Open-Meteo fails
- *   the assembled view             fresh 5 min, served stale up to 3 d if a rebuild fails
- *                                  (token expired, BlueRing down); the 15-minute cron
- *                                  rebuilds it so page loads stay warm
+ *   weather                        fresh 60 min (≤24 writes/day), served stale ≤12 h on failure
+ *   the assembled view             written ONLY by the 15-minute cron (96/day). Page and
+ *                                  API requests just read it; they rebuild and write only
+ *                                  if it's over 20 min old (the cron has stopped).
+ *                                  Before 2026-11-13 every request older than 5 min rebuilt
+ *                                  and wrote, so an open tab or visitor cost 12 writes/hour.
  */
 import {
 	bangkokMidnightIso,
@@ -67,15 +70,16 @@ const LEARN_DAYS = 21;
 const FORECAST_DAYS = 7;
 /** MEA TOU monthly service charge 38.22 + VAT 7% */
 const SERVICE_THB = 40.9;
-/** no new bucket for this long = gateway probably offline (normal lag is ≤ 20 min) */
-const GATEWAY_SILENT_MIN = 45;
+/** no new bucket for this long = gateway probably offline (normal lag is ≤ 20 min, plus ≤ 15 min of view age) */
+const GATEWAY_SILENT_MIN = 60;
 
 /** bump the suffix whenever EnergyView's shape changes, so an old cached view is never served */
 const VIEW_KV_KEY = "energy:v2:view:5";
-const VIEW_FRESH_MS = 5 * 60_000;
+/** a request rebuilds only past this age: the cron refreshes every 15 min */
+const VIEW_REQUEST_MAX_AGE_MS = 20 * 60_000;
 const VIEW_TTL_SEC = 3 * 86400;
 const WEATHER_KV_KEY = "energy:v2:weather";
-const WEATHER_FRESH_MS = 30 * 60_000;
+const WEATHER_FRESH_MS = 60 * 60_000;
 const WEATHER_TTL_SEC = 12 * 3600;
 const dayKey = (gid: number, date: string) => `energy:bluering:min:${gid}:${date}`;
 const DAY_TTL_SEC = 120 * 86400;
@@ -600,14 +604,37 @@ export async function buildView(env: EnergyEnv, kv: KVNamespace | undefined, now
 }
 
 /**
- * The view, fresh within 5 min. Older → rebuild; if the rebuild fails (token expired,
- * BlueRing or the network down), the last good view comes back marked `stale` instead of
- * an error page. Throws only when there is nothing cached at all. `force` (the cron)
- * always rebuilds.
+ * The view. `force` (the cron, every 15 min) always rebuilds and writes. A request serves
+ * the cached view unless it's over 20 min old, i.e. the cron has stopped; only then does
+ * it rebuild and write. If a rebuild fails (token expired, BlueRing or the network down),
+ * the last good view comes back marked `stale` instead of an error page. Throws only when
+ * nothing is cached at all.
  */
+/** pulls within this window share one rebuild (per isolate) */
+const PULL_MIN_INTERVAL_MS = 60_000;
+let lastPulled: EnergyView | null = null;
+
+/**
+ * Pull-to-refresh: a real rebuild from BlueRing that is NOT written to KV, so a public page
+ * can't be used to burn the write quota. Pulls inside PULL_MIN_INTERVAL_MS reuse the last
+ * pulled view held in this isolate's memory. The cron's KV view stays the source for
+ * normal loads, and the page keeps whichever view is newer.
+ */
+export async function pullView(env: EnergyEnv, kv: KVNamespace | undefined, now = Date.now()): Promise<EnergyView> {
+	if (lastPulled && now - lastPulled.generatedAt < PULL_MIN_INTERVAL_MS) return lastPulled;
+	try {
+		lastPulled = await buildView(env, kv, now);
+		return lastPulled;
+	} catch (e) {
+		const hit = lastPulled ?? (await kv?.get<EnergyView>(VIEW_KV_KEY, "json"));
+		if (!hit) throw e;
+		return { ...hit, stale: { reason: e instanceof BlueringAuthError ? "token_expired" : "error", at: now } };
+	}
+}
+
 export async function getView(env: EnergyEnv, kv: KVNamespace | undefined, force = false, now = Date.now()): Promise<EnergyView> {
 	const hit = await kv?.get<EnergyView>(VIEW_KV_KEY, "json");
-	if (!force && hit && now - hit.generatedAt < VIEW_FRESH_MS) return hit;
+	if (!force && hit && now - hit.generatedAt < VIEW_REQUEST_MAX_AGE_MS) return hit;
 	try {
 		const view = await buildView(env, kv, now);
 		await kv?.put(VIEW_KV_KEY, JSON.stringify(view), { expirationTtl: VIEW_TTL_SEC });

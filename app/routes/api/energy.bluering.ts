@@ -1,12 +1,12 @@
 import type { Route } from "./+types/energy.bluering";
 import { requireEnergyAuth } from "~/lib/energy-gate.server";
+import { getView } from "~/lib/energy-model.server";
 import {
 	BlueringAuthError,
 	BlueringHttpError,
 	bangkokToday,
 	getPlant,
 	getSeries,
-	getSnapshot,
 	SERIES_TYPES,
 	type SeriesType,
 } from "~/lib/bluering.server";
@@ -16,7 +16,8 @@ import {
  * only an Open-Meteo forecast).
  *
  *   GET /api/energy/bluering
- *       plant info, latest 15-min reading (W) and today's kWh totals (60 s KV cache)
+ *       plant info, latest 15-min reading (W) and today's kWh totals, read from the
+ *       cron-built /energy view (no BlueRing call and no KV write per request)
  *   GET /api/energy/bluering?series=minute|daily|monthly&date=YYYY-MM-DD
  *       minute  = that Bangkok day in 15-min buckets, values in average kW
  *       daily   = from that day on, one row per day, kWh
@@ -59,7 +60,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 			);
 		}
 
-		const snap = await getSnapshot(env, kv);
+		const view = await getView(env, kv);
+		const snap = {
+			ts: view.generatedAt,
+			plant: view.plant,
+			live: view.live,
+			ageSec: view.live ? Math.round((Date.now() - Date.parse(view.live.at)) / 1000) : null,
+			tokenExpiresAt: view.tokenExpiresAt,
+			stale: view.stale ?? null,
+		};
 		return Response.json(
 			{ ok: true, ...snap, latency_ms: Date.now() - startedAt },
 			{ headers: { "Cache-Control": "private, max-age=30" } },
