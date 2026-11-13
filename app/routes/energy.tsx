@@ -5,6 +5,7 @@ import type { Route } from "./+types/energy";
 import "~/styles/energy-v2.css";
 import { BacktestChart, HistoryChart, TodayChart, useChartColors } from "~/components/energy-v2/Charts";
 import { Flow } from "~/components/energy-v2/Flow";
+import { PullToRefresh } from "~/components/PullToRefresh";
 import { ago, baht, hhmm, kwh, n0, n1, n2, thDate, thShort } from "~/components/energy-v2/format";
 import type { LiveReading } from "~/lib/bluering.server";
 import { BlueringAuthError } from "~/lib/bluering.server";
@@ -56,11 +57,29 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 const VIEW_REFRESH_MS = 5 * 60_000;
 
 export default function EnergyPage({ loaderData }: Route.ComponentProps) {
-	const { view, error } = loaderData;
+	const { error } = loaderData;
 	const root = useRef<HTMLDivElement>(null);
 	const colors = useChartColors(root);
 	const revalidator = useRevalidator();
+	// a pulled (fresh) view outranks the loader's cron view until a newer one arrives
+	const [pulled, setPulled] = useState<EnergyView | null>(null);
+	const [pullError, setPullError] = useState<string | null>(null);
+	const view = pulled && (!loaderData.view || pulled.generatedAt > loaderData.view.generatedAt) ? pulled : loaderData.view;
 	const [now, setNow] = useState(() => view?.generatedAt ?? 0);
+
+	// pull-to-refresh: a real rebuild from BlueRing (server skips the KV write)
+	const pull = async () => {
+		try {
+			const res = await fetch("/api/energy/view?fresh=1", { cache: "no-store" });
+			const j = (await res.json()) as { ok: boolean; view?: EnergyView };
+			if (!res.ok || !j.ok || !j.view) throw new Error(String(res.status));
+			setPulled(j.view);
+			setPullError(null);
+		} catch {
+			setPullError("รีเฟรชไม่สำเร็จ แสดงข้อมูลล่าสุดที่มี");
+		}
+		setNow(Date.now());
+	};
 
 	// one source of truth: re-run the loader every 5 min while visible, and on return
 	useEffect(() => {
@@ -84,23 +103,32 @@ export default function EnergyPage({ loaderData }: Route.ComponentProps) {
 	if (!view) {
 		return (
 			<div className="ev" ref={root}>
-				<div className="ev-wrap">
-					<header className="ev-top">
-						<h1>พลังงานบ้าน</h1>
-					</header>
-					<div className="ev-banner bad">
-						<TriangleAlert size={18} />
-						<div>{error === "token_expired" ? <TokenFix /> : "ดึงข้อมูลจาก BlueRing ไม่ได้ตอนนี้ ลองใหม่อีกครั้ง"}</div>
+				<PullToRefresh onRefresh={pull}>
+					<div className="ev-wrap">
+						<header className="ev-top">
+							<h1>พลังงานบ้าน</h1>
+						</header>
+						<div className="ev-banner bad">
+							<TriangleAlert size={18} />
+							<div>{error === "token_expired" ? <TokenFix /> : "ดึงข้อมูลจาก BlueRing ไม่ได้ตอนนี้ ลองดึงหน้าจอลงเพื่อลองใหม่"}</div>
+						</div>
 					</div>
-				</div>
+				</PullToRefresh>
 			</div>
 		);
 	}
 
 	return (
 		<div className="ev" ref={root}>
+			<PullToRefresh onRefresh={pull}>
 			<div className="ev-wrap">
 				<Header view={view} now={now} refreshing={revalidator.state === "loading"} />
+				{pullError && (
+					<div className="ev-banner warn" role="status">
+						<TriangleAlert size={18} />
+						<div>{pullError}</div>
+					</div>
+				)}
 				<Alerts view={view} now={now} />
 				<div className="ev-grid">
 					<NowCard view={view} live={view.live} />
@@ -117,6 +145,7 @@ export default function EnergyPage({ loaderData }: Route.ComponentProps) {
 					{n2(view.tariff.offPeak)} ฿) + ค่าบริการ {n2(view.tariff.serviceThb)} ฿ · <a href="/energy/legacy">หน้าเดิม</a>
 				</footer>
 			</div>
+			</PullToRefresh>
 		</div>
 	);
 }
@@ -126,7 +155,8 @@ export default function EnergyPage({ loaderData }: Route.ComponentProps) {
 function Header({ view, now, refreshing }: { view: EnergyView; now: number; refreshing: boolean }) {
 	const end = view.status.lastDataT;
 	const ageSec = end ? Math.max(0, (now - end) / 1000) : null;
-	const late = view.status.gatewaySilent || ageSec === null || ageSec > 45 * 60;
+	// the view is cron-built every 15 min and BlueRing lags ~5-20 min, so up to ~40 min is normal
+	const late = view.status.gatewaySilent || ageSec === null || ageSec > 60 * 60;
 	return (
 		<header className="ev-top">
 			<div>
@@ -170,7 +200,7 @@ function Alerts({ view, now }: { view: EnergyView; now: number }) {
 		});
 	}
 	const lastT = view.status.lastDataT;
-	if (lastT && now - lastT > 45 * 60_000) {
+	if (lastT && now - lastT > 60 * 60_000) {
 		items.push({
 			key: "gw",
 			tone: "warn",

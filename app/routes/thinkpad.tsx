@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Route } from "./+types/thinkpad";
 import "~/styles/thinkpad.css";
+import { PullToRefresh } from "~/components/PullToRefresh";
 import { thinkpadGate } from "~/lib/thinkpad-auth.server";
 import type { StatusView } from "~/lib/thinkpad-status";
 import { loadStatusView } from "~/lib/thinkpad-view.server";
@@ -84,6 +85,8 @@ export default function ThinkpadPage({ loaderData }: Route.ComponentProps) {
 	const fetchedAt = useRef<number | null>(null);
 	const viewNow = useRef<number | null>(loaderData.view?.now ?? null);
 	const [now, setNow] = useState<number>(loaderData.view?.now ?? 0);
+	// the poll lives inside the effect; pull-to-refresh calls the same function
+	const pollRef = useRef<() => Promise<void>>(async () => {});
 
 	useEffect(() => {
 		fetchedAt.current = Date.now();
@@ -103,6 +106,7 @@ export default function ThinkpadPage({ loaderData }: Route.ComponentProps) {
 				if (alive) setError("รีเฟรชไม่สำเร็จ — แสดงข้อมูลล่าสุดที่มี");
 			}
 		};
+		pollRef.current = poll;
 		const pollId = setInterval(poll, POLL_MS);
 		const tickId = setInterval(() => {
 			if (viewNow.current != null && fetchedAt.current != null) setNow(viewNow.current + (Date.now() - fetchedAt.current));
@@ -120,14 +124,16 @@ export default function ThinkpadPage({ loaderData }: Route.ComponentProps) {
 
 	return (
 		<div className="tp">
-			<div className="tp-wrap">
-				<div className="tp-head">
-					<h1>ThinkPad · VPN</h1>
-					<span className="tp-sub">{view ? `อัปเดต ${clock(view.now)} · รีเฟรชทุก 30 วินาที` : ""}</span>
+			<PullToRefresh onRefresh={() => pollRef.current()}>
+				<div className="tp-wrap">
+					<div className="tp-head">
+						<h1>ThinkPad · VPN</h1>
+						<span className="tp-sub">{view ? `อัปเดต ${clock(view.now)} · รีเฟรชทุก 30 วินาที · ดึงลงเพื่อรีเฟรช` : ""}</span>
+					</div>
+					{error && <div className="tp-banner warn">{error}</div>}
+					{view && <Body view={view} now={now} />}
 				</div>
-				{error && <div className="tp-banner warn">{error}</div>}
-				{view && <Body view={view} now={now} />}
-			</div>
+			</PullToRefresh>
 		</div>
 	);
 }

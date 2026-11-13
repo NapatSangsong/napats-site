@@ -3,7 +3,7 @@
  * rebuild falls back to the last good view (marked stale) instead of an error page.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { type EnergyView, getView } from "../energy-model.server";
+import { type EnergyView, getView, pullView } from "../energy-model.server";
 
 function memKv(seed: Record<string, unknown> = {}) {
 	const store = new Map(Object.entries(seed).map(([k, v]) => [k, JSON.stringify(v)]));
@@ -20,7 +20,7 @@ function memKv(seed: Record<string, unknown> = {}) {
 }
 
 const NOW = Date.parse("2026-11-12T05:00:00Z");
-const cached = { generatedAt: NOW - 20 * 60_000, cycles: [] } as unknown as EnergyView;
+const cached = { generatedAt: NOW - 25 * 60_000, cycles: [] } as unknown as EnergyView;
 const VIEW_KEY = "energy:v2:view:5";
 
 describe("getView", () => {
@@ -36,6 +36,29 @@ describe("getView", () => {
 		expect(f).not.toHaveBeenCalled();
 	});
 
+	it("requests never rebuild (or write) a view the cron refreshed within 20 min", async () => {
+		const f = vi.fn();
+		vi.stubGlobal("fetch", f);
+		const fifteen = { ...cached, generatedAt: NOW - 15 * 60_000 };
+		const { kv, store } = memKv({ [VIEW_KEY]: fifteen });
+		const put = vi.spyOn(kv, "put");
+		const v = await getView({ BLUERING_TOKEN: "t" }, kv, false, NOW);
+		expect(v.generatedAt).toBe(fifteen.generatedAt);
+		expect(f).not.toHaveBeenCalled();
+		expect(put).not.toHaveBeenCalled();
+		expect(store.size).toBe(1);
+	});
+
+	it("the cron (force) rebuilds even a fresh view", async () => {
+		const f = vi.fn(async () => new Response("down", { status: 502 }));
+		vi.stubGlobal("fetch", f);
+		const fresh = { ...cached, generatedAt: NOW - 60_000 };
+		const { kv } = memKv({ [VIEW_KEY]: fresh });
+		const v = await getView({ BLUERING_TOKEN: "t" }, kv, true, NOW);
+		expect(f).toHaveBeenCalled(); // it tried; BlueRing being down then falls back
+		expect(v.stale?.reason).toBe("error");
+	});
+
 	it("falls back to the last good view, marked stale, when the token is gone", async () => {
 		vi.stubGlobal("fetch", vi.fn());
 		const { kv } = memKv({ [VIEW_KEY]: cached });
@@ -49,6 +72,16 @@ describe("getView", () => {
 		const { kv } = memKv({ [VIEW_KEY]: cached });
 		const v = await getView({ BLUERING_TOKEN: "t" }, kv, false, NOW);
 		expect(v.stale?.reason).toBe("error");
+	});
+
+	it("pullView never writes KV, and falls back to the cached view when BlueRing is down", async () => {
+		vi.stubGlobal("fetch", vi.fn(async () => new Response("down", { status: 502 })));
+		const { kv } = memKv({ [VIEW_KEY]: cached });
+		const put = vi.spyOn(kv, "put");
+		const v = await pullView({ BLUERING_TOKEN: "t" }, kv, NOW + 1);
+		expect(v.stale?.reason).toBe("error");
+		expect(v.generatedAt).toBe(cached.generatedAt);
+		expect(put).not.toHaveBeenCalled();
 	});
 
 	it("throws when there is nothing cached to fall back to", async () => {
