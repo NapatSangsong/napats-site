@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#141b2a">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Beijing &amp; Tianjin Winter Book</title>
+<meta name="description" content="Beijing & Tianjin winter journey, 5–11 December 2026">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Noto+Serif+SC:wght@500;700&display=swap">
+<style>
+/* Layout: night-sky hero with a vermilion seal and a glazed-tile edge, then a sticky day rail and one long scroll of days, each a timeline + practical notes. */
+:root{
+  --bg:#eef1f5; --surface:#fbfcfd; --sunk:#e3e8ef; --ink:#1a2130; --muted:#5b6475; --line:#d6dce5;
+  --red:#a8322a; --red-soft:#f3dedb; --gold:#a97d22; --gold-soft:#f2e7cc;
+  --hero:#141b2a; --hero-2:#1f2a40; --hero-fg:#eef2f7; --hero-muted:#a9b4c6; --seal:#b23a2e; --tile:#c99a36;
+  --f-display:"Cormorant Garamond","Iowan Old Style",Georgia,serif;
+  --f-body:"IBM Plex Sans Thai","Noto Sans Thai",-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --f-zh:"Noto Serif SC","Songti SC","STSong",serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d121b; --surface:#151c28; --sunk:#1b2433; --ink:#e6eaf0; --muted:#98a2b3; --line:#283244;
+  --red:#e2695d; --red-soft:#3a1f20; --gold:#d8ad57; --gold-soft:#33291a;
+  --hero:#090d15; --hero-2:#141c2b; --hero-fg:#eef2f7; --hero-muted:#a2adbf; --seal:#b23a2e; --tile:#c99a36;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d121b; --surface:#151c28; --sunk:#1b2433; --ink:#e6eaf0; --muted:#98a2b3; --line:#283244;
+  --red:#e2695d; --red-soft:#3a1f20; --gold:#d8ad57; --gold-soft:#33291a;
+  --hero:#090d15; --hero-2:#141c2b; --hero-fg:#eef2f7; --hero-muted:#a2adbf; --seal:#b23a2e; --tile:#c99a36;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(64px + env(safe-area-inset-top,0px))}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.65 var(--f-body);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+.zh{font-family:var(--f-zh);font-weight:500;letter-spacing:.02em}
+.tl .zh,.det .zh,.label .zh,.kv .zh,.note .zh,.checks .zh{white-space:nowrap}
+.wrap{max-width:920px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.label{font:500 11px/1.2 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+
+/* ---------- hero ---------- */
+.hero{position:relative;background:radial-gradient(120% 90% at 80% 0%,var(--hero-2),var(--hero) 62%);color:var(--hero-fg);overflow:hidden}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero .wrap{position:relative;padding-block:clamp(40px,8vw,84px) clamp(54px,9vw,92px);display:grid;grid-template-columns:1fr auto;gap:28px;align-items:end}
+.hero .label{color:var(--hero-muted)}
+.hero h1{font:500 clamp(58px,13vw,128px)/.86 var(--f-display);letter-spacing:-.035em;margin:18px 0 0;text-wrap:balance}
+.hero h1 i{display:block;font-style:italic;color:var(--tile);padding-left:.42em}
+.hero .sub{margin:22px 0 0;max-width:46ch;color:var(--hero-muted);font-size:15px}
+.hero .facts{margin-top:28px;display:flex;flex-wrap:wrap;gap:8px}
+.hero .facts span{font:500 12px/1 var(--f-mono);letter-spacing:.06em;border:1px solid rgba(238,242,247,.22);border-radius:99px;padding:8px 12px}
+.today-btn{margin-top:18px;display:inline-flex;gap:8px;align-items:center;background:var(--seal);color:#fff;border:0;border-radius:99px;padding:10px 16px;font:600 13px var(--f-body);cursor:pointer;text-decoration:none}
+.seal{writing-mode:vertical-rl;font:700 clamp(30px,5.4vw,46px)/1 var(--f-zh);letter-spacing:.14em;color:#fff4ec;background:var(--seal);padding:18px 12px;border-radius:6px;box-shadow:inset 0 0 0 3px var(--seal),inset 0 0 0 5px rgba(255,244,236,.55);transform:rotate(2deg);align-self:start}
+.tiles{position:absolute;left:0;right:0;bottom:0;height:22px;background:
+  radial-gradient(circle at 50% 100%,var(--tile) 0 9px,transparent 9.5px) 0 0/22px 22px repeat-x,
+  linear-gradient(transparent 17px,var(--tile) 17px);opacity:.9}
+.tiles::after{content:"";position:absolute;inset:auto 0 0;height:3px;background:var(--seal)}
+@media(max-width:560px){.hero .wrap{grid-template-columns:1fr}.seal{position:absolute;top:28px;right:max(16px,env(safe-area-inset-right,0px));font-size:24px;padding:12px 8px}}
+
+/* ---------- rail ---------- */
+.rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.rail nav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-block:10px}
+.rail nav::-webkit-scrollbar{display:none}
+.rail a{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;min-width:56px;text-decoration:none;padding:6px 10px;border-radius:10px;color:var(--muted);border:1px solid transparent;transition:background .2s,color .2s}
+.rail a b{font:600 18px/1 var(--f-display);color:var(--ink)}
+.rail a small{font:500 10px/1.4 var(--f-mono);letter-spacing:.08em;text-transform:uppercase}
+.rail a.on{background:var(--ink);color:var(--bg)}
+.rail a.on b{color:var(--bg)}
+.rail a.is-today{border-color:var(--red)}
+.rail a:hover:not(.on){background:var(--sunk)}
+
+/* ---------- overview ---------- */
+section{scroll-margin-top:calc(64px + env(safe-area-inset-top,0px))}
+.block{padding-block:44px 8px}
+.h2{font:500 clamp(32px,6vw,46px)/1.05 var(--f-display);letter-spacing:-.02em;margin:8px 0 6px;text-wrap:balance}
+.lede{color:var(--muted);max-width:62ch;margin:0}
+.route{margin-top:26px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.stop{padding:16px 14px;position:relative;min-width:0}
+.stop+.stop{border-left:1px dashed var(--line)}
+.stop .code{font:600 26px/1 var(--f-display)}
+.stop .zh{display:block;font-size:13px;color:var(--muted);margin-top:4px}
+.stop .how{margin-top:10px;font:500 11px/1.4 var(--f-mono);color:var(--red);letter-spacing:.04em}
+.stop .nights{display:inline-block;margin-top:8px;font:500 11px/1 var(--f-mono);background:var(--gold-soft);color:var(--gold);padding:5px 7px;border-radius:6px}
+@media(max-width:700px){.route{grid-template-columns:1fr}.stop+.stop{border-left:0;border-top:1px dashed var(--line)}.stop{display:grid;grid-template-columns:76px 1fr;column-gap:12px}.stop .code{grid-row:span 3}.stop .how,.stop .nights{margin-top:6px;justify-self:start}}
+
+.cards{margin-top:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.card h3{margin:0 0 12px;font:600 11px/1.2 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--red)}
+.kv{display:grid;gap:12px}
+.kv div{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;align-items:baseline}
+.kv .k{font:600 15px/1.2 var(--f-mono);font-variant-numeric:tabular-nums}
+.kv .v{font-size:13.5px}
+.kv .s{grid-column:2;font-size:12px;color:var(--muted)}
+.facts-list{margin:0;padding:0;list-style:none;display:grid;gap:9px;font-size:13.5px}
+.facts-list b{font-weight:600}
+@media(max-width:640px){.cards{grid-template-columns:1fr}}
+
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.checks label{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;padding:9px 6px;border-radius:8px;cursor:pointer;font-size:13.5px}
+.checks label:hover{background:var(--sunk)}
+.checks input{appearance:none;width:18px;height:18px;margin:2px 0 0;border:1.5px solid var(--muted);border-radius:5px;display:grid;place-items:center;cursor:pointer}
+.checks input:checked{background:var(--red);border-color:var(--red)}
+.checks input:checked::after{content:"";width:9px;height:5px;border:2px solid #fff;border-top:0;border-right:0;transform:translateY(-1px) rotate(-45deg)}
+.checks input:checked+span{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+.checks small{display:block;color:var(--muted);font-size:12px;text-decoration:none}
+.progress{font:500 12px var(--f-mono);color:var(--muted)}
+
+/* ---------- day ---------- */
+.day{padding-block:56px 12px}
+.day-top{display:grid;grid-template-columns:auto 1fr;gap:18px 22px;align-items:end;padding-bottom:22px;border-bottom:1px solid var(--ink)}
+.dnum{font:500 clamp(84px,16vw,132px)/.78 var(--f-display);letter-spacing:-.05em;color:var(--ink)}
+.dnum sup{font:500 12px/1 var(--f-mono);letter-spacing:.14em;vertical-align:top;margin-left:6px;color:var(--muted);position:relative;top:8px}
+.dhead .label b{color:var(--red);font-weight:600}
+.dhead h2{font:500 clamp(30px,5.6vw,46px)/1.02 var(--f-display);letter-spacing:-.02em;margin:8px 0 4px;text-wrap:balance}
+.dhead .zh{color:var(--muted);font-size:14px}
+.meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;font:500 12px/1 var(--f-body);padding:7px 10px;border-radius:99px;background:var(--sunk);color:var(--ink)}
+.chip.tag{background:var(--red-soft);color:var(--red);font-family:var(--f-mono);letter-spacing:.1em;text-transform:uppercase;font-size:11px}
+.chip.today{background:var(--red);color:#fff}
+.chip svg{width:13px;height:13px;flex:none}
+.tea{cursor:pointer;border:1px dashed var(--muted);background:transparent}
+.tea[aria-pressed="true"]{background:var(--gold-soft);border-color:var(--gold);color:var(--gold)}
+
+.day-body{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:34px;margin-top:26px}
+@media(max-width:780px){.day-body{grid-template-columns:1fr;gap:26px}}
+.tl{list-style:none;margin:10px 0 0;padding:0;position:relative}
+.tl li{display:grid;grid-template-columns:96px 18px 1fr;gap:0 10px;padding:9px 0}
+.tl li::before{content:"";grid-column:2;grid-row:1;justify-self:center;width:9px;height:9px;margin-top:7px;border-radius:50%;background:var(--surface);border:2px solid var(--red);z-index:1}
+.tl::before{content:"";position:absolute;left:calc(96px + 10px + 8px);top:18px;bottom:18px;width:2px;background:var(--line)}
+.tl .t{grid-column:1;grid-row:1;font:500 12.5px/1.6 var(--f-mono);font-variant-numeric:tabular-nums;color:var(--red);text-align:right;padding-top:1px}
+.tl .a{grid-column:3;grid-row:1;font-size:14px;min-width:0}
+.tl li.now{background:linear-gradient(90deg,transparent,var(--red-soft) 30%);border-radius:10px}
+.tl li.now::before{background:var(--red);box-shadow:0 0 0 5px var(--red-soft)}
+.tl li.now .a::after{content:"ตอนนี้";margin-left:8px;font:600 10px var(--f-mono);letter-spacing:.1em;color:#fff;background:var(--red);padding:2px 6px;border-radius:4px;vertical-align:2px}
+@media(max-width:520px){.tl li{grid-template-columns:78px 14px 1fr;gap:0 8px}.tl::before{left:calc(78px + 8px + 6px)}.tl .t{font-size:11.5px}}
+
+.det{display:grid;gap:0;margin-top:10px}
+.det div{padding:12px 0;border-top:1px solid var(--line)}
+.det div:first-child{border-top:0;padding-top:4px}
+.det h4{margin:0 0 3px;font-size:14px;font-weight:600}
+.det p{margin:0;font-size:13.5px;color:var(--muted)}
+
+.didi{margin-top:26px}
+.didi-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.cp{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 12px 8px;cursor:pointer;color:var(--ink);text-align:left;font:inherit;transition:border-color .2s,transform .1s}
+.cp:hover{border-color:var(--red)}
+.cp:active{transform:scale(.98)}
+.cp .zh{font-size:17px;line-height:1.25}
+.cp small{font-size:11px;color:var(--muted)}
+.cp.done{border-color:var(--gold);background:var(--gold-soft)}
+
+.note{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.note .label{color:var(--gold);display:flex;gap:8px;align-items:center}
+.note ul{margin:10px 0 0;padding-left:18px;display:grid;gap:5px;font-size:13.5px}
+.note li::marker{color:var(--gold)}
+
+.foot{padding-block:56px 40px;text-align:center;color:var(--muted)}
+.foot .seal-s{display:inline-block;font:700 18px/1 var(--f-zh);color:#fff4ec;background:var(--seal);padding:8px 9px;border-radius:4px;margin-bottom:14px}
+.foot p{margin:4px 0;font:500 11px/1.6 var(--f-mono);letter-spacing:.14em;text-transform:uppercase}
+.foot a{color:var(--red)}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:40;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+
+</head><body>
+<header class="hero" id="top">
+  <canvas id="snow" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div>
+      <div class="label">Travel book · 5–11 December 2026</div>
+      <h1>Beijing <i>&amp; Tianjin</i></h1>
+      <p class="sub">เจ็ดวันในฤดูหนาวทางเหนือ เริ่มที่ห้องสมุดเทียนจิน เดินริมแม่น้ำไห่เหอ แล้วจบที่พระราชวัง สวน และหูท่งของปักกิ่ง</p>
+      <div class="facts"><span>7 DAYS · 6 NIGHTS</span><span>TIANJIN 2N</span><span>BEIJING 4N</span><span>−5 ถึง 5°C</span></div>
+      <a class="today-btn" id="todayBtn" href="#" hidden>ไปที่วันนี้ →</a>
+    </div>
+    <div class="seal" aria-hidden="true">北京天津</div>
+  </div>
+  <div class="tiles" aria-hidden="true"></div>
+</header>
+
+<div class="rail"><div class="wrap"><nav id="rail" aria-label="Days"></nav></div></div>
+
+<main class="wrap">
+  <section class="block" id="overview">
+    <div class="label">The route</div>
+    <h2 class="h2">Seven days, at an unhurried pace.</h2>
+    <p class="lede">เวลาในตารางเป็นกรอบวางแผน ไม่ใช่ตั๋วรถไฟหรือเวลาเปิดที่ยืนยันแล้ว ข้อมูลเวลาเปิดและราคาอ้างอิง ณ พฤศจิกายน 2026 ควรตรวจซ้ำใกล้วันเดินทาง</p>
+
+    <div class="route" role="list">
+      <div class="stop" role="listitem"><div class="code">BKK</div><span class="zh">Suvarnabhumi</span><div class="how">5 ธ.ค. · TG674 23:40</div></div>
+      <div class="stop" role="listitem"><div class="code">PEK</div><span class="zh">首都机场 T3</span><div class="how">6 ธ.ค. · ถึง 05:20</div></div>
+      <div class="stop" role="listitem"><div class="code">Tianjin</div><span class="zh">天津站</span><div class="how">HSR จาก 北京南站</div><span class="nights">2 คืน · 5–7 ธ.ค.</span></div>
+      <div class="stop" role="listitem"><div class="code">Beijing</div><span class="zh">王府井</span><div class="how">7 ธ.ค. · HSR กลับ</div><span class="nights">4 คืน · 7–11 ธ.ค.</span></div>
+      <div class="stop" role="listitem"><div class="code">BKK</div><span class="zh">Home</span><div class="how">11 ธ.ค. · TG615 17:05</div></div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Flights · Thai Airways</h3>
+        <div class="kv">
+          <div><span class="k">TG674</span><span class="v">BKK 23:40 → PEK 05:20 <span class="mono">+1</span></span><span class="s">เสาร์ 5 ธ.ค. · ลง Beijing Capital T3 (ไม่ใช่ Daxing PKX)</span></div>
+          <div><span class="k">TG615</span><span class="v">PEK 17:05 → BKK 21:20</span><span class="s">ศุกร์ 11 ธ.ค. · T3 · บิน 5 ชม. 15 นาที</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Stays</h3>
+        <div class="kv">
+          <div><span class="k">2N</span><span class="v">CitiGO Hotel Tianjin Station Binjiang Road</span><span class="s">คืน 5 และ 6 ธ.ค. · จองคืนแรกไว้รองรับการมาถึงเช้า</span></div>
+          <div><span class="k">4N</span><span class="v">JianGuo Hidden Hotel</span><span class="s">Beijing Tian An Men Wangfujing store · 7–11 ธ.ค.</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Trains · High-speed</h3>
+        <div class="kv">
+          <div><span class="k">~09:30</span><span class="v"><span class="zh">北京南站</span> → <span class="zh">天津站</span></span><span class="s">อาทิตย์ 6 ธ.ค. · Second Class · 2 คน · กรอบเป้าหมาย</span></div>
+          <div><span class="k">~17:00</span><span class="v"><span class="zh">天津站</span> → <span class="zh">北京南站</span></span><span class="s">จันทร์ 7 ธ.ค. · ราว 30–40 นาที · ถึงสถานีก่อน 45–60 นาที</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Good to know</h3>
+        <ul class="facts-list">
+          <li><b>เวลา</b> จีนเร็วกว่าไทย 1 ชั่วโมง (UTC+8)</li>
+          <li><b>อากาศ</b> ธ.ค. หนาวมาก ประมาณ −5 ถึง 5°C เตรียมเสื้อกันหนาวและอุปกรณ์กันลม</li>
+          <li><b>วันจันทร์</b> Forbidden City และอาคารหลักหลายแห่งปิด วันนั้นเราอยู่ Tianjin พอดี</li>
+          <li><b>เดินทาง</b> ใช้ DiDi ทั้งทริป แตะชื่อจีนในแต่ละวันเพื่อคัดลอกไปวางในแอป</li>
+          <li><b>HEYTEA</b> <span class="zh">喜茶</span> อย่างน้อยวันละแก้ว 6–11 ธ.ค. แวะสาขาบนเส้นทาง ไม่อ้อม</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h3 style="display:flex;justify-content:space-between;gap:12px"><span>Before you go</span><span class="progress" id="chkProg"></span></h3>
+      <ul class="checks" id="checks"></ul>
+    </div>
+  </section>
+
+  <div id="days"></div>
+
+  <footer class="foot">
+    <div class="seal-s" aria-hidden="true">冬</div>
+    <p>Beijing &amp; Tianjin · Winter 2026</p>
+    <p>Personal travel book · napats.dev</p>
+    <p style="margin-top:14px"><a href="#top">กลับขึ้นด้านบน ↑</a> · <a href="/beijing2026/v4/">เวอร์ชันเดิม (v4)</a></p>
+  </footer>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const DAYS = [
+ {n:0,date:"2026-12-05",tz:"Asia/Bangkok",th:"เสาร์ 5 ธันวาคม",zhd:"周六",title:"Bangkok → Beijing",zh:"曼谷 → 北京",tag:"Departure",sleep:"บนเครื่อง TG674",
+  plan:[["18:00","ออกจากบ้าน → Suvarnabhumi Airport (BKK) และจอดรถที่สนามบิน"],["ช่วงค่ำ","เช็กอิน โหลดกระเป๋า ผ่าน Security และ Immigration"],["23:40","Thai Airways TG674 · Bangkok (BKK) → Beijing Capital International Airport (PEK)"],["05:20 +1","ถึง PEK Terminal 3 ในวันอาทิตย์ที่ 6 ธันวาคม"]],
+  det:[["ก่อนออกจากบ้าน","ตรวจ Passport, Booking, น้ำหนักสัมภาระ และเตรียมข้อมูลจุดจอดรถ"],["สนามบินสุวรรณภูมิ","เผื่อเวลาจอดรถ เดินเข้าอาคารผู้โดยสาร เช็กอิน โหลดกระเป๋า และผ่านขั้นตอนขาออก"],["เที่ยวบิน","TG674 ออกจาก BKK เวลา 23:40 ถึง PEK เวลา 05:20 ของวันถัดไป"]],
+  didi:[],
+  notes:["เที่ยวบินขาไปคือ PEK (Beijing Capital) ไม่ใช่ PKX (Beijing Daxing)","เวลาหน้า Boarding Pass และ Gate จริงให้ยึดประกาศสายการบิน"]},
+ {n:1,date:"2026-12-06",tz:"Asia/Shanghai",th:"อาทิตย์ 6 ธันวาคม",zhd:"周日",title:"Beijing → Tianjin",zh:"北京 → 天津",tag:"Tianjin",sleep:"CitiGO Tianjin",sun:"16:45",tea:1,
+  plan:[["05:20–07:00","ถึง PEK T3 · ตม. · รับกระเป๋า · Arrival Hall ชั้น 2 · ตามป้าย 网约车"],["07:00–08:30","DiDi → Beijing South Railway Station (北京南站) · ประมาณ 50–80 นาที"],["09:30–10:00","รถไฟความเร็วสูง Beijing South → Tianjin Station (天津站) · Second Class · 2 คน"],["10:10–11:30","DiDi → CitiGO Hotel Tianjin Station Binjiang Road"],["11:30–14:00","ฝากกระเป๋า / ขอ Early Check-in / อาหารกลางวัน / พัก"],["14:00–15:00","DiDi → Tianjin Binhai Library (天津滨海图书馆)"],["15:00–16:45","Tianjin Binhai Library · The Eye · โถงกลาง · ชั้นหนังสือโค้ง"],["16:45–17:15","Binhai Cultural Center (optional)"],["17:15–18:15","DiDi กลับโรงแรม · Dinner & Rest ตั้งแต่ 18:30"]],
+  det:[["PEK Arrival","ผ่าน Immigration → รับกระเป๋า → ออก Arrival Hall ชั้น 2 → ตามป้าย 网约车 (Ride-hailing) → เปิด DiDi ตรวจจุดรับรถในแอป"],["จุดรับรถสนามบิน","แผนเดิมระบุ B2, Zone H (H区) แต่ให้ยึดหมุดใน DiDi และป้ายสนามบิน ณ วันเดินทาง ไม่เดินตามตำแหน่งเก่าหากแอปเปลี่ยน"],["Beijing South","DiDi destination: 北京南站 · ให้ส่ง Departure Level (出发层) · เข้าทาง 进站口 → แสดง Passport/ตั๋ว → 安检 → 候车大厅 → ตรวจจอหา 检票口"],["รถไฟไป Tianjin","เลือก Tianjin Station (天津站) ไม่ใช่ 天津西站 หรือ 天津南站 · ใช้ Passport สำหรับการจอง/ผ่านประตู · เวลา 09:30 เป็นกรอบเป้าหมาย ไม่ใช่ขบวนที่ยืนยันแล้ว"],["ถึง Tianjin","ตามป้าย 出站口 ออกจาก paid area แล้วเปิด DiDi ดู pickup pin เดินตามหมุด ตรวจทะเบียนรถก่อนขึ้น · โรงแรมใช้ชื่อ CitiGO Hotel Tianjin Station Binjiang Road"],["โรงแรมก่อนออกเที่ยว","จองคืน 5 และ 6 ธ.ค. รวม 2 คืน เพื่อรองรับการมาถึงเช้า · แจ้งโรงแรมล่วงหน้าว่ามาถึงเช้า ขอเก็บห้องไว้และไม่ mark no-show · ฝากกระเป๋า/ขอ Early Check-in/พัก"],["ไปห้องสมุด","DiDi destination: 天津滨海图书馆 · ประมาณ 45–60 นาที · ลงบริเวณ Tianjin Binhai Cultural Center แล้วตามป้าย 图书馆"],["จุดชมในห้องสมุด","The Eye, โถงกลาง, ชั้นหนังสือโค้ง และ public areas/photo spots · เคารพพื้นที่อ่านหนังสือและปฏิบัติตามกฎถ่ายภาพของสถานที่"]],
+  didi:[["北京南站","Beijing South Station"],["天津站","Tianjin Station"],["天津滨海图书馆","Binhai Library"]],
+  notes:["ตรวจจุดรับ DiDi ที่ PEK และขบวนรถไฟจริงอีกครั้งใกล้วันเดินทาง","ตรวจเงื่อนไขการจองและเวลาเปิดห้องสมุด","ยืนยันการเข้าใช้ห้องพักช่วงเช้ากับโรงแรม"]},
+ {n:2,date:"2026-12-07",tz:"Asia/Shanghai",th:"จันทร์ 7 ธันวาคม",zhd:"周一",title:"Tianjin Downtown → Beijing",zh:"天津 → 北京",tag:"City walk",sleep:"JianGuo Hidden",sun:"16:45",tea:1,
+  plan:[["08:30–09:00","Breakfast at CitiGO Hotel"],["09:00–09:20","DiDi → Italian Style Town (意式风情区)"],["09:20–10:00","Italian Style Town / Marco Polo Square (马可波罗广场)"],["10:00–10:15","DiDi → St. Joseph Cathedral"],["10:15–10:50","St. Joseph Cathedral (西开教堂)"],["10:50–11:30","เดิน Binjiang Road (滨江道步行街)"],["11:30–12:30","Lunch at Riverside 66 (天津恒隆广场)"],["12:30–13:00","DiDi → Jinwan Square (津湾广场)"],["13:00–13:30","Jinwan Square"],["13:30–14:00","Century Clock (世纪钟) + Jiefang Bridge (解放桥)"],["14:00–14:30","Haihe riverside walk"],["14:30–15:00","DiDi กลับโรงแรม"],["15:00–15:30","รับกระเป๋า / เตรียมเดินทาง"],["15:30–16:00","DiDi → Tianjin Railway Station (天津站)"],["16:00–17:00","เข้าสถานีและรอรถไฟ"],["17:00–17:40","รถไฟ Tianjin → Beijing South (กรอบเวลาเป้าหมาย)"],["17:40 →","ถึง Beijing South · DiDi → JianGuo Hidden Hotel · Check-in / Dinner"]],
+  det:[["Italian Style Town","DiDi destination: 意式风情区 · เดินชมย่านสถาปัตยกรรมอิตาเลียนและ Marco Polo Square (马可波罗广场)"],["St. Joseph Cathedral","เดินทางจาก Italian Style Town ด้วย DiDi · โบสถ์อยู่คนละย่านกัน · เวลาเข้าชมภายในที่เคยพบ 10:00–12:00 และ 14:00–16:00 ต้องตรวจซ้ำ"],["Binjiang Road","จากโบสถ์เดินต่อไป Binjiang Road (滨江道步行街) แล้วเดิน/ต่อระยะไป Riverside 66 (天津恒隆广场)"],["Riverside 66","ใช้เป็นจุดพักและอาหารกลางวัน · ยังไม่ล็อกร้าน · Grandma’s Home (外婆家) ยังไม่มีการยืนยันสาขาในห้างนี้"],["Haihe cluster","DiDi ไป Jinwan Square (津湾广场) แล้วเดินเชื่อม Century Clock (世纪钟), Jiefang Bridge (解放桥) และทางเดินริมแม่น้ำ Haihe"],["กลับโรงแรมและสถานี","กลับโรงแรมรับกระเป๋า แล้ว DiDi ไป Tianjin Station (天津站) · เข้าสถานี 进站口 → Passport/ตั๋ว → 安检 → 候车大厅 → 检票口"],["กลับ Beijing","เป้าหมายรถไฟประมาณ 17:00–17:40 · ใช้เวลาราว 30–40 นาที · ควรถึงสถานีก่อนรถออก 45–60 นาที · เมื่อถึง Beijing South เรียก DiDi ไป JianGuo Hidden Hotel (Beijing Tian An Men Wangfujing store)"]],
+  didi:[["意式风情区","Italian Style Town"],["西开教堂","St. Joseph Cathedral"],["滨江道步行街","Binjiang Road"],["天津恒隆广场","Riverside 66"],["津湾广场","Jinwan Square"],["天津站","Tianjin Station"]],
+  notes:["Ancient Culture Street (古文化街) ถูกตัดจากโปรแกรมหลัก เพราะย้อนทางและทำให้เร่งก่อนรถไฟ","ตารางรถไฟเป็นกรอบเป้าหมาย ยังไม่ใช่ขบวนที่ยืนยัน","ไม่ระบุ Grandma’s Home ว่าอยู่ใน Riverside 66"]},
+ {n:3,date:"2026-12-08",tz:"Asia/Shanghai",th:"อังคาร 8 ธันวาคม",zhd:"周二",title:"Imperial Beijing",zh:"故宫 · 景山 · 后海",tag:"History & hutong",sleep:"JianGuo Hidden",sun:"16:50",tea:1,
+  plan:[["08:00–08:30","Hotel → Tian’anmen Square (天安门广场) ด้วย DiDi"],["08:30–09:30","Tian’anmen Square · Monument to the People’s Heroes (人民英雄纪念碑) · Tian’anmen Gate (天安门)"],["09:30–10:00","เดิน Tian’anmen Gate → Duanmen (端门) → Meridian Gate (午门)"],["10:00–13:00","Forbidden City / The Palace Museum (故宫博物院)"],["13:00–13:45","Lunch & Rest ใกล้ Jingshan / Di’anmen"],["13:45–14:45","Jingshan Park (景山公园) · Wanchun Pavilion (万春亭)"],["14:45–15:00","DiDi → Nanluoguxiang (南锣鼓巷)"],["15:00–15:40","Nanluoguxiang · เดิน Hutong"],["15:40–16:00","เดินไป Drum Tower (鼓楼)"],["16:00–16:20","Drum Tower · ชมภายนอก"],["16:20–16:40","Yandai Xiejie (烟袋斜街)"],["16:40–18:00","Shichahai & Houhai (什刹海 · 后海)"],["18:00 →","Dinner ใกล้ Shichahai / Houhai · DiDi กลับโรงแรม"]],
+  det:[["Tian’anmen","DiDi destination: 天安门广场 · เผื่อรถติดและจุดตรวจ · ชม Monument to the People’s Heroes และ Tian’anmen Gate"],["เดินสู่พระราชวัง","จากจัตุรัสเดินผ่าน Tian’anmen Gate → Duanmen (端门) → Meridian Gate (午门) · เผื่อการตรวจ Passport และ Security"],["Forbidden City route","เข้าทาง Meridian Gate (午门) → Hall of Supreme Harmony (太和殿) → Hall of Central Harmony (中和殿) → Hall of Preserving Harmony (保和殿) → Palace of Heavenly Purity (乾清宫) → Hall of Union (交泰殿) → Palace of Earthly Tranquility (坤宁宫) → ออก Gate of Divine Prowess (神武门)"],["Jingshan","เดินข้ามจากประตูเหนือของ Forbidden City ไป Jingshan Park (景山公园) · ขึ้น Wanchun Pavilion (万春亭) เพื่อชมวิวหลังคาพระราชวัง"],["Hutong walk","DiDi ไป Nanluoguxiang (南锣鼓巷) · เดินชมตรอก ร้านขนม ของฝากและคาเฟ่ · จากนั้นเดินไป Drum Tower (鼓楼) ชมภายนอก"],["Yandai Xiejie & lake","จาก Drum Tower เดินต่อ Yandai Xiejie (烟袋斜街) ไปทาง Yinding Bridge แล้วเดินริม Shichahai / Houhai ช่วงแสงเย็น"]],
+  didi:[["天安门广场","Tian’anmen Square"],["南锣鼓巷","Nanluoguxiang"],["什刹海","Shichahai"]],
+  notes:["Forbidden City ฤดูหนาว 08:30–16:30 · last entry 15:30 · ปิดวันจันทร์","บัตร low season CNY 40 · ต้องจองล่วงหน้า ไม่มีขายบัตรวันเข้าชม · จองได้ 7 วันล่วงหน้า เริ่ม 20:00 เวลาปักกิ่ง","Jingshan ฤดูหนาว (ที่เคยตรวจ) 06:30–20:00 · last entry 19:30 · CNY 2","ถ้าพระราชวังล่าช้า ลดเวลา Nanluoguxiang / Drum Tower แต่ไม่ตัด Jingshan และไม่เร่ง Houhai"]},
+ {n:4,date:"2026-12-09",tz:"Asia/Shanghai",th:"พุธ 9 ธันวาคม",zhd:"周三",title:"Summer Palace",zh:"颐和园",tag:"Garden day",sleep:"JianGuo Hidden",sun:"16:50",tea:1,
+  plan:[["09:00–10:00","Hotel → East Palace Gate (东宫门) · DiDi destination 颐和园东宫门"],["10:00–12:00","East Palace Gate → Hall of Benevolence and Longevity → Hall of Jade Ripples / Hall of Happiness and Longevity → Kunming Lake → Long Corridor"],["12:00–13:00","Lunch & Rest ภายในหรือใกล้สวน"],["13:00–14:30","Long Corridor → Gate of Dispelling Clouds → Tower of Buddhist Incense"],["14:30–15:00","เดินลงจาก Longevity Hill (万寿山) มุ่งหน้าไปทะเลสาบ"],["15:00–16:00","Seventeen-Arch Bridge (十七孔桥) + South Lake Island (南湖岛)"],["16:00–16:45","เดินชม Kunming Lake และกลับ East Palace Gate"],["16:45–17:45","DiDi กลับโรงแรม"],["17:45–19:00","พักผ่อน หรือ optional Xidan Joy City (西单大悦城)"],["19:00 →","Dinner"]],
+  det:[["ทางเข้า","DiDi destination: 颐和园东宫门 · East Palace Gate (东宫门) · ใช้ทางเข้าตามที่วางแผน ไม่สลับไปประตูอื่น"],["ช่วงเช้า","Hall of Benevolence and Longevity (仁寿殿) → Hall of Jade Ripples (玉澜堂) → Hall of Happiness and Longevity (乐寿堂) ตามทางที่เปิดให้เข้าชม → Kunming Lake (昆明湖) → Long Corridor (长廊)"],["ช่วงบ่าย","Long Corridor → Gate of Dispelling Clouds (排云门) → Tower of Buddhist Incense (佛香阁) · มีบันไดและทางชัน ควรเดินตามกำลัง"],["สะพาน","เดินลงจาก Longevity Hill (万寿山) ไป Seventeen-Arch Bridge (十七孔桥) และ South Lake Island (南湖岛) · จากนั้นเลียบ Kunming Lake กลับ East Palace Gate"],["กลับโรงแรม","ออก East Palace Gate แล้วเรียก DiDi กลับโรงแรม · optional Xidan Joy City เฉพาะเมื่อยังมีแรง"]],
+  didi:[["颐和园东宫门","Summer Palace East Gate"],["西单大悦城","Xidan Joy City"]],
+  notes:["สวน 06:30–19:00 · last entry 18:00 (ข้อมูลฤดูหนาวทางการ)","Tower of Buddhist Incense และพื้นที่พิเศษ 08:30–17:00 · last entry 16:30","บัตรสวน CNY 20 · บัตรรวม CNY 50 · Tower แยก CNY 10 · สะพานรวมในบัตรสวน","พื้นที่พิเศษปิดวันจันทร์ ยกเว้นวันหยุดราชการ","ไม่มีเรือเป็นกิจกรรมหลัก · Golden Light ไม่ใช่สิ่งที่คาดหวังสำหรับ 9 ธ.ค. · วันนี้เดินไกล ตารางเป็นเป้าหมาย"]},
+ {n:5,date:"2026-12-10",tz:"Asia/Shanghai",th:"พฤหัสบดี 10 ธันวาคม",zhd:"周四",title:"Temples, Hutongs & Old Streets",zh:"雍和宫 · 天坛 · 前门",tag:"Slow city day",sleep:"JianGuo Hidden",sun:"16:50",tea:1,
+  plan:[["09:00–09:45","Hotel → Lama Temple (雍和宫) ด้วย DiDi"],["09:45–11:00","Lama Temple (雍和宫)"],["11:00–11:15","เดินไป Guozijian Street"],["11:15–11:45","Guozijian Street (国子监街)"],["11:45–12:30","Wudaoying Hutong (五道营胡同) · คาเฟ่"],["12:30–13:15","Lunch & Rest"],["13:15–13:45","DiDi → Temple of Heaven East Gate (天坛东门)"],["13:45–16:15","Temple of Heaven (天坛)"],["16:15–16:45","South Gate → Qianmen ด้วย DiDi"],["16:45–18:30","Qianmen (前门) → Dashilar (大栅栏)"],["18:30 →","Dinner & Evening Walk"]],
+  det:[["Lama Temple","DiDi destination: 雍和宫 · เดินชมแนวอาคารและลานวัด · เวลา/การเข้าชมต้องตรวจประกาศล่าสุด"],["Guozijian & Wudaoying","เดินจาก Lama Temple ไป Guozijian Street (国子监街) แล้วต่อ Wudaoying Hutong (五道营胡同) · คาเฟ่ที่อยู่ใน wishlist: Metal Hands และ Voyage Coffee"],["ไป Temple of Heaven","DiDi destination: 天坛东门 · East Gate (东门) · เผื่อรถติดและเวลาเดินจากจุดลงรถ"],["เส้นทางฤดูหนาวในสวน","East Gate → Long Corridor (长廊) → Hall of Prayer for Good Harvests (祈年殿) → Danbi Bridge (丹陛桥) → Imperial Vault of Heaven (皇穹宇) + Echo Wall (回音壁) → Circular Mound Altar (圜丘坛) → ออก South Gate (南门)"],["Qianmen & Dashilar","จาก South Gate เรียก DiDi ไป 前门大街 · เดิน Qianmen Street (前门大街) ต่อ Dashilar (大栅栏) · Yangmeizhu Xiejie (杨梅竹斜街) เป็นตัวเลือกถ้ามีแรง"],["Food & coffee","Fei Da Chu (费大厨辣椒炒肉) เป็นร้านโปรดและตัวเลือกเมื่อมีสาขาสะดวก · HEYTEA (喜茶) อย่างน้อยหนึ่งแก้วต่อวัน 6–11 ธ.ค. โดยแวะสาขาบนเส้นทาง ไม่อ้อม"]],
+  didi:[["雍和宫","Lama Temple"],["天坛东门","Temple of Heaven East Gate"],["前门大街","Qianmen Street"]],
+  notes:["Temple of Heaven ฤดูหนาว: สวน 06:30–22:00 · last entry 21:00","อาคารหลักเปิด 08:00–17:00 · last entry 16:30 · ต้องเริ่มจุดหลักก่อน 16:30 และเดินตามลำดับให้ทัน","สวน CNY 10 · บัตรรวม CNY 28 · อาคารสำคัญปิดวันจันทร์ ยกเว้นวันหยุด","Sanlitun ไม่อยู่ในโปรแกรมหลัก · ไม่เพิ่ม Confucius Temple / Imperial College Museum"]},
+ {n:6,date:"2026-12-11",tz:"Asia/Shanghai",th:"ศุกร์ 11 ธันวาคม",zhd:"周五",title:"Beijing → Bangkok",zh:"北京 → 曼谷",tag:"Return",sleep:"บ้าน",tea:1,
+  plan:[["09:00–10:00","Wake up & Breakfast"],["10:00–11:00","Pack luggage & เตรียมเช็กเอาต์"],["11:00–11:30","Check-out at JianGuo Hidden Hotel"],["11:30–13:00","DiDi Hotel → Beijing Capital Airport (PEK), Terminal 3"],["13:00–14:05","Lunch & Rest at Airport"],["14:05–15:00","Thai Airways Check-in & Baggage Drop (เวลาเปิดโดยประมาณ)"],["15:00–15:45","Security Check & Immigration"],["15:45–16:30","เดินไป Gate / พักรอ"],["16:30 →","Boarding · ยึดเวลาจริงจาก Boarding Pass"],["17:05","Thai Airways TG615 · PEK → BKK"],["21:20","ถึง Bangkok (BKK) · เวลาไทย"]],
+  det:[["ก่อนออกจากโรงแรม","ตรวจห้องทุกจุด ลิ้นชัก ตู้เสื้อผ้า ห้องน้ำ ปลั๊กไฟ Passport และสัมภาระ"],["Check-out","JianGuo Hidden Hotel (Beijing Tian An Men Wangfujing store) · ตรวจค่าใช้จ่ายเพิ่มเติมแล้วเรียก DiDi"],["ไปสนามบิน","DiDi destination: 北京首都国际机场 T3 · เผื่อเวลาเดินทาง 60–90 นาที และตรวจสภาพจราจรก่อนออก"],["เช็กอิน","เวลา 14:05 เป็นเวลาเปิดเคาน์เตอร์โดยประมาณจากกรอบ 3 ชั่วโมงก่อนเครื่องออก ไม่ใช่เวลาเคาน์เตอร์ยืนยัน · ตรวจจอสนามบินหาเคาน์เตอร์จริง"],["ขาออก","โหลดกระเป๋า รับ Boarding Pass → Security → Immigration → เดินไป Gate ตามจอ"],["เที่ยวบินกลับ","TG615 ออกจาก PEK 17:05 ถึง BKK 21:20 ตามเวลาท้องถิ่น · เวลาบินตามตาราง 5 ชั่วโมง 15 นาที"]],
+  didi:[["北京首都国际机场 T3","Beijing Capital Airport T3"]],
+  notes:["Terminal 3 ตามข้อมูลเที่ยวบินที่วางไว้ · ไม่ระบุหมายเลขเคาน์เตอร์หรือ Gate ล่วงหน้า","16:30 เป็นเวลาเป้าหมายสำหรับไป Gate ไม่ใช่ Boarding Time ที่ยืนยัน","ตรวจข้อมูลสายการบินและ Boarding Pass อีกครั้ง"]}
+];
+
+const CHECKS = [
+ ["fc","จองบัตร Forbidden City สำหรับอังคาร 8 ธ.ค.","จองได้ 7 วันล่วงหน้า เริ่ม 20:00 เวลาปักกิ่ง (19:00 เวลาไทย) · ไม่มีขายหน้างาน"],
+ ["t1","จองรถไฟ 北京南站 → 天津站 เช้า 6 ธ.ค.","Second Class · 2 คน · ใช้ Passport · เป้าหมายราว 09:30"],
+ ["t2","จองรถไฟ 天津站 → 北京南站 เย็น 7 ธ.ค.","เป้าหมายราว 17:00–17:40"],
+ ["ht","แจ้ง CitiGO ว่าจะมาถึงเช้า 6 ธ.ค.","ขอเก็บห้องไว้และไม่ mark no-show"],
+ ["dd","ตรวจจุดรับ DiDi ที่ PEK T3","แผนเดิม B2 Zone H (H区) · ให้ยึดหมุดในแอปวันจริง"],
+ ["hr","ตรวจเวลาเปิดและการจอง Binhai Library, St. Joseph Cathedral, Lama Temple","ข้อมูลอ้างอิง ณ พ.ย. 2026"],
+ ["fl","ตรวจเวลาเที่ยวบิน TG674 / TG615 อีกครั้ง","ขาไป PEK T3 ไม่ใช่ PKX"]
+];
+
+const store = {
+  get(k,d){try{const v=localStorage.getItem("bjtj26:"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("bjtj26:"+k,JSON.stringify(v))}catch(e){}}
+};
+const esc = s => s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const rich = s => esc(s).replace(/[㐀-鿿（）]+(?:[ ·][㐀-鿿]+)*/g,m=>`<span class="zh" lang="zh-Hans">${m}</span>`).replace(/ → /g,' <span aria-hidden="true">→</span> ');
+const MON = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const ico = {
+  bed:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.5 12.5v-9M1.5 9.5h13v3M14.5 9.5V8a2 2 0 0 0-2-2H7v3.5"/><circle cx="4.3" cy="7.3" r="1.3"/></svg>',
+  sun:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12.5h14M4 12.5a4 4 0 0 1 8 0M8 3.5v2M3 6l1.2 1.2M13 6l-1.2 1.2"/></svg>',
+  cup:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5.5h8l-1 9H5zM3.5 5.5h9M9 5.5l1.5-4"/></svg>'
+};
+
+/* rail + days */
+const rail = document.getElementById("rail"), daysEl = document.getElementById("days");
+const teas = store.get("tea",{});
+rail.innerHTML = `<a href="#overview" data-id="overview"><b>✦</b><small>Route</small></a>` + DAYS.map(d=>{
+  const dd=+d.date.slice(8);return `<a href="#day${d.n}" data-id="day${d.n}"><b>${dd}</b><small>Day ${d.n}</small></a>`}).join("");
+
+daysEl.innerHTML = DAYS.map(d=>{
+  const dd=+d.date.slice(8), mm=+d.date.slice(5,7);
+  return `<section class="day" id="day${d.n}" aria-labelledby="h-day${d.n}">
+  <div class="day-top">
+    <div class="dnum">${String(dd).padStart(2,"0")}<sup>${MON[mm]}</sup></div>
+    <div class="dhead">
+      <div class="label"><b>Day ${d.n}</b> · ${esc(d.th)} · <span class="zh">${d.zhd}</span></div>
+      <h2 id="h-day${d.n}">${esc(d.title)}</h2>
+      <span class="zh">${d.zh}</span>
+    </div>
+    <div class="meta">
+      <span class="chip tag">${esc(d.tag)}</span>
+      <span class="chip today" data-today hidden>วันนี้</span>
+      <span class="chip">${ico.bed} ${esc(d.sleep)}</span>
+      ${d.sun?`<span class="chip">${ico.sun} ตะวันตก ≈ ${d.sun}</span>`:""}
+      ${d.tea?`<button class="chip tea" type="button" id="tea-${d.n}" data-tea="${d.n}" aria-pressed="${!!teas[d.n]}">${ico.cup} <span>${teas[d.n]?"HEYTEA วันนี้แล้ว":"HEYTEA วันนี้"}</span></button>`:""}
+    </div>
+  </div>
+  <div class="day-body">
+    <div>
+      <div class="label">At a glance</div>
+      <ol class="tl">${d.plan.map(([t,a])=>`<li data-t="${esc(t)}"><span class="t">${esc(t)}</span><span class="a">${rich(a)}</span></li>`).join("")}</ol>
+    </div>
+    <div>
+      <div class="label">Route &amp; practical details</div>
+      <div class="det">${d.det.map(([h,p])=>`<div><h4>${rich(h)}</h4><p>${rich(p)}</p></div>`).join("")}</div>
+    </div>
+  </div>
+  ${d.didi.length?`<div class="didi"><div class="label">DiDi destinations · แตะเพื่อคัดลอก</div><div class="didi-row">${d.didi.map(([z,e])=>`<button class="cp" type="button" data-copy="${esc(z)}"><span class="zh" lang="zh-Hans">${esc(z)}</span><small>${esc(e)}</small></button>`).join("")}</div></div>`:""}
+  <aside class="note"><div class="label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4.5M8 4.6v.1"/></svg>Hours, tickets &amp; things to check</div><ul>${d.notes.map(n=>`<li>${rich(n)}</li>`).join("")}</ul></aside>
+</section>`}).join("");
+
+/* checklist */
+const done = store.get("checks",{});
+const checksEl = document.getElementById("checks"), prog = document.getElementById("chkProg");
+checksEl.innerHTML = CHECKS.map(([k,t,s])=>`<li><label for="c-${k}"><input type="checkbox" id="c-${k}" data-k="${k}" ${done[k]?"checked":""}><span>${rich(t)}<small>${rich(s)}</small></span></label></li>`).join("");
+const upd = ()=>{prog.textContent = `${Object.values(done).filter(Boolean).length}/${CHECKS.length}`};upd();
+checksEl.addEventListener("change",e=>{const k=e.target.dataset.k;if(!k)return;done[k]=e.target.checked;store.set("checks",done);upd()});
+
+/* copy + tea */
+const toast = document.getElementById("toast");let tt;
+const say = m=>{toast.textContent=m;toast.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>toast.classList.remove("show"),1800)};
+document.addEventListener("click",e=>{
+  const c=e.target.closest("[data-copy]");
+  if(c){const txt=c.dataset.copy;
+    const ok=()=>{c.classList.add("done");say(`คัดลอก ${txt} แล้ว · วางใน DiDi ได้เลย`)};
+    const fb=()=>{const r=document.createRange();r.selectNodeContents(c.querySelector(".zh"));const s=getSelection();s.removeAllRanges();s.addRange(r);say("เลือกข้อความแล้ว กดคัดลอกเองได้")};
+    try{navigator.clipboard.writeText(txt).then(ok,fb)}catch(err){fb()}
+    return}
+  const t=e.target.closest("[data-tea]");
+  if(t){const n=t.dataset.tea;teas[n]=!teas[n];store.set("tea",teas);t.setAttribute("aria-pressed",!!teas[n]);t.querySelector("span").textContent=teas[n]?"HEYTEA วันนี้แล้ว":"HEYTEA วันนี้";
+    const c=Object.values(teas).filter(Boolean).length;if(teas[n])say(`HEYTEA แก้วที่ ${c} ของทริป`)}
+});
+
+/* rail highlight */
+const links=[...rail.querySelectorAll("a")];
+const io=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting){links.forEach(a=>a.classList.toggle("on",a.dataset.id===en.target.id));
+  const on=rail.querySelector("a.on");if(on){const r=on.getBoundingClientRect(),p=rail.getBoundingClientRect();if(r.left<p.left||r.right>p.right)rail.scrollBy({left:r.left-p.left-40,behavior:"smooth"})}}})},{rootMargin:"-45% 0px -50% 0px"});
+document.querySelectorAll("#overview,.day").forEach(s=>io.observe(s));
+
+/* today + now */
+function partsIn(tz){const f=new Intl.DateTimeFormat("en-CA",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date());const g=k=>f.find(p=>p.type===k).value;return{date:`${g("year")}-${g("month")}-${g("day")}`,min:+g("hour")*60+ +g("minute")}}
+const toMin=s=>{const m=s.match(/(\d{1,2}):(\d{2})/);return m?+m[1]*60+ +m[2]:null};
+function markToday(){
+  document.querySelectorAll(".tl li.now").forEach(l=>l.classList.remove("now"));
+  let found=null;
+  DAYS.forEach(d=>{const p=partsIn(d.tz),sec=document.getElementById("day"+d.n),isT=p.date===d.date;
+    sec.querySelector("[data-today]").hidden=!isT;rail.querySelector(`a[data-id="day${d.n}"]`).classList.toggle("is-today",isT);
+    if(!isT)return;found=d;
+    const lis=[...sec.querySelectorAll(".tl li")];
+    lis.forEach((li,i)=>{const t=li.dataset.t,s=toMin(t);if(s==null||/\+1/.test(t))return;
+      const r=t.match(/–(\d{1,2}:\d{2})/);const next=lis.slice(i+1).map(x=>toMin(x.dataset.t)).find(v=>v!=null);
+      const e=r?toMin(r[1]):(next!=null&&next>s?next:s+60);
+      if(p.min>=s&&p.min<e)li.classList.add("now")})});
+  const b=document.getElementById("todayBtn");
+  if(found){b.hidden=false;b.href="#day"+found.n;b.textContent=`ไปที่วันนี้ · Day ${found.n} →`}else b.hidden=true;
+}
+markToday();setInterval(markToday,60000);
+
+/* snow */
+(function(){
+  const cv=document.getElementById("snow"),cx=cv.getContext("2d");
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  let w,h,fl=[],dpr=Math.min(devicePixelRatio||1,2),run=true;
+  const size=()=>{const r=cv.getBoundingClientRect();w=r.width;h=r.height;cv.width=w*dpr;cv.height=h*dpr;cx.setTransform(dpr,0,0,dpr,0,0);
+    const n=Math.round(w*h/9000);fl=Array.from({length:n},()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.8+.4,s:Math.random()*.5+.2,d:Math.random()*Math.PI*2}))};
+  size();addEventListener("resize",size);
+  new IntersectionObserver(e=>{run=e[0].isIntersecting;if(run)requestAnimationFrame(tick)}).observe(cv);
+  function tick(){if(!run)return;cx.clearRect(0,0,w,h);cx.fillStyle="rgba(238,242,247,.75)";
+    for(const f of fl){f.y+=f.s;f.d+=.01;f.x+=Math.sin(f.d)*.3;if(f.y>h){f.y=-4;f.x=Math.random()*w}
+      cx.beginPath();cx.arc(f.x,f.y,f.r,0,7);cx.fill()}
+    requestAnimationFrame(tick)}
+  requestAnimationFrame(tick);
+})();
+</script>
+
+</body></html>
