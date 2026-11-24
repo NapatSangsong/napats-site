@@ -192,14 +192,15 @@
   { const l = lawnC.getHSL({}); lawnC.setHSL(l.h, l.s * 0.74, l.l * 0.97); }
   const far = new THREE.Mesh(new THREE.CircleGeometry(700, 64), new THREE.MeshBasicMaterial({ color: lawnC, fog: true }));
   far.rotation.x = -Math.PI / 2; far.position.set(7.4, -0.03, 7.2); scene.add(far);
+  const ringMats = [new THREE.MeshBasicMaterial({ vertexColors: true, fog: true }), new THREE.MeshBasicMaterial({ color: 0x2d2620, fog: true })];
   const rnd = (s => () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; })(77);
   {
     const crown = new THREE.IcosahedronGeometry(1, 2);
     const cols = [], P = crown.attributes.position;
     for (let i = 0; i < P.count; i++) { const y = P.getY(i); const k = 0.55 + 0.45 * (y * 0.5 + 0.5); cols.push(0.07 * k, 0.12 * k, 0.05 * k); }
     crown.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
-    const N = 70, im = new THREE.InstancedMesh(crown, new THREE.MeshBasicMaterial({ vertexColors: true, fog: true }), N * 2);
-    const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.16, 1, 6), new THREE.MeshBasicMaterial({ color: 0x2d2620, fog: true }), N);
+    const N = 70, im = new THREE.InstancedMesh(crown, ringMats[0], N * 2);
+    const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.16, 1, 6), ringMats[1], N);
     const M = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
     for (let i = 0; i < N; i++) {
       const a = rnd() * Math.PI * 2, r = 30 + rnd() * 50;
@@ -232,6 +233,7 @@
     skyMat.uniforms.top.value.copy(S.top); skyMat.uniforms.mid.value.copy(S.mid); skyMat.uniforms.hor.value.copy(S.hor);
     scene.fog.color.copy(S.fog);
     far.material.color.copy(n ? new THREE.Color(0.004, 0.006, 0.004) : lawnC);
+    ringMats[0].color.setScalar(n ? 0.08 : 1); ringMats[1].color.set(n ? 0x050504 : 0x2d2620);
     UI.setSky(n);
     document.getElementById('l-day').setAttribute('aria-pressed', String(!n));
     document.getElementById('l-night').setAttribute('aria-pressed', String(n));

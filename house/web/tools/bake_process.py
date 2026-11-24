@@ -24,8 +24,8 @@ INTERIOR = {'Int_Wall', 'Int_Olive', 'Moulding', 'Floor_Tile', 'Laminate', 'Bath
             'Tile_Grey', 'Door_White', 'Wood_Tread', 'LED_Strip', 'Light_Warm', 'Chrome', 'AC_White'}
 INTERIOR_GROUPS = {'furn_g', 'furn_u'}
 EXT_GROUP_EXTERIOR = {'Ext_Wall', 'Ext_Dark', 'Steel_Brown', 'Alu_Dark'}
-GAIN_IN = 7.0 if VARIANT == 'day' else 2.2
-GAIN_OUT = 0.95 if VARIANT == 'day' else 2.4
+GAIN_IN = 7.0 if VARIANT == 'day' else 3.4
+GAIN_OUT = 0.95 if VARIANT == 'day' else 6.0
 
 
 def is_interior(g, mat):
